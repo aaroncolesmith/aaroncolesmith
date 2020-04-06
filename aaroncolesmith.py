@@ -6,7 +6,7 @@ import streamlit as st
 
 def main():
     st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects'))
+    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data-Stocks'))
 
     if selection == 'About Me':
         about()
@@ -14,6 +14,18 @@ def main():
         experience()
     if selection == 'Projects':
         projects()
+    if selection == 'Data-Stocks':
+        stocks()
+
+    # st.sidebar.title("Data Products")
+    # selection = st.sidebar.radio("", ('Stocks','TBD','TBD'))
+    #
+    # if selection == 'Stocks':
+    #     stocks()
+    # if selection == 'Work Experience':
+    #     experience()
+    # if selection == 'Projects':
+    #     projects()
 
 def about():
     st.write("""
@@ -109,6 +121,40 @@ def projects():
     **Solution:** Went all-in on rewriting and redesigning our existing product so that we had a much more stable future. I led the product requirements and product design while working very closely with engineering leadership to ensure we were meeting project objectives of keeping future support costs to a minimum.
 
     """)
+
+def stocks():
+    #d=pd.read_csv('./stocks/stocks_month_chg.csv')
+    df=pd.read_csv('./stocks/stocks.csv')
+    group=df.groupby(['symbol','name']).agg({'date':'last',
+                                      'close':'last',
+                                      'close_last_month':'last',
+                                      'volume':['last','mean'],
+                                      'pct_chg':'last'}).reset_index(drop=False)
+    group.columns=['symbol','name','date','close','close_last_month','volume_last','volume_average','pct_chg']
+    a=px.scatter(group,
+    x='close', y='pct_chg', hover_data = ['symbol','name'],
+    title='3 Month Pct Change vs. Most Recent Price',
+    width=800, height=600,
+    range_y=[-1,2])
+    a.update_xaxes(title='Close')
+    a.update_yaxes(title='% Change Since Last Month')
+    a.update_traces(marker=dict(size=12,
+                              line=dict(width=2,
+                                        color='DarkSlateGrey')),
+                  selector=dict(mode='markers'))
+    st.plotly_chart(a)
+
+    l=(df['symbol'] + ' - ' + df['name']).unique()
+    l=np.insert(l,0,'')
+    selection=st.multiselect('Select stocks -',l)
+    #option=st.selectbox('Select a bet -', state.a)
+    if len(selection) > 0:
+        # st.write(selection)
+        f = df.loc[(df['symbol'] + ' - ' + df['name']).isin(selection)]
+        # st.write(f)
+        line_g=px.line(f,x='date',y='close',color='symbol')
+        line_g.update_traces(mode='lines+markers')
+        st.plotly_chart(line_g)
 
 def hide_footer():
     hide_footer_style = """
