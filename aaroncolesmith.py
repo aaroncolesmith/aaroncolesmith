@@ -193,69 +193,69 @@ def get_price_data():
     df = pd.concat([row_df, df], ignore_index=True, sort=False)
 
     #CB2
-    url='https://www.cb2.com/justice-oak-coffee-table/s393709'
-    company = 'cb2'
-    req = requests.get(url,headers=agent)
-    soup = BeautifulSoup(req.text)
-    item = soup.find_all(class_="shop-bar-product-title")[0].text
-    price = soup.find_all(class_="regPrice")[0].text
-    try:
-        sale_price = soup.find_all(class_="salePrice")[0].text
-    except:
-        sale_price = ''
-    used_price = ''
-    date = datetime.datetime.now()
-
-    row = pd.Series([date,url,company,item,price,sale_price,used_price])
-    row_df = pd.DataFrame([row])
-    row_df.columns = ['date','url','company','item','price','sale_price','used_price']
-    df = pd.concat([row_df, df], ignore_index=True, sort=False)
-
-    #AMAZON - INSPIRED
-    url = 'https://www.amazon.com/INSPIRED-Create-Tech-Products-Customers/dp/1119387507/ref=tmm_hrd_swatch_0?_encoding=UTF8&qid=&sr='
-    company = 'Amazon'
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    soup = BeautifulSoup(webpage)
-    item = soup.find_all(id='productTitle')[0].text.replace('\n','').lstrip().rstrip()
-    try:
-        price = soup.find_all(class_="a-size-medium a-color-price offer-price a-text-normal")[0].text.replace('\n','').lstrip().rstrip()
-    except:
-        price = soup.find_all(class_="a-size-medium a-color-price")[0].text.replace('\n','').lstrip().rstrip()
-    try:
-        used_price = soup.find_all(class_="a-color-base offer-price a-text-normal")[0].text
-    except:
-        used_price = ''
-    date = datetime.datetime.now()
-
-    row = pd.Series([date,url,company,item,price,sale_price,used_price])
-    row_df = pd.DataFrame([row])
-    row_df.columns = ['date','url','company','item','price','sale_price','used_price']
-
-    df = pd.concat([row_df, df], ignore_index=True, sort=False)
-
-    #AMAZON - BIKE Tool
-    url = 'https://www.amazon.com/CRANKBROTHERs-Crank-Brothers-Bicycle-19-Function/dp/B002VYB4QC/ref=sr_1_2?dchild=1&keywords=crankbrothers%2Bm19&qid=1588034039&sr=8-2&th=1&psc=1'
-    company = 'Amazon'
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    webpage = urlopen(req).read()
-    soup = BeautifulSoup(webpage)
-    item = soup.find_all(id='productTitle')[0].text.replace('\n','').lstrip().rstrip()
-    try:
-        price = soup.find_all(class_="a-size-medium a-color-price offer-price a-text-normal")[0].text.replace('\n','').lstrip().rstrip()
-    except:
-        price = soup.find_all(class_="a-size-medium a-color-price")[0].text.replace('\n','').lstrip().rstrip()
-    try:
-        used_price = soup.find_all(class_="a-color-base offer-price a-text-normal")[0].text
-    except:
-        used_price = ''
-    date = datetime.datetime.now()
-
-    row = pd.Series([date,url,company,item,price,sale_price,used_price])
-    row_df = pd.DataFrame([row])
-    row_df.columns = ['date','url','company','item','price','sale_price','used_price']
-
-    df = pd.concat([row_df, df], ignore_index=True, sort=False)
+    # url='https://www.cb2.com/justice-oak-coffee-table/s393709'
+    # company = 'cb2'
+    # req = requests.get(url,headers=agent)
+    # soup = BeautifulSoup(req.text)
+    # item = soup.find_all(class_="shop-bar-product-title")[0].text
+    # price = soup.find_all(class_="regPrice")[0].text
+    # try:
+    #     sale_price = soup.find_all(class_="salePrice")[0].text
+    # except:
+    #     sale_price = ''
+    # used_price = ''
+    # date = datetime.datetime.now()
+    #
+    # row = pd.Series([date,url,company,item,price,sale_price,used_price])
+    # row_df = pd.DataFrame([row])
+    # row_df.columns = ['date','url','company','item','price','sale_price','used_price']
+    # df = pd.concat([row_df, df], ignore_index=True, sort=False)
+    #
+    # #AMAZON - INSPIRED
+    # url = 'https://www.amazon.com/INSPIRED-Create-Tech-Products-Customers/dp/1119387507/ref=tmm_hrd_swatch_0?_encoding=UTF8&qid=&sr='
+    # company = 'Amazon'
+    # req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    # webpage = urlopen(req).read()
+    # soup = BeautifulSoup(webpage)
+    # item = soup.find_all(id='productTitle')[0].text.replace('\n','').lstrip().rstrip()
+    # try:
+    #     price = soup.find_all(class_="a-size-medium a-color-price offer-price a-text-normal")[0].text.replace('\n','').lstrip().rstrip()
+    # except:
+    #     price = soup.find_all(class_="a-size-medium a-color-price")[0].text.replace('\n','').lstrip().rstrip()
+    # try:
+    #     used_price = soup.find_all(class_="a-color-base offer-price a-text-normal")[0].text
+    # except:
+    #     used_price = ''
+    # date = datetime.datetime.now()
+    #
+    # row = pd.Series([date,url,company,item,price,sale_price,used_price])
+    # row_df = pd.DataFrame([row])
+    # row_df.columns = ['date','url','company','item','price','sale_price','used_price']
+    #
+    # df = pd.concat([row_df, df], ignore_index=True, sort=False)
+    #
+    # #AMAZON - BIKE Tool
+    # url = 'https://www.amazon.com/CRANKBROTHERs-Crank-Brothers-Bicycle-19-Function/dp/B002VYB4QC/ref=sr_1_2?dchild=1&keywords=crankbrothers%2Bm19&qid=1588034039&sr=8-2&th=1&psc=1'
+    # company = 'Amazon'
+    # req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    # webpage = urlopen(req).read()
+    # soup = BeautifulSoup(webpage)
+    # item = soup.find_all(id='productTitle')[0].text.replace('\n','').lstrip().rstrip()
+    # try:
+    #     price = soup.find_all(class_="a-size-medium a-color-price offer-price a-text-normal")[0].text.replace('\n','').lstrip().rstrip()
+    # except:
+    #     price = soup.find_all(class_="a-size-medium a-color-price")[0].text.replace('\n','').lstrip().rstrip()
+    # try:
+    #     used_price = soup.find_all(class_="a-color-base offer-price a-text-normal")[0].text
+    # except:
+    #     used_price = ''
+    # date = datetime.datetime.now()
+    #
+    # row = pd.Series([date,url,company,item,price,sale_price,used_price])
+    # row_df = pd.DataFrame([row])
+    # row_df.columns = ['date','url','company','item','price','sale_price','used_price']
+    #
+    # df = pd.concat([row_df, df], ignore_index=True, sort=False)
     df.to_csv('./price_tracker.csv',index=False)
 
     return df
