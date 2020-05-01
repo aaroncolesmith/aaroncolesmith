@@ -35,7 +35,7 @@ def main():
     #     projects()
 
 def about():
-    <img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=traffic&ea=visit&dp=About_Me&dt=About_Me">
+    #<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=traffic&ea=visit&dp=About_Me&dt=About_Me">
     st.write("""
     # Aaron Cole Smith
     I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
