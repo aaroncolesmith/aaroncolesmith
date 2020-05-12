@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import plotly_express as px
 import streamlit as st
-#from pandas.io.json import json_normalize
-from pandas import json_normalize
+from pandas.io.json import json_normalize
+#from pandas import json_normalize
 #from bs4 import BeautifulSoup
 import requests
 #import datetime
