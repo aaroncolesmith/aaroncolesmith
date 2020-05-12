@@ -2,17 +2,19 @@ import pandas as pd
 import numpy as np
 import plotly_express as px
 import streamlit as st
+#from pandas.io.json import json_normalize
+from pandas import json_normalize
 #from bs4 import BeautifulSoup
-#import requests
+import requests
 #import datetime
 #import html
 #from urllib.request import Request, urlopen
-from PIL import Image
+#from PIL import Image
 
 
 def main():
     st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data-Stocks'))
+    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data - Stocks','Data - Coronavirus'))
 
     if selection == 'About Me':
         about()
@@ -20,10 +22,12 @@ def main():
         experience()
     if selection == 'Projects':
         projects()
-    if selection == 'Data-Stocks':
+    if selection == 'Data - Stocks':
         stocks()
     if selection == 'Price Tracker':
         price_tracker()
+    if selection == 'Data - Coronavirus':
+        coronavirus()
 
     # st.sidebar.title("Data Products")
     # selection = st.sidebar.radio("", ('Stocks','TBD','TBD'))
@@ -282,6 +286,43 @@ def get_price_data():
         pass
 
     return df
+
+def coronavirus():
+    url = 'https://covidtracking.com/api/v1/us/daily.json'
+    req = requests.get(url)
+    df=json_normalize(req.json())
+    df['dateChecked'] = pd.to_datetime(df['dateChecked'])
+    df['date'] = df.dateChecked.dt.date
+    #df['day_of_week']=df.dateChecked.dt.weekday_name
+
+    df = df.sort_values('date',ascending=True)
+    df['rolling_avg'] = df['positiveIncrease'].rolling(window=7).mean()
+    d1 = df[['date','positiveIncrease','rolling_avg']]
+    d1 = d1.melt(id_vars=['date']+list(d1.keys()[5:]), var_name='val')
+    fig=px.line(d1, x='date', y='value', color='val', title='United States Daily COVID Growth vs 7 Day Rolling Avg')
+    fig.update_traces(showlegend=False,
+                     mode='lines+markers',
+                     marker=dict(size=6,
+                                  line=dict(width=1,
+                                            color='DarkSlateGrey')))
+    fig.update_xaxes(title='Date')
+    fig.update_yaxes(title='# of COVID Cases')
+    st.plotly_chart(fig)
+
+
+    df['rolling_avg_deaths'] = df['deathIncrease'].rolling(window=7).mean()
+    d1 = df[['date','deathIncrease','rolling_avg_deaths']]
+    d1 = d1.melt(id_vars=['date']+list(d1.keys()[5:]), var_name='val')
+    fig=px.line(d1, x='date', y='value', color='val', title='United States Daily COVID Deaths vs 7 Day Rolling Avg')
+    fig.update_traces(showlegend=False,
+                     mode='lines+markers',
+                     marker=dict(size=6,
+                                  line=dict(width=1,
+                                            color='DarkSlateGrey')))
+    fig.update_xaxes(title='Date')
+    fig.update_yaxes(title='# of COVID Deaths')
+    st.plotly_chart(fig)
+
 
 def hide_footer():
     hide_footer_style = """
