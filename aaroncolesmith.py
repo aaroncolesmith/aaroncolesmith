@@ -293,6 +293,7 @@ def coronavirus():
     df=json_normalize(req.json())
     df['dateChecked'] = pd.to_datetime(df['dateChecked'])
     df['date'] = df.dateChecked.dt.date
+    df = df.loc[df.date > df.date.max() - pd.to_timedelta(60, unit='d')]
     #df['day_of_week']=df.dateChecked.dt.weekday_name
 
     df = df.sort_values('date',ascending=True)
@@ -322,6 +323,49 @@ def coronavirus():
     fig.update_xaxes(title='Date')
     fig.update_yaxes(title='# of COVID Deaths')
     st.plotly_chart(fig)
+
+
+    url = 'https://covidtracking.com/api/v1/states/daily.json'
+    req = requests.get(url)
+    df=json_normalize(req.json())
+    df['dateChecked'] = pd.to_datetime(df['dateChecked'])
+    df['date'] = df.dateChecked.dt.date
+    df = df.loc[df.date > df.date.max() - pd.to_timedelta(60, unit='d')]
+
+    a=df['state'].unique()
+    a=np.insert(a,0,'')
+    option=st.selectbox('Select a State to view data', a)
+    if len(option) > 0:
+        state=option
+        d = df.loc[(df.state == state) & (df.date > df.date.max() - pd.to_timedelta(60, unit='d'))].sort_values('date',ascending=True)
+        d['rolling_avg'] = d['positiveIncrease'].rolling(window=7).mean()
+        d1 = d[['date','positiveIncrease','rolling_avg']]
+        d1.columns = ['date','Daily COVID Cases','7 Day Rolling Avg.']
+        d1 = d1.melt(id_vars=['date']+list(d1.keys()[5:]), var_name='val')
+        fig=px.line(d1, x='date', y='value', color='val', title='Daily COVID Growth vs 7 Day Rolling Avg for '+state)
+        fig.update_traces(showlegend=False,
+                         mode='lines+markers',
+                         marker=dict(size=6,
+                                      line=dict(width=1,
+                                                color='DarkSlateGrey')))
+        fig.update_xaxes(title='Date')
+        fig.update_yaxes(title='# of COVID Cases')
+        st.plotly_chart(fig)
+
+        d = df.loc[(df.state == state) & (df.date > df.date.max() - pd.to_timedelta(60, unit='d'))].sort_values('date',ascending=True)
+        d['rolling_avg'] = d['deathIncrease'].rolling(window=7).mean()
+        d1 = d[['date','deathIncrease','rolling_avg']]
+        d1.columns = ['date','Daily COVID Deaths','7 Day Rolling Avg.']
+        d1 = d1.melt(id_vars=['date']+list(d1.keys()[5:]), var_name='val')
+        fig=px.line(d1, x='date', y='value', color='val', title='Daily COVID Deaths vs 7 Day Rolling Avg for '+state)
+        fig.update_traces(showlegend=False,
+                         mode='lines+markers',
+                         marker=dict(size=6,
+                                      line=dict(width=1,
+                                                color='DarkSlateGrey')))
+        fig.update_xaxes(title='Date')
+        fig.update_yaxes(title='# of COVID Deaths')
+        st.plotly_chart(fig)
 
 
 def hide_footer():
