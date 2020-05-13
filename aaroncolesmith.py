@@ -57,6 +57,17 @@ def about():
 
     """)
 
+    st.markdown(
+            """
+    <style>
+    canvas {
+    max-width: 100%!important;
+    height: auto!important;
+    </style>
+    """,
+            unsafe_allow_html=True
+        )
+
 def experience():
     st.write("""
     # Work Experience
@@ -288,6 +299,7 @@ def get_price_data():
     return df
 
 def coronavirus():
+
     url = 'https://covidtracking.com/api/v1/us/daily.json'
     req = requests.get(url)
     df=json_normalize(req.json())
