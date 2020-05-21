@@ -423,7 +423,7 @@ def nba_clusters():
         df['Cluster'] = km_neat
         df['Cluster_x'] = test[:,0]
         df['Cluster_y'] = test[:,1]
-        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year',])
+        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year','Age','Tm','PPG'])
         fig.update_traces(mode='markers',
                   marker=dict(size=8,
                               line=dict(width=1,
@@ -431,16 +431,27 @@ def nba_clusters():
         st.plotly_chart(fig)
 
         st.write(df[['Year','Player','Pos','Age','Tm','Cluster','PPG','RPG','APG','BPG','SPG','3P','3PA','3P%','2P','2PA','2P%','FT','FTA','FT%','All_Stat_PM']].sort_values('All_Stat_PM',ascending=False))
-        fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','Player':'size'}).reset_index(),x='PPG',y='RPG',size='Player',color='Cluster',title='PPG vs. RPG by Cluster')
-        fig.update_traces(mode='markers',
-                          marker=dict(line=dict(width=1,
-                                                color='DarkSlateGrey')))
+
+        # fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','Player':'size'}).reset_index(),x='PPG',y='RPG',size='Player',color='Cluster',title='PPG vs. RPG by Cluster')
+        # fig.update_traces(mode='markers',
+        #                   marker=dict(line=dict(width=1,
+        #                                         color='DarkSlateGrey')))
+        # st.plotly_chart(fig)
+        #
+        #
+        #
+        # fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','SPG':'median','Player':'size'}).reset_index(),x='SPG',y='APG',size='Player',color='Cluster',title='SPG vs. APG by Cluster')
+        # fig.update_traces(mode='markers',
+        #                   marker=dict(line=dict(width=1,
+        #                                         color='DarkSlateGrey')))
+        # st.plotly_chart(fig)
+
+        fig = px.scatter_3d(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','SPG':'median','Player':'size'}).reset_index(),
+                            x='PPG',y='RPG',z='APG',color='Cluster')
+        fig.update_traces(marker=dict(line=dict(width=1,color='DarkSlateGrey')))
         st.plotly_chart(fig)
 
-        fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','SPG':'median','Player':'size'}).reset_index(),x='SPG',y='APG',size='Player',color='Cluster',title='SPG vs. APG by Cluster')
-        fig.update_traces(mode='markers',
-                          marker=dict(line=dict(width=1,
-                                                color='DarkSlateGrey')))
+        fig = px.scatter_3d(df, x='PPG', y='RPG', z='APG',color='Cluster')
         st.plotly_chart(fig)
 
         # fields = df.columns
