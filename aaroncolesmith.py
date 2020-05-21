@@ -388,6 +388,14 @@ def load_nba():
     return df
 
 def nba_clusters():
+    st.write("""
+    # NBA clusters
+    The goal of this page is to take the yearly stats for a period of time (beginning and ending year below), select the # of clusters and group players together based on their yearly stats.
+
+    The result should group similar types of players together...likely there will be a superstar cluster that dominate all stats, a big-man cluster that pulls tons of rebounds, and a guard cluster that contributes tons of assists.
+
+    Play around with different year combos and see the results below!""")
+
     df = load_nba()
     df=df.loc[df.Year >= 1952]
     df=df.loc[df.MP > 100]
@@ -451,7 +459,8 @@ def nba_clusters():
         fig.update_traces(marker=dict(line=dict(width=1,color='DarkSlateGrey')))
         st.plotly_chart(fig)
 
-        fig = px.scatter_3d(df, x='PPG', y='RPG', z='APG',color='Cluster')
+        fig = px.scatter_3d(df, x='PPG', y='RPG', z='APG',color='Cluster', hover_data=['Player','Year','Age','Tm'])
+        fig.update_traces(marker=dict(line=dict(width=1,color='DarkSlateGrey')))
         st.plotly_chart(fig)
 
         # fields = df.columns
