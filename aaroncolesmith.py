@@ -400,9 +400,6 @@ def nba_clusters():
 
     clusters = st.selectbox('Number of clusters',[2,3,4,5,6,7,8,9,10,11],5)
 
-    st.write(year_min)
-    st.write(year_max)
-
     df=df.reset_index(drop=True)
 
 
@@ -427,10 +424,38 @@ def nba_clusters():
         df['Cluster_x'] = test[:,0]
         df['Cluster_y'] = test[:,1]
         fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year',])
+        fig.update_traces(mode='markers',
+                  marker=dict(size=8,
+                              line=dict(width=1,
+                                        color='DarkSlateGrey')))
         st.plotly_chart(fig)
 
         st.write(df[['Year','Player','Pos','Age','Tm','Cluster','PPG','RPG','APG','BPG','SPG','3P','3PA','3P%','2P','2PA','2P%','FT','FTA','FT%','All_Stat_PM']].sort_values('All_Stat_PM',ascending=False))
+        fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','Player':'size'}).reset_index(),x='PPG',y='RPG',size='Player',color='Cluster',title='PPG vs. RPG by Cluster')
+        fig.update_traces(mode='markers',
+                          marker=dict(line=dict(width=1,
+                                                color='DarkSlateGrey')))
+        st.plotly_chart(fig)
 
+        fig=px.scatter(df.groupby('Cluster').agg({'PPG':'median','RPG':'median','APG':'median','SPG':'median','Player':'size'}).reset_index(),x='SPG',y='APG',size='Player',color='Cluster',title='SPG vs. APG by Cluster')
+        fig.update_traces(mode='markers',
+                          marker=dict(line=dict(width=1,
+                                                color='DarkSlateGrey')))
+        st.plotly_chart(fig)
+
+        # fields = df.columns
+        # fields = np.insert(fields,0,'')
+        # x = st.selectbox('Select a field for x-axis',fields)
+        # y = st.selectbox('Select a field for y-axis',fields)
+        #
+        # if len(x) > 0:
+        #     if len(y) > 0:
+        #         fig = px.scatter(df, x=x, y=y)
+        #         fig.update_traces(mode='markers',
+        #           marker=dict(size=8,
+        #                       line=dict(width=1,
+        #                                 color='DarkSlateGrey')))
+        #         st.plotly_chart(fig)
 
 def hide_footer():
     hide_footer_style = """
