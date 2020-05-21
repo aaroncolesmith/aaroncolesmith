@@ -431,7 +431,7 @@ def nba_clusters():
         df['Cluster'] = km_neat
         df['Cluster_x'] = test[:,0]
         df['Cluster_y'] = test[:,1]
-        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year','Age','Tm','PPG'])
+        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year','Age','Tm','PPG','RPG','APG','BPG','SPG'])
         fig.update_traces(mode='markers',
                   marker=dict(size=8,
                               line=dict(width=1,
