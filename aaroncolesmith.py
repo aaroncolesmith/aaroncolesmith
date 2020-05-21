@@ -3,6 +3,9 @@ import numpy as np
 import plotly_express as px
 import streamlit as st
 from pandas.io.json import json_normalize
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 #from pandas import json_normalize
 #from bs4 import BeautifulSoup
 import requests
@@ -14,7 +17,7 @@ import requests
 
 def main():
     st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data - Stocks','Data - Coronavirus'))
+    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data - Stocks','Data - Coronavirus','Data - NBA Clusters'))
 
     if selection == 'About Me':
         about()
@@ -28,6 +31,8 @@ def main():
         price_tracker()
     if selection == 'Data - Coronavirus':
         coronavirus()
+    if selection == 'Data - NBA Clusters':
+        nba_clusters()
 
     # st.sidebar.title("Data Products")
     # selection = st.sidebar.radio("", ('Stocks','TBD','TBD'))
@@ -39,11 +44,8 @@ def main():
     # if selection == 'Projects':
     #     projects()
 
+
 def about():
-    #<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=traffic&ea=visit&dp=About_Me&dt=About_Me">
-    #st.image('olive_logo.png')
-    #st.image('care.png',use_column_width=True)
-    #st.image('pupil.gif',use_column_width=True)
     st.write("""
     # Aaron Cole Smith
     I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
@@ -378,6 +380,56 @@ def coronavirus():
         fig.update_xaxes(title='Date')
         fig.update_yaxes(title='# of COVID Deaths')
         st.plotly_chart(fig)
+
+@st.cache
+def load_nba():
+    df = pd.read_csv('./nba_year_stats.csv')
+
+    return df
+
+def nba_clusters():
+    df = load_nba()
+    df=df.loc[df.Year >= 1952]
+    df=df.loc[df.MP > 100]
+    df=df.loc[df.All_Stat_PM.notnull()]
+    year = df.Year.unique()
+    #year = np.insert(year,0,np.nan)
+    year_min = st.selectbox('Select beginning year - ',year,0)
+    #year2 = [row for row in year if row >= year_min]
+    year_max = st.selectbox('Select ending year - ',[row for row in year if row >= year_min],len([row for row in year if row >= year_min])-1)
+
+    clusters = st.selectbox('Number of clusters',[2,3,4,5,6,7,8,9,10,11],5)
+
+    st.write(year_min)
+    st.write(year_max)
+
+    df=df.reset_index(drop=True)
+
+
+    # l=d.columns
+    # l=np.insert(l,0,'')
+    # selection=st.multiselect('Select fields -',l)
+    #st.write(d[l])
+    if st.button('Go!'):
+        df = df.loc[(df.Year >= year_min) & (df.Year <= year_max)]
+        d=df.drop(['Rk','Player','Pos','Age','Tm','Year','Key_Player'],axis=1)
+        X=d
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        pca = PCA(n_components=8)
+        pca.fit(X_scaled)
+        X_pca = pca.transform(X_scaled)
+        test=X_pca
+
+        #Predict K-Means cluster membership
+        km_neat = KMeans(n_clusters=clusters, random_state=2).fit_predict(test)
+        df['Cluster'] = km_neat
+        df['Cluster_x'] = test[:,0]
+        df['Cluster_y'] = test[:,1]
+        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year',])
+        st.plotly_chart(fig)
+
+        st.write(df[['Year','Player','Pos','Age','Tm','Cluster','PPG','RPG','APG','BPG','SPG','3P','3PA','3P%','2P','2PA','2P%','FT','FTA','FT%','All_Stat_PM']].sort_values('All_Stat_PM',ascending=False))
 
 
 def hide_footer():
