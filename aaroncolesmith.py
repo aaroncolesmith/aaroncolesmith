@@ -6,6 +6,7 @@ from pandas.io.json import json_normalize
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
 #from pandas import json_normalize
 #from bs4 import BeautifulSoup
 import requests
@@ -400,6 +401,8 @@ def nba_clusters():
     df=df.loc[df.Year >= 1952]
     df=df.loc[df.MP > 100]
     df=df.loc[df.All_Stat_PM.notnull()]
+    df['Year'] = df['Year'].astype(np.int64)
+    df=df.round({'PPG': 1, 'APG':1, 'RPG':1,'BPG':1,'SPG':1,'PPM':1,'All_Stat_PM':1})
     year = df.Year.unique()
     #year = np.insert(year,0,np.nan)
     year_min = st.selectbox('Select beginning year - ',year,0)
@@ -417,25 +420,24 @@ def nba_clusters():
     #st.write(d[l])
     if st.button('Go!'):
         df = df.loc[(df.Year >= year_min) & (df.Year <= year_max)]
-        d=df.drop(['Rk','Player','Pos','Age','Tm','Year','Key_Player'],axis=1)
-        X=d
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
+        X_scaled = scaler.fit_transform(df.drop(['Rk','Player','Pos','Age','Tm','Year','Key_Player'],axis=1))
         pca = PCA(n_components=8)
         pca.fit(X_scaled)
+
         X_pca = pca.transform(X_scaled)
-        test=X_pca
 
         #Predict K-Means cluster membership
-        km_neat = KMeans(n_clusters=clusters, random_state=2).fit_predict(test)
-        df['Cluster'] = km_neat
-        df['Cluster_x'] = test[:,0]
-        df['Cluster_y'] = test[:,1]
-        fig = px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year','Age','Tm','PPG','RPG','APG','BPG','SPG'])
-        fig.update_traces(mode='markers',
-                  marker=dict(size=8,
-                              line=dict(width=1,
-                                        color='DarkSlateGrey')))
+        km_neat = KMeans(n_clusters=clusters, random_state=2).fit_predict(X_pca)
+        #km_messy = KMeans(n_clusters=3, random_state=2).fit_predict(x_messy)
+
+        df['Cluster'] = km_neat.astype('str')
+        df['Cluster_x'] = X_pca[:,0]
+        df['Cluster_y'] = X_pca[:,1]
+
+        # df['Cluster'] = df['Cluster'].astype('str')
+        df=df.sort_values('Cluster',ascending=True)
+        fig=px.scatter(df, x='Cluster_x',y='Cluster_y',color='Cluster',hover_data=['Player','Year','Age','Tm','PPG','RPG','APG','BPG','SPG'])
+        fig.update_traces(mode='markers',marker=dict(size=8,opacity=.85,line=dict(width=1,color='DarkSlateGrey')))
         st.plotly_chart(fig)
 
         st.write(df[['Year','Player','Pos','Age','Tm','Cluster','PPG','RPG','APG','BPG','SPG','3P','3PA','3P%','2P','2PA','2P%','FT','FTA','FT%','All_Stat_PM']].sort_values('All_Stat_PM',ascending=False))
