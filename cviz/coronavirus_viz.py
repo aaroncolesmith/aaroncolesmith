@@ -236,7 +236,7 @@ def coronavirus_viz():
 
 def main():
     #_max_width_()
-    st.title("Coronavirus-Viz")
+    st.title("COVID Viz")
     st.markdown("Feel free to explore the data. Click on an item in the legend to filter it out -- double-click an item to filter down to just that item. Or click and drag to filter the view so that you only see the range you are looking for.")
     st.write("If you have any feedback or questions, feel free to get at me on the [Twitter] (https://www.twitter.com/aaroncolesmith) machine")
 
