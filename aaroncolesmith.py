@@ -7,7 +7,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-from cviz.coronavirus_viz import coronavirus_viz
+from coviz.coronavirus_viz import coronavirus_viz
+#from cviz.coronavirus_viz import coronavirus_viz
 #from pandas import json_normalize
 #from bs4 import BeautifulSoup
 import requests
@@ -50,7 +51,7 @@ def main():
 def about():
     st.write("""
     # Aaron Cole Smith
-    Hi, I'm Aaron. dI am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
+    Hi, I'm Aaron. I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
 
 
     I am currently a Product Manager at [SafeRide Health](https://saferidehealth.com) where we are building the technology platform to enable anyone to get the care they need.
