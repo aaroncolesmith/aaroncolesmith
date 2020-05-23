@@ -1,0 +1,3 @@
+[submodule "coronavirus-viz"]
+	path = coronavirus-viz
+	url = https://github.com/aaroncolesmith/coronavirus-viz
