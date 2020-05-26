@@ -414,7 +414,7 @@ def nba_clusters():
     The result should group similar types of players together...likely there will be a superstar cluster that dominate all stats, a big-man cluster that pulls tons of rebounds, and a guard cluster that contributes tons of assists.
 
     Play around with different year combos and see the results below!""")
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=experience">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=data_nbaclusters">',unsafe_allow_html=True)
 
     df = load_nba()
     df=df.loc[df.Year >= 1952]
