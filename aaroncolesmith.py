@@ -63,7 +63,7 @@ def about():
     If you have any questions / thoughts, feel free to reach out to me via [email](mailto:aaroncolesmith@gmail.com), [LinkedIn](https://linkedin.com/in/aaroncolesmith) or [Twitter](https://www.twitter.com/aaroncolesmith).
 
     """)
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=about">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=about">',unsafe_allow_html=True)
 
     st.markdown(
             """
@@ -125,7 +125,7 @@ def experience():
     - Worked with key client contacts to maintain our current relationship while also working with our delivery leads to
     explore and expand our business relationship
     """)
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=experience">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=experience">',unsafe_allow_html=True)
 
 
 
@@ -169,12 +169,12 @@ def projects():
 
     st.image('./images/queue.png',caption='Queue was our patient registration system used across 500 health systems', use_column_width=True)
 
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=projects">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=projects">',unsafe_allow_html=True)
 
 
 def stocks():
     #d=pd.read_csv('./stocks/stocks_month_chg.csv')
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=data_stocks">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=data_stocks">',unsafe_allow_html=True)
     df=pd.read_csv('./stocks/stocks.csv')
     group=df.groupby(['symbol','name']).agg({'date':'last',
                                       'close':'last',
@@ -315,7 +315,7 @@ def get_price_data():
 
 def coronavirus():
     coronavirus_viz()
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=data_coronavirus">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=data_coronavirus">',unsafe_allow_html=True)
 
 
 
@@ -414,7 +414,7 @@ def nba_clusters():
     The result should group similar types of players together...likely there will be a superstar cluster that dominate all stats, a big-man cluster that pulls tons of rebounds, and a guard cluster that contributes tons of assists.
 
     Play around with different year combos and see the results below!""")
-    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=website&ea=data_nbaclusters">',unsafe_allow_html=True)
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=data_nbaclusters">',unsafe_allow_html=True)
 
     df = load_nba()
     df=df.loc[df.Year >= 1952]
