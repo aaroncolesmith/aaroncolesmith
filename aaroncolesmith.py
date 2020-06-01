@@ -22,7 +22,14 @@ import requests
 
 def main():
     st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("", ('About Me','Work Experience','Projects','Data - Stocks','Data - Coronavirus','Data - NBA Clusters'))
+    selection = st.sidebar.radio("",
+    ('About Me',
+    'Work Experience',
+    'Projects',
+    # 'Data - Stocks',
+    # 'Data - Coronavirus',
+    # 'Data - NBA Clusters'
+    ))
 
     if selection == 'About Me':
         about()
@@ -38,6 +45,14 @@ def main():
         coronavirus()
     if selection == 'Data - NBA Clusters':
         nba_clusters()
+
+    st.sidebar.markdown('---')
+    st.sidebar.markdown('# Data Products')
+    st.sidebar.markdown("""
+    * [Coronavirus Viz](http://coronavirus.aaroncolesmith.com)
+    * [NBA Clusters](http://nbaclusters.aaroncolesmith.com)
+    * [Bovada](http://bovada.aaroncolesmith.com)
+    """)
 
     # st.sidebar.title("Data Products")
     # selection = st.sidebar.radio("", ('Stocks','TBD','TBD'))
