@@ -21,15 +21,11 @@ import requests
 
 
 def main():
-    st.sidebar.image('./images/oscar_sticker.png',width=75)
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("",
     ('About Me',
     'Work Experience',
-    'Projects',
-    # 'Data - Stocks',
-    # 'Data - Coronavirus',
-    # 'Data - NBA Clusters'
+    'Projects'
     ))
 
     if selection == 'About Me':
@@ -54,16 +50,8 @@ def main():
     * [NBA Clusters](http://nbaclusters.aaroncolesmith.com)
     * [Bovada](http://bovada.aaroncolesmith.com)
     """)
+    st.sidebar.image('./images/oscar_sticker.png',width=75)
 
-    # st.sidebar.title("Data Products")
-    # selection = st.sidebar.radio("", ('Stocks','TBD','TBD'))
-    #
-    # if selection == 'Stocks':
-    #     stocks()
-    # if selection == 'Work Experience':
-    #     experience()
-    # if selection == 'Projects':
-    #     projects()
 
 
 def about():
