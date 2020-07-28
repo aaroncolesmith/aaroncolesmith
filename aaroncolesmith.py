@@ -50,6 +50,7 @@ def main():
     * [NBA Clusters](http://nbaclusters.aaroncolesmith.com)
     * [Bovada](http://bovada.aaroncolesmith.com)
     """)
+    st.sidebar.markdown('---')
     st.sidebar.image('./images/oscar_sticker.png',width=75)
 
 
