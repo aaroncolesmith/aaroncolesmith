@@ -12,7 +12,7 @@ import requests
 
 
 def main():
-    st.sidebar.title("Navigation")
+    st.sidebar.markdown("## Navigation")
     selection = st.sidebar.radio("",
     ('About Me',
     'Work Experience',
@@ -35,7 +35,7 @@ def main():
         nba_clusters()
 
     st.sidebar.markdown('---')
-    st.sidebar.markdown('# Data Products')
+    st.sidebar.markdown('## Data Products')
     st.sidebar.markdown("""
     * [Coronavirus Viz](http://coronavirus.aaroncolesmith.com)
     * [NBA Clusters](http://nbaclusters.aaroncolesmith.com)
@@ -50,9 +50,8 @@ def about():
 
     st.write("""
     # Aaron Cole Smith
-    Hi, I'm Aaron. I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
-
-
+    Hi, I'm Aaron. I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have worked a number of different roles, but have mostly found success working as a Product Manager and working with data.
+    My most successful project was working at [Olive](https://oliveai.com) where I was an early product hire brought in to build the platform to build Olive's AI workforce.
     I'm also very active in building side projects, mainly centered around data-related apps. Feel free to check some of these out on the sidebar, like NBA Clusters where you can see how different NBA players / careers cluster based on similar stats.""")
 
     st.image('./images/nba_clusters.gif',caption='Preview of NBA Clusters -- feel free to check it out!',use_column_width=True)
@@ -62,23 +61,18 @@ def about():
     """)
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=about">',unsafe_allow_html=True)
 
-    st.markdown(
-            """
-    <style>
-    canvas {
-    max-width: 100%!important;
-    height: auto!important;
-    </style>
-    """,
-            unsafe_allow_html=True
-        )
 
 def experience():
     st.write("""
     # Work Experience
 
+    ### [Openpath](https://openpath.com)
+    #### Senior Product Manager | Present
+    - Working with the advanced concepts team to start building new products and integration to support new use cases like integrating video feeds into the portal to provide a holistic security monitoring solutions
+    - Introduced data driven processes and principles to the product team so that we start to build products and make decisions backed by data
+
     ### [SafeRide Health](https://saferidehealth.com)
-    #### Product Manager | Present
+    #### Product Manager | 2020
     - Built the technology platform to enable end-to-end patient transportation to care, supporting a number of different
     use cases supporting Health Plans, Health Networks, NEMT Providers & ridesharing solutions
     - Automated existing Operations’ processes to enable the organization to scale without having to increase team size
