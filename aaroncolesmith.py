@@ -7,17 +7,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-# try:
-#     from coviz.coronavirus_viz import coronavirus_viz
-# except:
-#     from cviz.coronavirus_viz import coronavirus_viz
-#from pandas import json_normalize
-#from bs4 import BeautifulSoup
 import requests
-#import datetime
-#import html
-#from urllib.request import Request, urlopen
-#from PIL import Image
+
 
 
 def main():
