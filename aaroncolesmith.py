@@ -53,8 +53,6 @@ def about():
     Hi, I'm Aaron. I am a data-driven problem solver who believes that any problem can be solved with hard work, creativity and technology. I have been deployed in a wide range of roles, but have recently excelled as a Product Manager focused on a high-tech product.
 
 
-    I am currently a Product Manager at [SafeRide Health](https://saferidehealth.com) where we are building the technology platform to enable anyone to get the care they need.
-
     I'm also very active in building side projects, mainly centered around data-related apps. Feel free to check some of these out on the sidebar, like NBA Clusters where you can see how different NBA players / careers cluster based on similar stats.""")
 
     st.image('./images/nba_clusters.gif',caption='Preview of NBA Clusters -- feel free to check it out!',use_column_width=True)
