@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 
-
+@st.cache(suppress_st_warning=True)
 def load_nba_data():
     df = pd.read_csv('./data/nba_year_stats.csv')
     df=df.loc[df.Year >= 1952]
