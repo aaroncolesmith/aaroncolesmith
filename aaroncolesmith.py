@@ -15,6 +15,7 @@ import covid
 import clstr
 import nbaclusters
 import nba_redraftables
+import bovada
 
 
 
@@ -24,6 +25,7 @@ def main():
     "About": about,
     "Experience": experience,
     "Projects": projects,
+    "Bovada": bovada,
     "COVID-Viz": covid,
     "CLSTR": clstr,
     "NBA Clusters": nbaclusters,
