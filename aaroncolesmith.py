@@ -11,6 +11,10 @@ import requests
 import about
 import experience
 import projects
+import covid
+import clstr
+import nbaclusters
+import nba_redraftables
 
 
 
@@ -19,7 +23,11 @@ def main():
     PAGES = {
     "About": about,
     "Experience": experience,
-    "Projects": projects
+    "Projects": projects,
+    "COVID-Viz": covid,
+    "CLSTR": clstr,
+    "NBA Clusters": nbaclusters,
+    "NBA Redraftables": nba_redraftables
     }
 
     st.sidebar.title('Navigation')
