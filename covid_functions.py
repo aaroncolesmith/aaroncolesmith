@@ -118,6 +118,11 @@ def load_data_global():
 
     return df_all
 
+@st.cache(suppress_st_warning=True)
+def load_data_global_file():
+    df_all = pd.read_csv('./data/df_all.csv')
+    return df_all
+
 def header(report_date):
     st.title("Coronavirus-Viz for "+report_date.strftime('%m/%d/%Y'))
     st.markdown("Feel free to explore the data. Click on an item in the legend to filter it out -- double-click an item to filter down to just that item. Or click and drag to filter the view so that you only see the range you are looking for.")

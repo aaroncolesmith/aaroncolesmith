@@ -115,7 +115,8 @@ def filter_view(df, dimension, selection, days_back):
 def app():
 
     # df_us = load_data_us()
-    df_all = load_data_global()
+    # df_all = load_data_global()
+    df_all = load_data_global_file()
     report_date = df_all.Date.dt.date.max()
     ga('Coronavirus-Viz','Page Load', 'Page Load')
 
