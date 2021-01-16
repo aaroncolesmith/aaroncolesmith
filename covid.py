@@ -114,14 +114,14 @@ def filter_view(df, dimension, selection, days_back):
 
 def app():
 
-    df_us = load_data_us()
+    # df_us = load_data_us()
     df_all = load_data_global()
     report_date = df_all.Date.dt.date.max()
     ga('Coronavirus-Viz','Page Load', 'Page Load')
 
     days_back = (datetime.datetime.now() - df_all.Date.min()).days
     st.sidebar.markdown('## COVID-Viz Navigation')
-    radio_selection = st.sidebar.radio('Select a page:',['Main Dashboard','Breakdown by Country','Breakdown by US State','Breakdown by US County'])
+    radio_selection = st.sidebar.radio('Select a page:',['Main Dashboard','Breakdown by Country'])
     days_back = st.sidebar.slider('How many days back',30,days_back,90)
 
     if radio_selection == 'Main Dashboard':
