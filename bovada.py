@@ -17,6 +17,13 @@ def last_minus_avg(x):
     return last(x) - mean(x)
 
 @st.cache(suppress_st_warning=True)
+def load_data():
+    df = pd.read_csv('./data/bovada.csv')
+    df['date'] = pd.to_datetime(df['date'])
+    df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+    return df
+
+@st.cache(suppress_st_warning=True)
 def get_s3_data(bucket, key):
     s3 = boto3.client('s3')
     obj = s3.get_object(Bucket=bucket, Key=key)
@@ -143,9 +150,10 @@ def app():
     df_file = 'bovada_requests.csv'
     track_file = 'track_df.csv'
 
-    df = get_s3_data(bucket,df_file)
+    df = load_file()
+    # df = get_s3_data(bucket,df_file)
 
-    track_df = get_s3_data(bucket,track_file)
+    # track_df = get_s3_data(bucket,track_file)
     ga('bovada','get_data',str(df.index.size))
 
     rise=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=False).head(5)[['title_desc','Net_Change']]
@@ -164,16 +172,22 @@ def app():
     for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
         col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
 
-    a=get_select_options(df, track_df)
+    # a=get_select_options(df, track_df)
+    a=df.groupby('title').agg({'date':'max'}).reset_index()
+    a['date']=a['date'].astype('str').str[:16].str[5:]
+    a=a['title'] + ' | ' + a['date']
+    a=a.to_list()
+    a=np.insert(a,0,'')
+
     option=st.selectbox('Select a bet -', a)
     option = option[:-14]
 
     if len(option) > 0:
 
-            track_df = track_df.append({'date' : datetime.datetime.now()
-                             ,'selection' :  option,
-                             'count' : 1} , ignore_index=True)
-            save_to_s3(track_df, bucket, track_file)
+            # track_df = track_df.append({'date' : datetime.datetime.now()
+            #                  ,'selection' :  option,
+            #                  'count' : 1} , ignore_index=True)
+            # save_to_s3(track_df, bucket, track_file)
 
             st.markdown('# '+option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
