@@ -17,7 +17,7 @@ def last_minus_avg(x):
     return last(x) - mean(x)
 
 @st.cache(suppress_st_warning=True)
-def load_data():
+def load_file():
     df = pd.read_csv('./data/bovada.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
