@@ -194,14 +194,14 @@ def app():
 
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
-                filtered_df = filtered_df[['date','url','title','description','price.american','Implied_Probability']].reset_index(drop=True)
-                filtered_df.columns = ['Date','URL','Title','Winner','Price','Implied_Probability']
+                filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
+                filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
                 filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
 
             if o == 'Favorites':
                 filtered_df = df.loc[df.title == option]
-                filtered_df = filtered_df[['date','url','title','description','price.american','Implied_Probability']].reset_index(drop=True)
-                filtered_df.columns = ['Date','URL','Title','Winner','Price','Implied_Probability']
+                filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
+                filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
                 filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
                 f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'mean')], ascending=True).reset_index(drop=False).head(10)
                 f=f['Winner']
