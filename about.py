@@ -50,10 +50,16 @@ def app():
     with st.beta_expander("NBA Redraftables"):
         st.write("""
         How would NBA teams redraft based on a player's statistical career? Based on [The Ringer's Podcast Series](https://www.theringer.com/nba/2020/4/1/21202663/the-ringer-nba-redraftables-series)
-        
+
         By combining draft results with a players career statistics, you can visualize whether a given draft pick was a good choice or a poor choice.
         """)
         st.image('./images/nba-redraftables.gif',use_column_width=True)
+
+    st.markdown('')
+    st.markdown('')
+    st.markdown('')
+    st.markdown('')
+    st.write("""If you have any questions / thoughts, feel free to reach out to me via [email](mailto:aaroncolesmith@gmail.com), [LinkedIn](https://linkedin.com/in/aaroncolesmith) or [Twitter](https://www.twitter.com/aaroncolesmith).""")
 
 
     # st.write("""
