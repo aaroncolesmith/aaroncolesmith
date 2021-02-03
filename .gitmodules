@@ -1,4 +1,0 @@
-
-[submodule "coviz"]
-	path = coviz
-	url = https://github.com/aaroncolesmith/coronavirus-viz
