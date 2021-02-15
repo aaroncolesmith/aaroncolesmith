@@ -3,10 +3,10 @@ import numpy as np
 import plotly_express as px
 import streamlit as st
 from pandas.io.json import json_normalize
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
+# from sklearn.cluster import KMeans
+# from sklearn.decomposition import PCA
+# from sklearn.preprocessing import StandardScaler
+# scaler = StandardScaler()
 import requests
 import about
 import experience
@@ -16,6 +16,7 @@ import clstr
 import nbaclusters
 import nba_redraftables
 import bovada
+import nfl_mock_draft
 
 
 
@@ -29,7 +30,8 @@ def main():
     "COVID-Viz": covid,
     "CLSTR": clstr,
     "NBA Clusters": nbaclusters,
-    "NBA Redraftables": nba_redraftables
+    "NBA Redraftables": nba_redraftables,
+    "NFL Mock Draft DB": nfl_mock_draft
     }
 
     st.sidebar.title('Navigation')
