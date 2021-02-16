@@ -120,7 +120,8 @@ def load_data_global():
 
 @st.cache(suppress_st_warning=True)
 def load_data_global_file():
-    df_all = pd.read_csv('./data/df_all.csv')
+    # df_all = pd.read_csv('./data/df_all.csv')
+    df_all = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/coronavirus-viz/master/data/df_all.csv')
     df_all['Date'] = pd.to_datetime(df_all.Date)
     return df_all
 
