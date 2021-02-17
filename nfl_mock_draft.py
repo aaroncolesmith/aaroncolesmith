@@ -13,7 +13,9 @@ def load_data():
 
 
 def app():
+    st.image('./images/nfl_draft.jpeg', use_column_width=True)
     st.title('NFL Mock Draft Database')
+
     st.write('By scraping the results of multiple NFL Mock Drafts, can we start to see trends that will help understand how teams will draft?')
     df=load_data()
 
@@ -30,16 +32,16 @@ def app():
 
 
     col1, col2 = st.beta_columns(2)
-    col1.success("### Players Rising")
+    col1.success("### Players Rising :fire:")
     for i, r in d3.head(5).iterrows():
-        col1.write(r['player']+' | treding ' + str(round(abs(r['chg']),2)) + ' picks earlier')
+        col1.write(r['player']+' - trending ' + str(round(abs(r['chg']),2)) + ' picks earlier')
         # col1.write(r['player'] + ' | Avg. Pick changed ' + str(round(r['chg'],2)) +' picks')
     # col1.write(d3.head(5))
 
 
-    col2.warning("### Players Falling")
+    col2.warning("### Players Falling 🧊")
     for i, r in d3.tail(5).iterrows():
-        col2.write(r['player'] + ' | trending ' + str(round(r['chg'],2)) +' picks later')
+        col2.write(r['player'] + ' - trending ' + str(round(r['chg'],2)) +' picks later')
 
 
     option = st.radio('View all or most recent mock drafts?',('All','Most Recent'))

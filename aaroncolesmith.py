@@ -23,8 +23,6 @@ st.set_page_config(
     page_icon='dog'
     )
 
-
-
 def main():
 
     PAGES = {
