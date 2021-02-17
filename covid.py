@@ -99,7 +99,6 @@ def county(df, report_date, days_back):
         if len(county_selection) > 0:
             filter_view(df, dimension, county_selection, days_back)
 
-
 def filter_view(df, dimension, selection, days_back):
 
     metric = 'Confirmed_Growth'
