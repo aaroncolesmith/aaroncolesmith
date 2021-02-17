@@ -20,7 +20,7 @@ import nfl_mock_draft
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
-    page_icon='man-office-worker'
+    page_icon='dog'
     )
 
 
