@@ -86,12 +86,15 @@ def app():
     fig.update_yaxes(title='Avg. Draft Position')
     st.plotly_chart(fig, use_container_width=True)
 
-    fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
-       x=df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).team + ' - '+df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).player,
-       y='cnt',
-       title='Most Common Team - Player Pairings')
-    fig.update_xaxes(title='Team & Player Pairing')
+
+    fig=px.bar(d2.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
+           y=d2.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).team + ' - '+d2.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).player,
+           x='cnt',
+           orientation='h',
+           title='Most Common Team - Player Pairings')
     fig.update_yaxes(title='Count')
+    fig.update_xaxes(title='Team & Player Pairing', categoryorder='category ascending')
+    fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, use_container_width=True)
 
     fig = px.box(d2.loc[d2.player.isin(d2.groupby('player').agg({'pick':'mean'}).reset_index().sort_values('pick',ascending=True).head(15)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
