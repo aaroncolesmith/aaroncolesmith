@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly_express as px
 import plotly.io as pio
-pio.templates.default = 'plotly_white'
+# pio.templates.default = 'plotly_white'
 import streamlit as st
 import requests
 import about
