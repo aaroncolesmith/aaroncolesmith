@@ -1,12 +1,9 @@
 import pandas as pd
 import numpy as np
 import plotly_express as px
+import plotly.io as pio
+pio.templates.default = 'plotly_white'
 import streamlit as st
-from pandas.io.json import json_normalize
-# from sklearn.cluster import KMeans
-# from sklearn.decomposition import PCA
-# from sklearn.preprocessing import StandardScaler
-# scaler = StandardScaler()
 import requests
 import about
 import experience

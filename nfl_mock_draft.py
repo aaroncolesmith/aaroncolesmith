@@ -11,12 +11,15 @@ def load_data():
     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/nfl_mock_draft_db.csv')
     return df
 
+def ga(event_category, event_action, event_label):
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
 
 def app():
     st.image('./images/nfl_draft.jpeg', use_column_width=True)
     st.title('NFL Mock Draft Database')
 
     st.write('By scraping the results of multiple NFL Mock Drafts, can we start to see trends that will help understand how teams will draft?')
+    ga('NFL Mock Draft Database', 'Page Load', 'Page Load')
     df=load_data()
 
     d1=pd.DataFrame()
@@ -83,7 +86,15 @@ def app():
     fig.update_yaxes(title='Avg. Draft Position')
     st.plotly_chart(fig, use_container_width=True)
 
-    fig = px.box(d2, x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
+    fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
+       x=df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).team + ' - '+df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).player,
+       y='cnt',
+       title='Most Common Team - Player Pairings')
+    fig.update_xaxes(title='Team & Player Pairing')
+    fig.update_yaxes(title='Count')
+    st.plotly_chart(fig, use_container_width=True)
+
+    fig = px.box(d2.loc[d2.player.isin(d2.groupby('player').agg({'pick':'mean'}).reset_index().sort_values('pick',ascending=True).head(15)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
     fig.update_xaxes(title='Player')
     fig.update_yaxes(title='Draft Position')
     st.plotly_chart(fig, use_container_width=True)
@@ -96,6 +107,7 @@ def app():
 
 
     if len(team) > 0:
+        ga('NFL Mock Draft Database', 'Team Select', team)
         fig=px.bar(d2.loc[df.team == team].groupby('player').size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(10),
            x='player',
            y='cnt',
