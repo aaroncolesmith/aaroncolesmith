@@ -105,13 +105,14 @@ def line_chart_probability(df,option):
                   showgrid=False,
                   gridwidth=1,
                   gridcolor='#D4D4D4')
-    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Manchester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Manchester City" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
+    # g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
+    g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
 
@@ -152,6 +153,15 @@ def bovada_data():
         df = df.loc[-df.title.str.contains(i)]
     return df
 
+def color_update(g):
+    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Manchester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
+    return g
 
 def ga(event_category, event_action, event_label):
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
