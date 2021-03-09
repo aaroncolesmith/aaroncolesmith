@@ -74,13 +74,13 @@ def line_chart(df, option):
                   showgrid=False,
                   gridwidth=1,
                   gridcolor='#D4D4D4')
-    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Winner=Arsenal" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Winner=Chelsea" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Winner=Liverpool" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Winner=Manchester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Winner=Manchester United" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Winner=Leicester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Winner=Tottenham Hotspur" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Manchester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability(df,option):
@@ -105,13 +105,13 @@ def line_chart_probability(df,option):
                   showgrid=False,
                   gridwidth=1,
                   gridcolor='#D4D4D4')
-    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Winner=Arsenal" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Winner=Chelsea" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Winner=Liverpool" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Winner=Manchester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Winner=Manchester United" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Winner=Leicester City" else ())
-    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Winner=Tottenham Hotspur" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#6CABDD') if trace.name == "Manchester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
+    g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
     st.plotly_chart(g,use_container_width=True)
 
 
