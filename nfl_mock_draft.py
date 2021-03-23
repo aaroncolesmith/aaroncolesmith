@@ -5,7 +5,6 @@ from pyvis import network as net
 import streamlit.components.v1 as components
 import networkx as nx
 import plotly_express as px
-import streamlit_analytics
 from IPython.core.display import HTML
 
 st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
