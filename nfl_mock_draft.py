@@ -7,151 +7,153 @@ import networkx as nx
 import plotly_express as px
 from IPython.core.display import HTML
 
-st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
-st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
+
+def app():
+    st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
 
 
-df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
+    df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
 
-d=pd.merge(df.iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
-         df.iloc[501:1000].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
-         left_on='player',
-         right_on='player',
-         suffixes=('_recent','_before')
-)
-d=d.loc[d.player_details_recent>=5]
-d['chg']=d['pick_recent'] - d['pick_before']
-d['pct_chg'] = (d['pick_recent'] - d['pick_before'])/d['pick_before']
-d.sort_values('chg',ascending=True)
+    d=pd.merge(df.iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
+             df.iloc[501:1000].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
+             left_on='player',
+             right_on='player',
+             suffixes=('_recent','_before')
+    )
+    d=d.loc[d.player_details_recent>=5]
+    d['chg']=d['pick_recent'] - d['pick_before']
+    d['pct_chg'] = (d['pick_recent'] - d['pick_before'])/d['pick_before']
+    d.sort_values('chg',ascending=True)
 
-col1, col2 = st.beta_columns(2)
-col1.success("### Players Rising :fire:")
-for i, r in d.sort_values('chg',ascending=True).head(5).iterrows():
-    col1.write(r['player']+' - trending ' + str(round(abs(r['chg']),2)) + ' picks earlier')
-
-
-col2.warning("### Players Falling 🧊")
-for i, r in d.sort_values('chg',ascending=False).head(5).iterrows():
-    col2.write(r['player'] + ' - trending ' + str(round(r['chg'],2)) +' picks later')
-
-del d
+    col1, col2 = st.beta_columns(2)
+    col1.success("### Players Rising :fire:")
+    for i, r in d.sort_values('chg',ascending=True).head(5).iterrows():
+        col1.write(r['player']+' - trending ' + str(round(abs(r['chg']),2)) + ' picks earlier')
 
 
-st.markdown("<h4 style='text-align: center; color: black;'>Network diagram showing relationships between teams and drafted players in recent mock drafts</h4>", unsafe_allow_html=True)
+    col2.warning("### Players Falling 🧊")
+    for i, r in d.sort_values('chg',ascending=False).head(5).iterrows():
+        col2.write(r['player'] + ' - trending ' + str(round(r['chg'],2)) +' picks later')
+
+    del d
 
 
-d=df.groupby(['player','team_pick','team_img']).size().to_frame('cnt').reset_index()
-
-player=d.groupby(['player']).agg({'cnt':'sum'}).reset_index()
-player.columns=['player','times_picked']
-team=d.groupby(['team_pick']).agg({'cnt':'sum'}).reset_index()
-team.columns=['team_pick','team_times_picked']
-
-d=pd.merge(d,player)
-d=pd.merge(d,team)
-
-d=d.sort_values('cnt',ascending=False)
-
-d['pick_str'] = d['team_pick']+ ' - '+d['cnt'].astype('str')+' times'
-d['player_pick_str'] = d['player']+ ' - '+d['cnt'].astype('str')+' times'
-
-nt = Network(directed=False,
-             # notebook=True,
-             height="480px",
-             width="1260px",
-             heading='')
-
-nt.force_atlas_2based(damping=2)
+    st.markdown("<h4 style='text-align: center; color: black;'>Network diagram showing relationships between teams and drafted players in recent mock drafts</h4>", unsafe_allow_html=True)
 
 
-icon = st.checkbox('Show icons (slows it down a bit)')
+    d=df.groupby(['player','team_pick','team_img']).size().to_frame('cnt').reset_index()
 
-for i, r in d.iterrows():
-    nt.add_node(r['player'],
-                size=r['times_picked'],
-                color={'background':'#40D0EF','border':'#03AED3'},
-                title = '<b>'+r['player'] + ' - Picked '+str(r['times_picked'])+'  times </b> <br> ' + d.loc[d.player==r['player']].groupby('player').apply(lambda x: ', <br>'.join(x.pick_str)).to_frame('pick_str').reset_index()['pick_str'].item())
-    if icon:
-        nt.add_node(r['team_pick'],
-                    size=r['team_times_picked'],
-                    color={'background':'#FA70C8','border':'#EC0498'},
-                    shape='image',
-                    image =r['team_img'],
-                    title='<b>' +r['team_pick'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team_pick == r['team_pick']].groupby('team_pick').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
-    else:
-        nt.add_node(r['team_pick'],
-                    size=r['team_times_picked'],
-                    color={'background':'#FA70C8','border':'#EC0498'},
-                    # shape='image',
-                    # image =r['team_img'],
-                    title='<b>' +r['team_pick'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team_pick == r['team_pick']].groupby('team_pick').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
+    player=d.groupby(['player']).agg({'cnt':'sum'}).reset_index()
+    player.columns=['player','times_picked']
+    team=d.groupby(['team_pick']).agg({'cnt':'sum'}).reset_index()
+    team.columns=['team_pick','team_times_picked']
 
-    nt.add_edge(r['player'],
-                r['team_pick'],
-                value = r['cnt'],
-                color='#9DA0DC',
-                title=r['team_pick']+' picked '+r['player']+' '+str(r['cnt'])+ '  times')
-nt.show('mock_draft_network.html')
+    d=pd.merge(d,player)
+    d=pd.merge(d,team)
 
-html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
-source_code = html_file.read()
-components.html(source_code, height=510,width=1300)
+    d=d.sort_values('cnt',ascending=False)
+
+    d['pick_str'] = d['team_pick']+ ' - '+d['cnt'].astype('str')+' times'
+    d['player_pick_str'] = d['player']+ ' - '+d['cnt'].astype('str')+' times'
+
+    nt = Network(directed=False,
+                 # notebook=True,
+                 height="480px",
+                 width="1260px",
+                 heading='')
+
+    nt.force_atlas_2based(damping=2)
 
 
-fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
-       y=df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).team + ' - '+df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).player,
-       x='cnt',
-       orientation='h',
-       title='Most Common Team - Player Pairings')
-fig.update_yaxes(title='Count')
-fig.update_xaxes(title='Team & Player Pairing', categoryorder='category ascending')
-fig.update_yaxes(autorange="reversed")
-st.plotly_chart(fig, use_container_width=True)
+    icon = st.checkbox('Show icons (slows it down a bit)')
 
-fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
-fig.update_xaxes(title='Player')
-fig.update_yaxes(title='Draft Position')
-st.plotly_chart(fig, use_container_width=True)
+    for i, r in d.iterrows():
+        nt.add_node(r['player'],
+                    size=r['times_picked'],
+                    color={'background':'#40D0EF','border':'#03AED3'},
+                    title = '<b>'+r['player'] + ' - Picked '+str(r['times_picked'])+'  times </b> <br> ' + d.loc[d.player==r['player']].groupby('player').apply(lambda x: ', <br>'.join(x.pick_str)).to_frame('pick_str').reset_index()['pick_str'].item())
+        if icon:
+            nt.add_node(r['team_pick'],
+                        size=r['team_times_picked'],
+                        color={'background':'#FA70C8','border':'#EC0498'},
+                        shape='image',
+                        image =r['team_img'],
+                        title='<b>' +r['team_pick'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team_pick == r['team_pick']].groupby('team_pick').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
+        else:
+            nt.add_node(r['team_pick'],
+                        size=r['team_times_picked'],
+                        color={'background':'#FA70C8','border':'#EC0498'},
+                        # shape='image',
+                        # image =r['team_img'],
+                        title='<b>' +r['team_pick'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team_pick == r['team_pick']].groupby('team_pick').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
 
-d=df.groupby(['team','team_img','player']).agg({'pick':['min','mean','median','size']}).reset_index()
-d.columns=['team','team_img','player','min_pick','avg_pick','median_pick','cnt']
-fig=px.scatter(d,
-      x='cnt',
-      y='avg_pick',
-       color='team',
-       title='# of Times a Player is Mocked to a Given Pick / Team',
-      hover_data=['player'])
-fig.update_xaxes(title='# of Occurences')
-fig.update_yaxes(title='Avg. Draft Pick')
-fig.update_traces(mode='markers',
-                  marker=dict(size=8,
-                              line=dict(width=1,
-                                        color='DarkSlateGrey')))
-st.plotly_chart(fig, use_container_width=True)
+        nt.add_edge(r['player'],
+                    r['team_pick'],
+                    value = r['cnt'],
+                    color='#9DA0DC',
+                    title=r['team_pick']+' picked '+r['player']+' '+str(r['cnt'])+ '  times')
+    nt.show('mock_draft_network.html')
 
-d=d.sort_values('avg_pick',ascending=True)
-fig=px.scatter(d,
-      x='player',
-      y='avg_pick',
-       size='cnt',
-      color='team',
-      height=600,
-      title='Avg. Pick Placement by Player / Team')
-fig.update_xaxes(title='Player')
-fig.update_xaxes(categoryorder='mean ascending')
-fig.update_yaxes(title='Avg. Draft Position')
-st.plotly_chart(fig, use_container_width=True)
-
-df['source_date'] = df['source'] + ' - ' +df['date']
-draft = st.selectbox('Pick a draft to view:',df['source_date'].unique())
+    html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
+    source_code = html_file.read()
+    components.html(source_code, height=510,width=1300)
 
 
-col1, col2, col3 = st.beta_columns((4,4,4))
-df_table=df.loc[df['source_date'] == draft].sort_values('pick',ascending=True).reset_index(drop=True)
-df_table['team'] = ["<img src='" + r.team_img
-+ f"""' style='display:block;margin-left:auto;margin-right:auto;width:32px;border:0;'><div style='text-align:center'>"""
-# + "<br>".join(r.team.split()) + "</div>"
-for ir, r in df_table.iterrows()]
-df_table['pick'] = df_table['pick'].astype('str').replace('\.0', '', regex=True)
+    fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
+           y=df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).team + ' - '+df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15).player,
+           x='cnt',
+           orientation='h',
+           title='Most Common Team - Player Pairings')
+    fig.update_yaxes(title='Count')
+    fig.update_xaxes(title='Team & Player Pairing', categoryorder='category ascending')
+    fig.update_yaxes(autorange="reversed")
+    st.plotly_chart(fig, use_container_width=True)
 
-col2.write(df_table[['pick','team','player']].to_html(index=False,escape=False), unsafe_allow_html=True)
+    fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
+    fig.update_xaxes(title='Player')
+    fig.update_yaxes(title='Draft Position')
+    st.plotly_chart(fig, use_container_width=True)
+
+    d=df.groupby(['team','team_img','player']).agg({'pick':['min','mean','median','size']}).reset_index()
+    d.columns=['team','team_img','player','min_pick','avg_pick','median_pick','cnt']
+    fig=px.scatter(d,
+          x='cnt',
+          y='avg_pick',
+           color='team',
+           title='# of Times a Player is Mocked to a Given Pick / Team',
+          hover_data=['player'])
+    fig.update_xaxes(title='# of Occurences')
+    fig.update_yaxes(title='Avg. Draft Pick')
+    fig.update_traces(mode='markers',
+                      marker=dict(size=8,
+                                  line=dict(width=1,
+                                            color='DarkSlateGrey')))
+    st.plotly_chart(fig, use_container_width=True)
+
+    d=d.sort_values('avg_pick',ascending=True)
+    fig=px.scatter(d,
+          x='player',
+          y='avg_pick',
+           size='cnt',
+          color='team',
+          height=600,
+          title='Avg. Pick Placement by Player / Team')
+    fig.update_xaxes(title='Player')
+    fig.update_xaxes(categoryorder='mean ascending')
+    fig.update_yaxes(title='Avg. Draft Position')
+    st.plotly_chart(fig, use_container_width=True)
+
+    df['source_date'] = df['source'] + ' - ' +df['date']
+    draft = st.selectbox('Pick a draft to view:',df['source_date'].unique())
+
+
+    col1, col2, col3 = st.beta_columns((4,4,4))
+    df_table=df.loc[df['source_date'] == draft].sort_values('pick',ascending=True).reset_index(drop=True)
+    df_table['team'] = ["<img src='" + r.team_img
+    + f"""' style='display:block;margin-left:auto;margin-right:auto;width:32px;border:0;'><div style='text-align:center'>"""
+    # + "<br>".join(r.team.split()) + "</div>"
+    for ir, r in df_table.iterrows()]
+    df_table['pick'] = df_table['pick'].astype('str').replace('\.0', '', regex=True)
+
+    col2.write(df_table[['pick','team','player']].to_html(index=False,escape=False), unsafe_allow_html=True)
