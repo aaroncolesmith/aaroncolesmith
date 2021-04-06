@@ -95,7 +95,7 @@ def app():
     nt = Network(directed=False,
                  # notebook=True,
                  height="480px",
-                 width="1260px",
+                 width="480px",
                  heading='')
 
     nt.force_atlas_2based(damping=2)
@@ -132,7 +132,7 @@ def app():
 
     html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
     source_code = html_file.read()
-    components.html(source_code, height=510,width=1300)
+    components.html(source_code, height=510,width=510)
 
 
     fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
@@ -194,3 +194,21 @@ def app():
     df_table['pick'] = df_table['pick'].astype('str').replace('\.0', '', regex=True)
 
     col2.write(df_table[['pick','team','player']].to_html(index=False,escape=False), unsafe_allow_html=True)
+
+    player = st.selectbox('Pick a player to view:',df['player'].unique())
+
+    d=df.loc[df.player == player].copy()
+    d=d.reset_index(drop=True)
+    d['mock_draft'] = d['date'].str[5:]+ ' - ' + d['source']
+    fig=px.scatter(d,
+                   x='mock_draft',
+                   y='pick',
+                   color='team',
+                   title='Mock Drafts over Time for ' + player)
+    fig.update_xaxes(title='Mock Draft / Date', categoryorder='category ascending')
+    fig.update_traces(mode='markers',
+                      marker=dict(size=8,
+                                  line=dict(width=1,
+                                            color='DarkSlateGrey')))
+    fig = update_colors(fig)
+    st.plotly_chart(fig, use_container_width=True)
