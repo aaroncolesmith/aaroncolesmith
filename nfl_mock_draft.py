@@ -95,7 +95,7 @@ def app():
     nt = Network(directed=False,
                  # notebook=True,
                  height="480px",
-                 width="480px",
+                 width="620px",
                  heading='')
 
     nt.force_atlas_2based(damping=2)
@@ -132,7 +132,7 @@ def app():
 
     html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
     source_code = html_file.read()
-    components.html(source_code, height=510,width=510)
+    components.html(source_code, height=510,width=640)
 
 
     fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
@@ -185,7 +185,7 @@ def app():
     df['source_date'] = df['source'] + ' - ' +df['date']
     draft = st.selectbox('Pick a draft to view:',df['source_date'].unique())
 
-    col1, col2, col3 = st.beta_columns((4,4,4))
+    col1, col2, col3 = st.beta_columns((2,4,2))
     df_table=df.loc[df['source_date'] == draft].sort_values('pick',ascending=True).reset_index(drop=True)
     df_table['team'] = ["<img src='" + r.team_img
     + f"""' style='display:block;margin-left:auto;margin-right:auto;width:32px;border:0;'><div style='text-align:center'>"""
