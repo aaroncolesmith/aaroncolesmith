@@ -141,9 +141,7 @@ def app():
            # color='#FA70C8',
            orientation='h',
            title='Most Common Team - Player Pairings')
-    fig.update_yaxes(title='Count')
-    fig.update_xaxes(title='Team & Player Pairing', categoryorder='category ascending')
-    fig.update_yaxes(autorange="reversed")
+
     st.plotly_chart(fig, use_container_width=True)
 
     fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
@@ -211,4 +209,40 @@ def app():
                                   line=dict(width=1,
                                             color='DarkSlateGrey')))
     fig = update_colors(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    team = st.selectbox('Pick a player to view:',df['team'].unique())
+
+    d=df.loc[df.team == team].copy()
+    d=d.reset_index(drop=True)
+
+    f = lambda x: x["player_details"].partition('|')[0]
+    d['position']=d.apply(f, axis=1)
+
+    d2=d.groupby(['team_pick','player','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    fig=px.bar(d2,
+           orientation='h',
+           y=d2['team_pick'] + ' - ' + d2['player'],
+           color='position',
+           x='cnt',
+           title='How many times a Pick / Team has been mocked to a player')
+
+    fig.update_yaxes(title='Pick / Team')
+    fig.update_xaxes(title='# of Times Mocked', categoryorder='total ascending')
+    fig.update_yaxes(autorange="reversed")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+    d2=d.groupby(['team_pick','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    fig=px.bar(d2,
+           orientation='h',
+           y=d2['team_pick'] + ' - ' + d2['position'],
+           x='cnt',
+           title='How many times a Pick / Team has been mocked to a Position')
+
+    fig.update_yaxes(title='Pick / Team')
+    fig.update_xaxes(title='# of Times Mocked', categoryorder='category ascending')
+    fig.update_yaxes(autorange="reversed")
+
     st.plotly_chart(fig, use_container_width=True)
