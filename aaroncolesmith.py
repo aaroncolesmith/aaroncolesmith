@@ -39,7 +39,7 @@ def main():
     sel = st.sidebar.radio("Go to", list(PAGES.keys()))
     page = PAGES[sel]
     g = geocoder.ip('me')
-    print(page+ ' - ' + g.city + ', '+g.state)
+    print(sel + ' - ' + g.city + ', '+g.state)
     page.app()
 
 
