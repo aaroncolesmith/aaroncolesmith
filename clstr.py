@@ -10,7 +10,6 @@ from sklearn.datasets import load_iris
 import plotly.graph_objects as go
 import datetime
 
-
 def app():
     st.image('./images/clstr.png',use_column_width=True)
     ga('CLSTR', 'Page Load', 'Page Load')

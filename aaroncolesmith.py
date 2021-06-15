@@ -22,8 +22,6 @@ st.set_page_config(
     )
 
 def main():
-    g = geocoder.ip('me')
-    print('main! ' + g.city + ', '+g.state)
 
     PAGES = {
     "About": about,
@@ -40,6 +38,8 @@ def main():
     st.sidebar.title('Navigation')
     sel = st.sidebar.radio("Go to", list(PAGES.keys()))
     page = PAGES[sel]
+    g = geocoder.ip('me')
+    print(page+ ' - ' + g.city + ', '+g.state)
     page.app()
 
 
