@@ -4,6 +4,7 @@ import plotly_express as px
 import plotly.io as pio
 # pio.templates.default = 'plotly_white'
 import streamlit as st
+import geocoder
 import requests
 import about
 import experience
@@ -21,8 +22,8 @@ st.set_page_config(
     )
 
 def main():
-
-    print('hello!')
+    g = geocoder.ip('me')
+    print('main! ' + g.city + ', '+g.state)
 
     PAGES = {
     "About": about,

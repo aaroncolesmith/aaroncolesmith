@@ -1,6 +1,9 @@
 import streamlit as st
+import geocoder
 
 def app():
+    g = geocoder.ip('me')
+    print('about! ' + g.city + ', '+g.state)
     st.write("""
     # Aaron Cole Smith
     Hi, I'm Aaron. I am a data-driven problem solver who believes that most any problem can be solved with creativity, technology, and hard work. I'm a passionate product manager with an emphasis on using data to inform my decision making and to make innovative products and features.

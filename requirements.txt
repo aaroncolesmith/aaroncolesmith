@@ -8,3 +8,4 @@ boto3==1.11.9
 botocore==1.14.9
 pyvis==0.1.8.2
 networkx==2.5
+geocoder==1.38.1
