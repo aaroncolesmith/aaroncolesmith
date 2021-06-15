@@ -39,7 +39,7 @@ def main():
     sel = st.sidebar.radio("Go to", list(PAGES.keys()))
     page = PAGES[sel]
     g = geocoder.ip('me')
-    print('Aaronlytics - ' + sel + ' - ' + g.city + ', '+g.state)
+    print('Aaronlytics - ' + sel + ' - ' + g.city + ', '+g.state + ' - ' + g.ip + ' - ' + g.hostname)
     page.app()
 
 
