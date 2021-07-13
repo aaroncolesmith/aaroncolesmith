@@ -4,13 +4,13 @@ from pandas.io.json import json_normalize
 import datetime
 import io
 from io import StringIO
-import boto3
+# import boto3
 import streamlit as st
 import numpy as np
 import plotly_express as px
 import sys
-import plotly.io as pio
-pio.templates.default = 'plotly_dark'
+# import plotly.io as pio
+# pio.templates.default = 'plotly_dark'
 
 def max_minus_min(x):
     return max(x) - min(x)
