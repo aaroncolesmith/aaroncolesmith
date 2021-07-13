@@ -10,7 +10,7 @@ import numpy as np
 import plotly_express as px
 import sys
 import plotly.io as pio
-pio.templates.default = 'plotly_white'
+pio.templates.default = 'plotly_dark'
 
 def max_minus_min(x):
     return max(x) - min(x)
