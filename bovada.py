@@ -68,14 +68,15 @@ def line_chart(df, option):
                     line = dict(width=4))
     g.update_yaxes(title='Implied Probability',
                    showgrid=True,
-                   gridwidth=1,
-                   gridcolor='#D4D4D4'
+                   # gridwidth=1,
+                   # gridcolor='#D4D4D4'
                   )
-    g.update_layout(plot_bgcolor='white')
+    # g.update_layout(plot_bgcolor='white')
     g.update_xaxes(title='Date',
                   showgrid=False,
-                  gridwidth=1,
-                  gridcolor='#D4D4D4')
+                  # gridwidth=1,
+                  # gridcolor='#D4D4D4'
+                  )
     g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
@@ -92,15 +93,16 @@ def line_chart_probability(df,option):
     g.update_yaxes(range=[0, 1],
                    title='Implied Probability',
                    showgrid=True,
-                   gridwidth=1,
-                   gridcolor='#D4D4D4',
+                   # gridwidth=1,
+                   # gridcolor='#D4D4D4',
                    tickformat = ',.0%'
                   )
     g.update_layout(plot_bgcolor='white')
     g.update_xaxes(title='Date',
                   showgrid=False,
-                  gridwidth=1,
-                  gridcolor='#D4D4D4')
+                  # gridwidth=1,
+                  # gridcolor='#D4D4D4'
+                  )
     g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
