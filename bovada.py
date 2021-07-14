@@ -97,7 +97,7 @@ def line_chart_probability(df,option):
                    # gridcolor='#D4D4D4',
                    tickformat = ',.0%'
                   )
-    g.update_layout(plot_bgcolor='white')
+    # g.update_layout(plot_bgcolor='white')
     g.update_xaxes(title='Date',
                   showgrid=False,
                   # gridwidth=1,
