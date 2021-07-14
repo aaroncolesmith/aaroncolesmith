@@ -45,8 +45,12 @@ def update_colors(fig):
     return fig
 
 def app():
-    st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
+    # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
+    # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
+
+    st.title('NFL Mock Draft Database')
+    st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
+
 
     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
 
