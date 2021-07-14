@@ -63,11 +63,12 @@ def line_chart(df, option):
     # animation_frame='Date',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Betting Odds Over Time')
-    g.update_traces(mode='lines',
+    g.update_traces(mode='lines+markers',
                     opacity=.75,
+                    marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
                     line = dict(width=4))
     g.update_yaxes(title='Implied Probability',
-                   showgrid=True,
+                   showgrid=False,
                    # gridwidth=1,
                    # gridcolor='#D4D4D4'
                   )
@@ -87,12 +88,14 @@ def line_chart_probability(df,option):
     color='Winner',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Implied Probability Over Time')
-    g.update_traces(mode='lines',
+    g.update_traces(mode='lines+markers',
                     opacity=.75,
+                    marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
                     line = dict(width=4))
-    g.update_yaxes(range=[0, 1],
+    g.update_yaxes(
+    #              range=[0, 1],
                    title='Implied Probability',
-                   showgrid=True,
+                   showgrid=False,
                    # gridwidth=1,
                    # gridcolor='#D4D4D4',
                    tickformat = ',.0%'
