@@ -191,11 +191,15 @@ def app():
     for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
         col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
 
+
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     a.columns = ['title','date','count','unique']
-    a=a.sort_values('date',ascending=False)
+    a['date_sort'] = a['date'].astype('datetime64[h]')
+    a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
+    del a['date_sort']
     a['date']=a['date'].astype('str').str[:16].str[5:]
-    a=a['title'] + ' | ' + a['date']
+    a['title'] + ' | ' + a['date'] + ' | ' + str(a['unique'])
+    # a=a['title'] + ' | ' + a['date']
     a=a.to_list()
     a=np.insert(a,0,'')
 
