@@ -109,7 +109,6 @@ def line_chart_probability(df,option):
     g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
-
 def bovada_data():
     url_list = [
     'https://www.bovada.lv/services/sports/event/coupon/events/A/description/soccer?marketFilterId=rank&preMatchOnly=true&lang=en',
@@ -198,8 +197,8 @@ def app():
     a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
     del a['date_sort']
     a['date']=a['date'].astype('str').str[:16].str[5:]
-    a=a['title'] + ' | ' + a['date'] + ' | ' + str(a['unique'])
-    # a=a['title'] + ' | ' + a['date']
+    # a=a['title'] + ' | ' + a['date'] + ' | ' + str(a['unique'])
+    a=a['title'] + ' | ' + a['date']
     a=a.to_list()
     a=np.insert(a,0,'')
 
