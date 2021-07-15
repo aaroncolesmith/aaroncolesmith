@@ -193,7 +193,7 @@ def app():
 
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     a.columns = ['title','date','count','unique']
-    a['date_sort'] = a['date'].astype('datetime64[h]')
+    a['date_sort'] = a['date'].astype('datetime64[D]')
     a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
     del a['date_sort']
     a['date']=a['date'].astype('str').str[:16].str[5:]
