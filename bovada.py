@@ -191,8 +191,9 @@ def app():
     for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
         col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
 
-    # a=get_select_options(df, track_df)
-    a=df.groupby('title').agg({'date':'max'}).reset_index()
+    a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
+    a.columns = ['title','date','count','unique']
+    a=a.sort_values('date',ascending=False)
     a['date']=a['date'].astype('str').str[:16].str[5:]
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
