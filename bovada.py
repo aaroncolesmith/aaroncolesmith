@@ -24,6 +24,12 @@ def load_file():
     df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+    df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+    df['minutes_ago'] = round(df['seconds_ago']/60,2)
+    df['Prev_Probability']=df.groupby('title_desc')['Implied_Probability'].transform(lambda x: x.shift(1))
+    df['Implied_Probability'] = round(df['Implied_Probability'],4)
+    df['Prev_Probability'] = round(df['Prev_Probability'],4)
+
     return df
 
 @st.cache(suppress_st_warning=True)
@@ -159,6 +165,34 @@ def color_update(g):
 def ga(event_category, event_action, event_label):
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
 
+def recent_updates(df):
+    d=df.loc[(df.Pct_Change.abs() > .001) & (df.date >= df.date.max() - pd.Timedelta(hours=48)) & (df.Pct_Change.notnull())].sort_values('date',ascending=True).tail(50).sort_values('Pct_Change',ascending=False).reset_index(drop=True)
+
+    fig=px.scatter(d,
+              #  x='date',
+               y='Pct_Change',
+               hover_data=['title_desc','Implied_Probability','Prev_Probability', 'minutes_ago'])
+    fig.update_traces(opacity=.75,
+                    marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey'),
+                                color=np.where(d['Pct_Change'] > 0,'green',np.where(d['Pct_Change'] < 0,'red','red'))
+                                )
+                    )
+    fig.update_yaxes(
+                    title='Implied Probability',
+                    showgrid=False,
+                    tickformat = ',.0%'
+                  )
+
+    fig.update_xaxes(
+                    title='',
+                    zeroline=False,
+                    showgrid=False,
+                    showticklabels=False
+                  )
+
+
+    st.plotly_chart(fig)
+
 
 def app():
 
@@ -174,21 +208,23 @@ def app():
     # track_df = get_s3_data(bucket,track_file)
     ga('bovada','get_data',str(df.index.size))
 
-    rise=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=False).head(5)[['title_desc','Net_Change']]
-    fall=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=True).head(5)[['title_desc','Net_Change']]
+    recent_updates(df)
 
-    col1, col2, col3 = st.beta_columns(3)
-    col1.success("### On the Rise")
-    for i, r in rise.iterrows():
-        col1.write(r['title_desc']+ ' | +' +str(round(r['Net_Change']*100,2))+'%')
-
-    col2.warning("### Falling")
-    for i, r in fall.iterrows():
-        col2.write(r['title_desc']+ ' | ' +str(round(r['Net_Change']*100,2))+'%')
-
-    col3.info('### Recent Updates')
-    for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
-        col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
+    # rise=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=False).head(5)[['title_desc','Net_Change']]
+    # fall=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=True).head(5)[['title_desc','Net_Change']]
+    #
+    # col1, col2, col3 = st.beta_columns(3)
+    # col1.success("### On the Rise")
+    # for i, r in rise.iterrows():
+    #     col1.write(r['title_desc']+ ' | +' +str(round(r['Net_Change']*100,2))+'%')
+    #
+    # col2.warning("### Falling")
+    # for i, r in fall.iterrows():
+    #     col2.write(r['title_desc']+ ' | ' +str(round(r['Net_Change']*100,2))+'%')
+    #
+    # col3.info('### Recent Updates')
+    # for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
+    #     col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
 
 
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
