@@ -153,6 +153,7 @@ def bovada_data():
     return df
 
 def color_update(g):
+    # soccer teams
     g.for_each_trace(lambda trace: trace.update(line_color='#ef0107') if trace.name == "Arsenal" else ())
     g.for_each_trace(lambda trace: trace.update(line_color='#034694') if trace.name == "Chelsea" else ())
     g.for_each_trace(lambda trace: trace.update(line_color='#C8102E') if trace.name == "Liverpool" else ())
@@ -160,6 +161,39 @@ def color_update(g):
     g.for_each_trace(lambda trace: trace.update(line_color='#DA291C') if trace.name == "Manchester United" else ())
     g.for_each_trace(lambda trace: trace.update(line_color='#003090') if trace.name == "Leicester City" else ())
     g.for_each_trace(lambda trace: trace.update(line_color='#132257') if trace.name == "Tottenham Hotspur" else ())
+    # football teams
+    g.for_each_trace(lambda trace: trace.update(marker_color='#FB4F14') if trace.name == "Cincinnati Bengals" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#006778') if trace.name == "Jacksonville Jaguars" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#008E97') if trace.name == "Miami Dolphins" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#A71930') if trace.name == "Atlanta Falcons" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#125740') if trace.name == "New York Jets" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#97233F') if trace.name == "Arizona Cardinals" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#0076B6') if trace.name == "Detroit Lions" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#AA0000') if trace.name == "San Francisco 49Ers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#241773') if trace.name == "Baltimore Ravens" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#C60C30') if trace.name == "Buffalo Bills" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#0085CA') if trace.name == "Carolina Panthers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#C83803') if trace.name == "Chicago Bears" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#041E42') if trace.name == "Dallas Cowboys" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#FB4F14') if trace.name == "Denver Broncos" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#203731') if trace.name == "Green Bay Packers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#03202F') if trace.name == "Houston Texans" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#FF3C00') if trace.name == "Cleveland Browns" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#002C5F') if trace.name == "Indianapolis Colts" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#E31837') if trace.name == "Kansas City Chiefs" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#0080C6') if trace.name == "Los Angeles Chargers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#003594') if trace.name == "Los Angeles Rams" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#4F2683') if trace.name == "Minnesota Vikings" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#002244') if trace.name == "New England Patriots" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#D3BC8D') if trace.name == "New Orleans Saints" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#0B2265') if trace.name == "New York Giants" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#A5ACAF') if trace.name == "Las Vegas Raiders" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#004C54') if trace.name == "Philadelphia Eagles" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#FFB612') if trace.name == "Pittsburgh Steelers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#69BE28') if trace.name == "Seattle Seahawks" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#D50A0A') if trace.name == "Tampa Bay Buccaneers" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#4B92DB') if trace.name == "Tennessee Titans" else ())
+    g.for_each_trace(lambda trace: trace.update(marker_color='#773141') if trace.name == "Washington Football Team" else ())
     return g
 
 def ga(event_category, event_action, event_label):
@@ -171,7 +205,7 @@ def recent_updates(df):
     fig=px.scatter(d,
               #  x='date',
                y='Pct_Change',
-               hover_data=['title_desc','Implied_Probability','Prev_Probability', 'minutes_ago'])
+               hover_data=['title','description','Implied_Probability','Prev_Probability', 'minutes_ago'])
     fig.update_traces(opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey'),
                                 color=np.where(d['Pct_Change'] > 0,'green',np.where(d['Pct_Change'] < 0,'red','red'))
@@ -190,6 +224,7 @@ def recent_updates(df):
                     showticklabels=False
                   )
 
+    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability: %{customdata[2]:.2%}<br>Prev Probability: %{customdata[3]:.2%}<br>Pct Change: %{y}<br>Last Update: %{customdata[4]} mins ago')
 
     st.plotly_chart(fig)
 
