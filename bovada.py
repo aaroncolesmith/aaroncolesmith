@@ -205,6 +205,7 @@ def recent_updates(df):
     fig=px.scatter(d,
               #  x='date',
                y='Pct_Change',
+               title='Recent Updates - Wagers Rising / Falling',
                hover_data=['title','description','Implied_Probability','Prev_Probability', 'minutes_ago'])
     fig.update_traces(opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey'),
@@ -212,7 +213,7 @@ def recent_updates(df):
                                 )
                     )
     fig.update_yaxes(
-                    title='Implied Probability',
+                    title='Percent Change',
                     showgrid=False,
                     tickformat = ',.0%'
                   )
