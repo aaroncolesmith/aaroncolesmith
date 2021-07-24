@@ -225,7 +225,8 @@ def recent_updates(df):
                     showticklabels=False
                   )
 
-    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability: %{customdata[2]:.2%}<br>Prev Probability: %{customdata[3]:.2%}<br>Pct Change: %{y}<br>Last Update: %{customdata[4]} mins ago')
+    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability Change: %{customdata[3]:.2%} > %{customdata[2]:.2%}<br>Pct Change: %{y}<br>Last Update: %{customdata[4]} mins ago')
+
 
     st.plotly_chart(fig)
 
