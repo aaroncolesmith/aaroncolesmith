@@ -6,7 +6,7 @@ def app():
     ### Olive - Process Mining / Process Mapping Product | September 2018 - July 2019
     **Problem:** Process discovery and process documentation were very difficult and time consuming for our team. We would go into meetings with customers and struggle to identify what were some good areas for automation and we would try to document existing processes, but interviews would only uncover a small set of the entire scope of the process.
 
-    **Solution:** We built Pupil which was a Process Discover & Process Mapping product. Pupil would ingest process related data like system logs and using machine learning and process mining algorithms, it would cluster processes together. We could then display those processes in a 3d scatter visualization that would allow users to group similar sets of processes together. Finally, they could output those groups to a process map which could be handed off to the automation team to build an Olive.""")
+    **Solution:** We built Pupil which was a Process Discovery & Process Mapping product. Pupil would ingest process related data like system logs and using machine learning and process mining algorithms, it would cluster processes together. We could then display those processes in a 3d scatter visualization that would allow users to group similar sets of processes together. Finally, they could output those groups to a process map which could be handed off to the automation team to build an Olive.""")
     st.image('./images/pupil.gif',caption='Pupil was used for Process Mining & Process Discovery',use_column_width=True)
 
     st.write("""

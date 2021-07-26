@@ -69,7 +69,8 @@ def line_chart(df, option):
     # animation_frame='Date',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Betting Odds Over Time')
-    g.update_traces(mode='lines+markers',
+    g.update_traces(mode='lines',
+                    line_shape='spline',
                     opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
                     line = dict(width=4))
@@ -94,7 +95,8 @@ def line_chart_probability(df,option):
     color='Winner',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Implied Probability Over Time')
-    g.update_traces(mode='lines+markers',
+    g.update_traces(mode='lines',
+                    line_shape='spline',
                     opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
                     line = dict(width=4))
@@ -200,10 +202,8 @@ def ga(event_category, event_action, event_label):
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
 
 def recent_updates(df):
-    d=df.loc[(df.Pct_Change.abs() > .001) & (df.date >= df.date.max() - pd.Timedelta(hours=48)) & (df.Pct_Change.notnull())].sort_values('date',ascending=True).tail(50).sort_values('Pct_Change',ascending=False).reset_index(drop=True)
-
+    d=df.loc[(df.Pct_Change.abs() > .01) & (df.date >= df.date.max() - pd.Timedelta(hours=4)) & (df.Pct_Change.notnull())].sort_values('Pct_Change',ascending=False)
     fig=px.scatter(d,
-              #  x='date',
                y='Pct_Change',
                title='Recent Updates - Wagers Rising / Falling',
                hover_data=['title','description','Implied_Probability','Prev_Probability', 'minutes_ago'])
@@ -225,7 +225,7 @@ def recent_updates(df):
                     showticklabels=False
                   )
 
-    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability Change: %{customdata[3]:.2%} > %{customdata[2]:.2%}<br>Pct Change: %{y}<br>Last Update: %{customdata[4]} mins ago')
+    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability Change: %{customdata[3]:.2%} > %{customdata[2]:.2%}<br>Pct Change: %{y:.1%}<br>Last Update: %{customdata[4]} mins ago')
 
 
     st.plotly_chart(fig)
