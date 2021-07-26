@@ -218,15 +218,17 @@ def recent_updates(df):
                     tickformat = ',.0%'
                   )
 
+    fig.update_layout(xaxis_type = 'category')
+
     fig.update_xaxes(
                     title='',
                     zeroline=False,
                     showgrid=False,
-                    showticklabels=False
+                    showticklabels=False,
+                    categoryorder='total descending'
                   )
 
     fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability Change: %{customdata[3]:.2%} > %{customdata[2]:.2%}<br>Pct Change: %{y:.1%}<br>Last Update: %{customdata[4]} mins ago')
-
 
     st.plotly_chart(fig)
 
