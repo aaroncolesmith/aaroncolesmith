@@ -33,6 +33,10 @@ def load_file():
     return df
 
 @st.cache(suppress_st_warning=True)
+def load_scatter_data():
+    return pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_scatter.csv')
+
+@st.cache(suppress_st_warning=True)
 def get_s3_data(bucket, key):
     s3 = boto3.client('s3')
     obj = s3.get_object(Bucket=bucket, Key=key)
@@ -201,8 +205,9 @@ def color_update(g):
 def ga(event_category, event_action, event_label):
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
 
-def recent_updates(df):
-    d=df.loc[(df.Pct_Change.abs() > .01) & (df.date >= df.date.max() - pd.Timedelta(hours=4)) & (df.Pct_Change.notnull())].sort_values('Pct_Change',ascending=False).reset_index(drop=False)
+def recent_updates():
+    # d=df.loc[(df.Pct_Change.abs() > .01) & (df.date >= df.date.max() - pd.Timedelta(hours=4)) & (df.Pct_Change.notnull())].sort_values('Pct_Change',ascending=False).reset_index(drop=False)
+    d=load_scatter_data()
     fig=px.scatter(d,
                y='Pct_Change',
                title='Recent Updates - Wagers Rising / Falling',
@@ -241,13 +246,15 @@ def app():
     df_file = 'bovada_requests.csv'
     track_file = 'track_df.csv'
 
+    recent_updates()
+
     df = load_file()
     # df = get_s3_data(bucket,df_file)
 
     # track_df = get_s3_data(bucket,track_file)
     ga('bovada','get_data',str(df.index.size))
 
-    recent_updates(df)
+    # recent_updates(df)
 
     # rise=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=False).head(5)[['title_desc','Net_Change']]
     # fall=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=True).head(5)[['title_desc','Net_Change']]
