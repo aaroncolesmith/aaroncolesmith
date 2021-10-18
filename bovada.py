@@ -26,7 +26,7 @@ def load_file():
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
-    df['Prev_Probability']=df.groupby('title_desc')['Implied_Probability'].transform(lambda x: x.shift(1))
+    df['Prev_Probability']=df.groupby(['title','description'])['Implied_Probability'].transform(lambda x: x.shift(1))
     df['Implied_Probability'] = round(df['Implied_Probability'],4)
     df['Prev_Probability'] = round(df['Prev_Probability'],4)
 
