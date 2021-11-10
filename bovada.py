@@ -124,7 +124,6 @@ def line_chart_probability(df,option):
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability_initial(df,option):
-    st.write(df.head(5))
     df['Implied_Probability_Initial_Change']=df.groupby('Winner')['Implied_Probability'].transform(lambda x: (x-x.iloc[0]))
     g=px.line(df,
     x='Date',
@@ -319,7 +318,7 @@ def app():
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
             line_chart_probability(filtered_df,option)
-            line_chart_probability_initial(df,option)
+            line_chart_probability_initial(filtered_df,option)
             line_chart(filtered_df,option)
             table_output(filtered_df)
             ga('bovada','view_option',option)
