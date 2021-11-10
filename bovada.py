@@ -70,6 +70,7 @@ def line_chart(df, option):
     x='Date',
     y='Price',
     color='Winner',
+    render_mode='svg',
     # animation_frame='Date',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Betting Odds Over Time')
@@ -97,6 +98,7 @@ def line_chart_probability(df,option):
     x='Date',
     y='Implied_Probability',
     color='Winner',
+    render_mode='svg',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Implied Probability Over Time')
     g.update_traces(mode='lines',
