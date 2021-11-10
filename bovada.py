@@ -123,6 +123,37 @@ def line_chart_probability(df,option):
     g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
+def line_chart_probability_initial(df,option):
+    df['Implied_Probability_Initial_Change']=df.groupby('Winner')['Implied_Probability'].transform(lambda x: (x-x.iloc[0]))
+    g=px.line(df,
+    x='Date',
+    y='Implied_Probability_Initial_Change',
+    color='Winner',
+    render_mode='svg',
+    color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
+    title='Implied Probability Over Time')
+    g.update_traces(mode='lines',
+                    line_shape='spline',
+                    opacity=.75,
+                    marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
+                    line = dict(width=4))
+    g.update_yaxes(
+    #              range=[0, 1],
+                   title='Implied Probability',
+                   showgrid=False,
+                   # gridwidth=1,
+                   # gridcolor='#D4D4D4',
+                   tickformat = ',.0%'
+                  )
+    # g.update_layout(plot_bgcolor='white')
+    g.update_xaxes(title='Date',
+                  showgrid=False,
+                  # gridwidth=1,
+                  # gridcolor='#D4D4D4'
+                  )
+    g=color_update(g)
+    st.plotly_chart(g,use_container_width=True)
+
 def bovada_data():
     url_list = [
     'https://www.bovada.lv/services/sports/event/coupon/events/A/description/soccer?marketFilterId=rank&preMatchOnly=true&lang=en',
@@ -251,29 +282,8 @@ def app():
     recent_updates()
 
     df = load_file()
-    # df = get_s3_data(bucket,df_file)
 
-    # track_df = get_s3_data(bucket,track_file)
     ga('bovada','get_data',str(df.index.size))
-
-    # recent_updates(df)
-
-    # rise=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=False).head(5)[['title_desc','Net_Change']]
-    # fall=df.loc[(df.date.dt.date == df.date.dt.date.max()) & (df.Pct_Change != 0)].sort_values('Net_Change',ascending=True).head(5)[['title_desc','Net_Change']]
-    #
-    # col1, col2, col3 = st.beta_columns(3)
-    # col1.success("### On the Rise")
-    # for i, r in rise.iterrows():
-    #     col1.write(r['title_desc']+ ' | +' +str(round(r['Net_Change']*100,2))+'%')
-    #
-    # col2.warning("### Falling")
-    # for i, r in fall.iterrows():
-    #     col2.write(r['title_desc']+ ' | ' +str(round(r['Net_Change']*100,2))+'%')
-    #
-    # col3.info('### Recent Updates')
-    # for i,r in df[['title_desc','date','seconds_ago']].sort_values(['seconds_ago'],ascending=True).head(5).iterrows():
-    #     col3.write(r['title_desc'] + ' - ' + str(round(r['seconds_ago']/60,2)) + ' minutes ago')
-
 
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     a.columns = ['title','date','count','unique']
@@ -281,7 +291,6 @@ def app():
     a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
     del a['date_sort']
     a['date']=a['date'].astype('str').str[:16].str[5:]
-    # a=a['title'] + ' | ' + a['date'] + ' | ' + str(a['unique'])
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
     a=np.insert(a,0,'')
@@ -290,11 +299,6 @@ def app():
     option = option[:-14]
 
     if len(option) > 0:
-
-            # track_df = track_df.append({'date' : datetime.datetime.now()
-            #                  ,'selection' :  option,
-            #                  'count' : 1} , ignore_index=True)
-            # save_to_s3(track_df, bucket, track_file)
 
             st.markdown('# '+option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
@@ -314,6 +318,7 @@ def app():
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
             line_chart_probability(filtered_df,option)
+            line_chart_probability_initial(df,option)
             line_chart(filtered_df,option)
             table_output(filtered_df)
             ga('bovada','view_option',option)
