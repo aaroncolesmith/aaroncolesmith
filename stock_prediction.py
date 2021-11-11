@@ -58,7 +58,7 @@ def app():
                                 mode='markers',
                                 marker_color='#626EF6',
                                 marker=dict(size=4,
-                                            opacity=.5,
+                                            opacity=1,
                                             line=dict(width=1,
                                                         color='#1320B2'))))
         fig.add_trace(go.Scattergl(x=d2.ds,
