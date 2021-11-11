@@ -297,10 +297,9 @@ def app():
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)
-    option = option[:-14]
+    # option = option[:-14]
 
     if len(option) > 0:
-
             st.markdown('# '+option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
 
