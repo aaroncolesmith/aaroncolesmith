@@ -4,11 +4,19 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
+import random
+
+foo = ['a', 'b', 'c', 'd', 'e']
+print(random.choice(foo))
 
 def app():
+    st.title('Stock Predictions')
+    stock_list = ['SPY','TSLA','AAPL','NKE','GME']
+    initial_stock = random.choice(stock_list)
+
     with st.form("input_form"):
-        st.write_text("Pick a stock and see a prediction")
-        ticker = st.input_text("Stock Ticker", value="SPY")
+        st.write("Pick a stock and see a prediction")
+        ticker = st.input_text("Stock Ticker", value=initial_stock)
         years_back = st.number_input("Years Back",min_value=.5, max_value=10, value=2.5, step=0.25)
         years_fwd = st.number_input("Years to Predict",min_value=.5, max_value=10, value=1, step=0.25)
         submit_button = st.form_submit_button(label="Go")
