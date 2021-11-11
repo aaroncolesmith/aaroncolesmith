@@ -32,7 +32,7 @@ def load_file():
 
     return df
 
-@st.cache(suppress_st_warning=True)
+# @st.cache(suppress_st_warning=True)
 def load_scatter_data():
     return pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_scatter.csv')
 
@@ -270,6 +270,9 @@ def recent_updates():
 
     st.plotly_chart(fig)
 
+    d['date']=d['date'].astype('str').str[:16].str[5:]
+    d['title']=d['title'] + ' | ' + d['date']
+    
     return d['title'].unique()
 
 
@@ -300,13 +303,13 @@ def app():
     # option = option[:-14]
 
     if len(option) > 0:
-            st.markdown('# '+option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
             try:
                 option = option.split(' |')[0]
             except:
                 pass
-
+            st.markdown('#### '+option)
+            
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
                 filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
