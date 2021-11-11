@@ -15,6 +15,7 @@ import nbaclusters
 import nba_redraftables
 import bovada
 import nfl_mock_draft
+import stock_prediction
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -32,7 +33,8 @@ def main():
     "CLSTR": clstr,
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
-    "NFL Mock Draft DB": nfl_mock_draft
+    "NFL Mock Draft DB": nfl_mock_draft,
+    "Stock Predications": stock_prediction
     }
 
     st.sidebar.title('Navigation')
