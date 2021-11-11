@@ -302,6 +302,10 @@ def app():
     if len(option) > 0:
             st.markdown('# '+option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
+            try:
+                option = option.split(' |')[0]
+            except:
+                pass
 
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
