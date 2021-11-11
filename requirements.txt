@@ -9,5 +9,6 @@ botocore==1.14.9
 pyvis==0.1.8.2
 networkx==2.5
 geocoder==1.38.1
+pystan==3.3.0
 fbprophet==0.7.1
 yahooquery==2.2.15
