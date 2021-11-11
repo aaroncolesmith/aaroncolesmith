@@ -270,16 +270,18 @@ def recent_updates():
 
     st.plotly_chart(fig)
 
+    return d['title'].unique()
+
 
 def app():
 
     st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
-    bucket = 'bovada-scrape'
-    df_file = 'bovada_requests.csv'
-    track_file = 'track_df.csv'
+    # bucket = 'bovada-scrape'
+    # df_file = 'bovada_requests.csv'
+    # track_file = 'track_df.csv'
 
-    recent_updates()
+    recent_list = recent_updates()
 
     df = load_file()
 
@@ -293,6 +295,7 @@ def app():
     a['date']=a['date'].astype('str').str[:16].str[5:]
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
+    a=recent_list.extend(a)
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)

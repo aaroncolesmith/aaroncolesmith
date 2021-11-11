@@ -34,7 +34,7 @@ def main():
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
     "NFL Mock Draft DB": nfl_mock_draft,
-    "Stock Predications": stock_prediction
+    "Stock Predictions": stock_prediction
     }
 
     st.sidebar.title('Navigation')
