@@ -120,6 +120,13 @@ def app():
     ga('Coronavirus-Viz','Page Load', 'Page Load')
 
     days_back = (datetime.datetime.now() - df_all.Date.min()).days
+
+    # with st.sidebar.form(key ='Form1'):
+    #     st.markdown('## COVID-Viz Navigation')
+    #     radio_selection = st.radio('Select a page:',['Main Dashboard','Breakdown by Country'])
+    #     days_back = st.slider('How many days back',30,days_back,90)
+    #     submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
+
     st.sidebar.markdown('## COVID-Viz Navigation')
     radio_selection = st.sidebar.radio('Select a page:',['Main Dashboard','Breakdown by Country'])
     days_back = st.sidebar.slider('How many days back',30,days_back,90)

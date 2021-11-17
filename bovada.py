@@ -18,7 +18,7 @@ def max_minus_min(x):
 def last_minus_avg(x):
     return last(x) - mean(x)
 
-@st.cache(suppress_st_warning=True)
+@st.cache(ttl=43200, suppress_st_warning=True)
 def load_file():
     # df = pd.read_csv('./data/bovada.csv')
     df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
@@ -308,7 +308,7 @@ def app():
                 option = option.split(' |')[0]
             except:
                 pass
-            st.markdown('#### '+option)
+            # st.markdown('#### '+option)
             
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
@@ -327,7 +327,7 @@ def app():
             line_chart_probability(filtered_df,option)
             line_chart_probability_initial(filtered_df,option)
             line_chart(filtered_df,option)
-            table_output(filtered_df)
+            # table_output(filtered_df)
             ga('bovada','view_option',option)
 
 
