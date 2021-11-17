@@ -53,9 +53,12 @@ def app():
 
     draft_year = st.selectbox('Draft Year?',
         ('2022','2021'))
+    st.write(draft_year)
     if draft_year == 2022:
+        st.write('year is 22')
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
     if draft_year == 2021:
+        st.write('year is 21')
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
 
     d=pd.merge(df.iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
