@@ -78,7 +78,8 @@ def line_chart(df, option):
                     line_shape='spline',
                     opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
-                    line = dict(width=4))
+                    line = dict(width=4),
+                    hovertemplate='%{x} - %{y}')
     g.update_yaxes(title='Implied Probability',
                    showgrid=False,
                    # gridwidth=1,
@@ -105,7 +106,8 @@ def line_chart_probability(df,option):
                     line_shape='spline',
                     opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
-                    line = dict(width=4))
+                    line = dict(width=4),
+                    hovertemplate='%{x} - %{y}')
     g.update_yaxes(
     #              range=[0, 1],
                    title='Implied Probability',
@@ -136,7 +138,8 @@ def line_chart_probability_initial(df,option):
                     line_shape='spline',
                     opacity=.75,
                     marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
-                    line = dict(width=4))
+                    line = dict(width=4),
+                    hovertemplate='%{x} - %{y}')
     g.update_yaxes(
     #              range=[0, 1],
                    title='Implied Probability',
