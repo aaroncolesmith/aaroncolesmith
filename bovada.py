@@ -300,6 +300,10 @@ def app():
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
     a = recent_list + a
+    tmp_list = []
+    [tmp_list.append(x) for x in a if x not in tmp_list]
+    a=tmp_list
+    del tmp_list
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)
