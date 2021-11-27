@@ -35,6 +35,7 @@ def load_file():
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
     df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_scatter.csv')
+    df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
     return df
