@@ -75,6 +75,7 @@ def line_chart(df, option):
     y='Price',
     color='Winner',
     render_mode='svg',
+    color_discrete_map=color_map,
     # animation_frame='Date',
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Betting Odds Over Time')
@@ -95,7 +96,7 @@ def line_chart(df, option):
                   # gridwidth=1,
                   # gridcolor='#D4D4D4'
                   )
-    g=color_update(g)
+    # g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability(df,option):
@@ -104,6 +105,7 @@ def line_chart_probability(df,option):
     y='Implied_Probability',
     color='Winner',
     render_mode='svg',
+    color_discrete_map=color_map,
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Implied Probability Over Time')
     g.update_traces(mode='lines',
@@ -126,7 +128,7 @@ def line_chart_probability(df,option):
                   # gridwidth=1,
                   # gridcolor='#D4D4D4'
                   )
-    g=color_update(g)
+    # g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability_initial(df,option):
@@ -136,6 +138,7 @@ def line_chart_probability_initial(df,option):
     y='Implied_Probability_Initial_Change',
     color='Winner',
     render_mode='svg',
+    color_discrete_map=color_map,
     color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
     title='Implied Probability - Change Since Initial Odds')
     g.update_traces(mode='lines',
@@ -158,7 +161,7 @@ def line_chart_probability_initial(df,option):
                   # gridwidth=1,
                   # gridcolor='#D4D4D4'
                   )
-    g=color_update(g)
+    # g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
 def bovada_data():
@@ -242,6 +245,14 @@ def color_update(g):
     g.for_each_trace(lambda trace: trace.update(marker_color='#773141') if trace.name == "Washington Football Team" else ())
     return g
 
+def get_color_map():
+  df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/color_map.csv')
+  trans_df = df[['team','primary_color']].set_index('team').T
+  color_map=trans_df.to_dict('index')['primary_color']
+
+  # word_freq.update({'before': 23})
+  return color_map
+
 def ga(event_category, event_action, event_label):
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
 
@@ -284,6 +295,8 @@ def recent_updates():
 
 
 def app():
+
+    color_map = get_color_map()
 
     st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
