@@ -6,6 +6,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import random
 
+
+
+def ga(event_category, event_action, event_label):
+    st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec='+event_category+'&ea='+event_action+'&el='+event_label+'">',unsafe_allow_html=True)
+
+
 def app():
     st.title('Stock Predictions')
     # stock_list = ['SPY','TSLA','AAPL','NKE','GME']
@@ -76,6 +82,7 @@ def app():
         fig.update_xaxes(title='Date')
 
         st.plotly_chart(fig)
+        ga('stock_prediction','stock',ticker)
 
 if __name__ == "__main__":
     #execute

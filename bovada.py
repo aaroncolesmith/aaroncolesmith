@@ -9,8 +9,6 @@ import streamlit as st
 import numpy as np
 import plotly_express as px
 import sys
-# import plotly.io as pio
-# pio.templates.default = 'plotly_dark'
 
 def max_minus_min(x):
     return max(x) - min(x)
@@ -69,7 +67,7 @@ def get_select_options(df, track_df):
 def table_output(df):
     st.write(df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min',max_minus_min,'count']}).sort_values([('Price', 'mean')], ascending=True))
 
-def line_chart(df, option):
+def line_chart(df, option, color_map):
     g=px.line(df,
     x='Date',
     y='Price',
@@ -99,7 +97,7 @@ def line_chart(df, option):
     # g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
-def line_chart_probability(df,option):
+def line_chart_probability(df,option,color_map):
     g=px.line(df,
     x='Date',
     y='Implied_Probability',
@@ -131,7 +129,7 @@ def line_chart_probability(df,option):
     # g=color_update(g)
     st.plotly_chart(g,use_container_width=True)
 
-def line_chart_probability_initial(df,option):
+def line_chart_probability_initial(df,option,color_map):
     df['Implied_Probability_Initial_Change']=df.groupby('Winner')['Implied_Probability'].transform(lambda x: (x-x.iloc[0]))
     g=px.line(df,
     x='Date',
@@ -348,9 +346,9 @@ def app():
                 f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'mean')], ascending=True).reset_index(drop=False).head(10)
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
-            line_chart_probability(filtered_df,option)
-            line_chart_probability_initial(filtered_df,option)
-            line_chart(filtered_df,option)
+            line_chart_probability(filtered_df,option,color_map)
+            line_chart_probability_initial(filtered_df,option,color_map)
+            line_chart(filtered_df,option,color_map)
             # table_output(filtered_df)
             ga('bovada','view_option',option)
 
