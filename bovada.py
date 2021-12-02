@@ -10,6 +10,9 @@ import numpy as np
 import plotly_express as px
 import sys
 
+color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF']
+
+
 def max_minus_min(x):
     return max(x) - min(x)
 
@@ -75,7 +78,7 @@ def line_chart(df, option, color_map):
     render_mode='svg',
     color_discrete_map=color_map,
     # animation_frame='Date',
-    color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
+    color_discrete_sequence=color_discrete_sequence,
     title='Betting Odds Over Time')
     g.update_traces(mode='lines',
                     line_shape='spline',
