@@ -10,7 +10,7 @@ import numpy as np
 import plotly_express as px
 import sys
 
-color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF']
+color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A']
 
 
 def max_minus_min(x):
@@ -108,7 +108,7 @@ def line_chart_probability(df,option,color_map):
     color='Winner',
     render_mode='svg',
     color_discrete_map=color_map,
-    color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
+    color_discrete_sequence=color_discrete_sequence,
     title='Implied Probability Over Time')
     g.update_traces(mode='lines',
                     line_shape='spline',
@@ -141,7 +141,7 @@ def line_chart_probability_initial(df,option,color_map):
     color='Winner',
     render_mode='svg',
     color_discrete_map=color_map,
-    color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF'],
+    color_discrete_sequence=color_discrete_sequence,
     title='Implied Probability - Change Since Initial Odds')
     g.update_traces(mode='lines',
                     line_shape='spline',
