@@ -86,6 +86,8 @@ def app():
     st.markdown("<h4 style='text-align: center; color: black;'>Network diagram showing relationships between teams and drafted players in recent mock drafts</h4>", unsafe_allow_html=True)
 
 
+#TEAM PICK VERSION OF THE NETWORK GRAPH
+
     d=df.groupby(['player','team_pick','team_img']).size().to_frame('cnt').reset_index()
 
     player=d.groupby(['player']).agg({'cnt':'sum'}).reset_index()
@@ -108,7 +110,6 @@ def app():
                  heading='')
 
     nt.force_atlas_2based(damping=2)
-
 
     icon = st.checkbox('Show icons (slows it down a bit)')
 
@@ -137,6 +138,61 @@ def app():
                     value = r['cnt'],
                     color='#9DA0DC',
                     title=r['team_pick']+' picked '+r['player']+' '+str(r['cnt'])+ '  times')
+    
+ # TEAM ONLY VERSION OF THE NETWORK GRAPH 
+    d=df.groupby(['player','team','team_img']).size().to_frame('cnt').reset_index()
+
+    player=d.groupby(['player']).agg({'cnt':'sum'}).reset_index()
+    player.columns=['player','times_picked']
+    team=d.groupby(['team']).agg({'cnt':'sum'}).reset_index()
+    team.columns=['team','team_times_picked']
+
+    d=pd.merge(d,player)
+    d=pd.merge(d,team)
+
+    d=d.sort_values('cnt',ascending=False)
+
+    d['pick_str'] = d['team']+ ' - '+d['cnt'].astype('str')+' times'
+    d['player_pick_str'] = d['player']+ ' - '+d['cnt'].astype('str')+' times'
+
+    nt = Network(directed=False,
+                # notebook=True,
+                height="480px",
+                width="620px",
+                heading='')
+
+    nt.force_atlas_2based(damping=2)
+
+    icon = st.checkbox('Show icons (slows it down a bit)')
+
+    for i, r in d.iterrows():
+    nt.add_node(r['player'],
+                size=r['times_picked'],
+                color={'background':'#40D0EF','border':'#03AED3'},
+                title = '<b>'+r['player'] + ' - Picked '+str(r['times_picked'])+'  times </b> <br> ' + d.loc[d.player==r['player']].groupby('player').apply(lambda x: ', <br>'.join(x.pick_str)).to_frame('pick_str').reset_index()['pick_str'].item())
+    if icon:
+        nt.add_node(r['team'],
+                    size=r['team_times_picked'],
+                    color={'background':'#FA70C8','border':'#EC0498'},
+                    shape='image',
+                    image =r['team_img'],
+                    title='<b>' +r['team'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team == r['team']].groupby('team').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
+    else:
+        nt.add_node(r['team'],
+                    size=r['team_times_picked'],
+                    color={'background':'#FA70C8','border':'#EC0498'},
+                    # shape='image',
+                    # image =r['team_img'],
+                    title='<b>' +r['team'] + ' - ' +str(r['team_times_picked'])+'  total picks</b> <br> ' + d.loc[d.team == r['team']].groupby('team').apply(lambda x: ', <br>'.join(x.player_pick_str)).to_frame('cnt').reset_index()['cnt'].item())
+
+    nt.add_edge(r['player'],
+                r['team'],
+                value = r['cnt'],
+                color='#9DA0DC',
+                title=r['team']+' picked '+r['player']+' '+str(r['cnt'])+ '  times')
+
+
+# SHOW THE NETWORK GRAPH                       
     nt.show('mock_draft_network.html')
 
     html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
@@ -231,6 +287,7 @@ def app():
 
     f = lambda x: x["player_details"].partition('|')[0]
     d['position']=d.apply(f, axis=1)
+    
 
     # d2=d.groupby(['team_pick','player','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
     # fig=px.bar(d2,
