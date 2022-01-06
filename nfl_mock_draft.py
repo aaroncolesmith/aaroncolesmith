@@ -232,14 +232,25 @@ def app():
     f = lambda x: x["player_details"].partition('|')[0]
     d['position']=d.apply(f, axis=1)
 
-    d2=d.groupby(['team_pick','player','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    # d2=d.groupby(['team_pick','player','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    # fig=px.bar(d2,
+    #        orientation='h',
+    #        y=d2['team_pick'] + ' - ' + d2['player'],
+    #        color='position',
+    #        x='cnt',
+    #        title='How many times a Pick / Team has been mocked to a player')
+    # fig.update_yaxes(title='Pick / Team', categoryorder='total descending')
+    # fig.update_xaxes(title='# of Times Mocked')
+    # fig.update_yaxes(autorange="reversed")
+
+    d2=d.groupby(['team','player','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
     fig=px.bar(d2,
            orientation='h',
-           y=d2['team_pick'] + ' - ' + d2['player'],
+           y=d2['team'] + ' - ' + d2['player'],
            color='position',
            x='cnt',
-           title='How many times a Pick / Team has been mocked to a player')
-    fig.update_yaxes(title='Pick / Team', categoryorder='total descending')
+           title='How many times a Team has been mocked to a player')
+    fig.update_yaxes(title='Team', categoryorder='total descending')
     fig.update_xaxes(title='# of Times Mocked')
     fig.update_yaxes(autorange="reversed")
 
@@ -247,14 +258,26 @@ def app():
     st.plotly_chart(fig, use_container_width=True)
 
 
-    d2=d.groupby(['team_pick','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    # d2=d.groupby(['team_pick','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    # fig=px.bar(d2,
+    #        orientation='h',
+    #        y=d2['team_pick'] + ' - ' + d2['position'],
+    #        x='cnt',
+    #        title='How many times a Pick / Team has been mocked to a Position')
+
+    # fig.update_yaxes(title='Pick / Team', categoryorder='total descending')
+    # fig.update_xaxes(title='# of Times Mocked')
+    # fig.update_yaxes(autorange="reversed")
+
+
+    d2=d.groupby(['team','position']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
     fig=px.bar(d2,
            orientation='h',
-           y=d2['team_pick'] + ' - ' + d2['position'],
+           y=d2['team'] + ' - ' + d2['position'],
            x='cnt',
-           title='How many times a Pick / Team has been mocked to a Position')
+           title='How many times a Team has been mocked to a Position')
 
-    fig.update_yaxes(title='Pick / Team', categoryorder='total descending')
+    fig.update_yaxes(title='Pick', categoryorder='total descending')
     fig.update_xaxes(title='# of Times Mocked')
     fig.update_yaxes(autorange="reversed")
 
