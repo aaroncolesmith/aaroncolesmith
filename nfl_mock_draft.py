@@ -111,14 +111,14 @@ def app():
 
     nt.force_atlas_2based(damping=2)
 
-    icon = st.checkbox('Show icons (slows it down a bit)')
+    icon1 = st.checkbox('Show icons (slows it down a bit)')
 
     for i, r in d.iterrows():
         nt.add_node(r['player'],
                     size=r['times_picked'],
                     color={'background':'#40D0EF','border':'#03AED3'},
                     title = '<b>'+r['player'] + ' - Picked '+str(r['times_picked'])+'  times </b> <br> ' + d.loc[d.player==r['player']].groupby('player').apply(lambda x: ', <br>'.join(x.pick_str)).to_frame('pick_str').reset_index()['pick_str'].item())
-        if icon:
+        if icon1:
             nt.add_node(r['team_pick'],
                         size=r['team_times_picked'],
                         color={'background':'#FA70C8','border':'#EC0498'},
@@ -163,14 +163,14 @@ def app():
 
     nt.force_atlas_2based(damping=2)
 
-    icon = st.checkbox('Show icons (slows it down a bit)')
+    icon2 = st.checkbox('Show icons (slows it down a bit)')
 
     for i, r in d.iterrows():
         nt.add_node(r['player'],
                     size=r['times_picked'],
                     color={'background':'#40D0EF','border':'#03AED3'},
                     title = '<b>'+r['player'] + ' - Picked '+str(r['times_picked'])+'  times </b> <br> ' + d.loc[d.player==r['player']].groupby('player').apply(lambda x: ', <br>'.join(x.pick_str)).to_frame('pick_str').reset_index()['pick_str'].item())
-        if icon:
+        if icon2:
             nt.add_node(r['team'],
                         size=r['team_times_picked'],
                         color={'background':'#FA70C8','border':'#EC0498'},
