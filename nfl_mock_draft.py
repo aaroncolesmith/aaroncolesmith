@@ -111,7 +111,7 @@ def app():
 
     nt.force_atlas_2based(damping=2)
 
-    icon1 = st.checkbox('Show icons (slows it down a bit)'key='icon1')
+    # icon1 = st.checkbox('Show icons (slows it down a bit)'key='icon1')
 
     for i, r in d.iterrows():
         nt.add_node(r['player'],
@@ -163,7 +163,7 @@ def app():
 
     nt.force_atlas_2based(damping=2)
 
-    icon2 = st.checkbox('Show icons (slows it down a bit)',key='icon2')
+    # icon2 = st.checkbox('Show icons (slows it down a bit)',key='icon2')
 
     for i, r in d.iterrows():
         nt.add_node(r['player'],
