@@ -5,6 +5,7 @@ from pyvis import network as net
 import streamlit.components.v1 as components
 import networkx as nx
 import plotly_express as px
+import numpy as np
 from IPython.core.display import HTML
 
 
