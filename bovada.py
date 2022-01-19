@@ -42,7 +42,15 @@ def load_scatter_data():
     df['hours_ago'] = round(df['minutes_ago']/60,2)
 
     last_update = str(round((datetime.datetime.utcnow() - df['date'].max()).total_seconds(),2))
-    return df, last_update
+
+    if last_update <60:
+        st.write('Last update: '+str(last_update)+' seconds ago')
+    elif last_update <3600:
+        st.write('Last update: '+str(last_update/60)+' minutes ago')
+    else:
+        st.write('Last update: '+str(last_update/3600)+' hours ago')
+
+    return df
 
 @st.cache(suppress_st_warning=True)
 def get_s3_data(bucket, key):
@@ -181,7 +189,7 @@ def ga(event_category, event_action, event_label):
 
 def recent_updates():
     # d=df.loc[(df.Pct_Change.abs() > .01) & (df.date >= df.date.max() - pd.Timedelta(hours=4)) & (df.Pct_Change.notnull())].sort_values('Pct_Change',ascending=False).reset_index(drop=False)
-    d, last_update=load_scatter_data()
+    d=load_scatter_data()
     fig=px.scatter(d,
                y='Pct_Change',
                title='Recent Updates - Wagers Rising / Falling',
@@ -214,7 +222,7 @@ def recent_updates():
     d['date']=d['date'].astype('str').str[:16].str[5:]
     d['title']=d['title'] + ' | ' + d['date']
     
-    return d['title'].unique(), last_update
+    return d['title'].unique()
 
 
 def app():
@@ -224,10 +232,8 @@ def app():
     st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
 
-    recent_list, last_update = recent_updates()
+    recent_list= recent_updates()
     recent_list = recent_list.tolist()
-
-    st.write('Last Update: ' +last_update)
 
     df = load_file()
 
