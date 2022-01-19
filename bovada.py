@@ -41,7 +41,7 @@ def load_scatter_data():
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
     df['hours_ago'] = round(df['minutes_ago']/60,2)
 
-    last_update = str(round((datetime.datetime.utcnow() - df['date'].max()).total_seconds(),2))
+    last_update = round((datetime.datetime.utcnow() - df['date'].max()).total_seconds(),2)
 
     if last_update <60:
         st.write('Last update: '+str(last_update)+' seconds ago')
