@@ -297,25 +297,42 @@ def app():
     player = st.selectbox('Pick a player to view:',df['player'].unique())
 
     d=df.loc[df.player == player].copy()
-    d=d.reset_index(drop=True)
+    d=d.sort_values('date',ascending=True).reset_index(drop=True)
     d['mock_draft'] = d['date'].str[5:]+ ' - ' + d['source']
     fig=px.scatter(d,
-                   x='mock_draft',
-                   y='pick',
-                   color='team',
-                   title='Mock Drafts over Time for ' + player)
-    fig.update_xaxes(title='Mock Draft / Date', categoryorder='category ascending')
+                    x='mock_draft',
+                    y='pick',
+                    color='team',
+                    category_orders={'mock_draft': d["mock_draft"]},
+                    title='Mock Drafts over Time for ' + player)
+    fig.update_xaxes(title='Mock Draft / Date')
     fig.update_traces(mode='markers',
-                      marker=dict(size=8,
-                                  line=dict(width=1,
+                        marker=dict(size=8,
+                                    line=dict(width=1,
                                             color='DarkSlateGrey')))
-    fig = update_colors(fig)
+
     st.plotly_chart(fig, use_container_width=True)
 
     team = st.selectbox('Pick a player to view:',df['team'].unique())
 
     d=df.loc[df.team == team].copy()
     d=d.reset_index(drop=True)
+
+    d=d.sort_values('date',ascending=True).reset_index(drop=True)
+    d['mock_draft'] = d['date'].str[5:]+ ' - ' + d['source']
+    fig=px.scatter(d,
+                    x='mock_draft',
+                    y='player',
+                    color='player',
+                    category_orders={'mock_draft': d["mock_draft"]},
+                    title='Mock Drafts over Time for ' + team)
+    fig.update_xaxes(title='Mock Draft / Date')
+    fig.update_yaxes(categoryorder='array', categoryarray= d.groupby('player').size().to_frame('cnt').sort_values('cnt',ascending=True).reset_index()['player'].to_numpy())
+    fig.update_traces(mode='markers',
+                        marker=dict(size=8,
+                                    line=dict(width=1,
+                                            color='DarkSlateGrey')))
+    st.plotly_chart(fig, use_container_width=True)
 
     f = lambda x: x["player_details"].partition('|')[0]
     d['position']=d.apply(f, axis=1)
