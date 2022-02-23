@@ -16,7 +16,7 @@ import nba_redraftables
 import bovada
 import nfl_mock_draft
 import stock_prediction
-import 538_viz
+import fivethirtyeight_viz
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -32,7 +32,7 @@ def main():
     "Bovada": bovada,
     "COVID-Viz": covid,
     "CLSTR": clstr,
-    "FiveThirtyEight": 538_viz,
+    "FiveThirtyEight": fivethirtyeight_viz,
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
     "NFL Mock Draft DB": nfl_mock_draft,
