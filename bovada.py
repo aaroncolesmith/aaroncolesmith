@@ -90,7 +90,7 @@ def line_chart(df, option, color_map):
     color_discrete_map=color_map,
     # animation_frame='Date',
     color_discrete_sequence=color_discrete_sequence,
-    title='Betting Odds Over Time')
+    title='Betting Odds Over Time <br><sup>'+option+' </sup>')
     g.update_traces(mode='lines',
                     line_shape='spline',
                     opacity=.75,
@@ -119,7 +119,9 @@ def line_chart_probability(df,option,color_map):
     render_mode='svg',
     color_discrete_map=color_map,
     color_discrete_sequence=color_discrete_sequence,
-    title='Implied Probability Over Time')
+    # title='Implied Probability Over Time'
+    title="Implied Probability Over Time <br><sup>"+option+" </sup>")
+    )
     g.update_traces(mode='lines',
                     line_shape='spline',
                     opacity=.75,
@@ -152,7 +154,7 @@ def line_chart_probability_initial(df,option,color_map):
     render_mode='svg',
     color_discrete_map=color_map,
     color_discrete_sequence=color_discrete_sequence,
-    title='Implied Probability - Change Since Initial Odds')
+    title='Implied Probability - Change Since Initial Odds <br><sup>'+option+'</sup>')
     g.update_traces(mode='lines',
                     line_shape='spline',
                     opacity=.75,
