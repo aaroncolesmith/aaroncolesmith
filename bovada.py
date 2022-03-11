@@ -121,7 +121,7 @@ def line_chart_probability(df,option,color_map):
     color_discrete_sequence=color_discrete_sequence,
     # title='Implied Probability Over Time'
     title="Implied Probability Over Time <br><sup>"+option+" </sup>")
-    )
+    
     g.update_traces(mode='lines',
                     line_shape='spline',
                     opacity=.75,
