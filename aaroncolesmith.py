@@ -40,14 +40,33 @@ def main():
     }
 
     st.sidebar.title('Navigation')
-    sel = st.sidebar.radio("Go to", list(PAGES.keys()))
-    page = PAGES[sel]
-    g = geocoder.ip('me')
+    # sel = st.sidebar.radio("Go to", list(PAGES.keys()))
+    # page = PAGES[sel]
+
+    pages = list(PAGES.keys())
+    query_params = st.experimental_get_query_params()
     try:
-        print('Aaronlytics - ' + sel + ' - ' + g.city + ', '+g.state + ' - ' + g.ip + ' - ' + g.hostname)
+        query_option = query_params['page'][0]
     except:
-        pass
-    page.app()
+        st.experimental_set_query_params(page=pages[0])
+        query_params = st.experimental_get_query_params()
+        query_option = query_params['page'][0]
+    st.sidebar.title('Navigation')
+    page_selected = st.sidebar.selectbox('Pick option',
+                                            pages,
+                                            index=pages.index(query_option))
+    if page_selected:
+        st.experimental_set_query_params(page=page_selected)
+        PAGES[page_selected].app()
+
+
+
+    # g = geocoder.ip('me')
+    # try:
+    #     print('Aaronlytics - ' + sel + ' - ' + g.city + ', '+g.state + ' - ' + g.ip + ' - ' + g.hostname)
+    # except:
+    #     pass
+    # page.app()
 
 
 def hide_footer():
