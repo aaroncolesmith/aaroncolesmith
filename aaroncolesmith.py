@@ -51,24 +51,9 @@ def main():
         st.experimental_set_query_params(page=pages[0])
         query_params = st.experimental_get_query_params()
         query_option = query_params['page'][0]
-    try:
-        page_selected = st.sidebar.selectbox('Pick option',
-                                                pages,
-                                                index=pages.index(query_option))
-    except:
-        pass
-    try:
-        query_option = query_option.title()
-        page_selected = st.sidebar.selectbox('Pick option',
-                                        pages,
-                                        index=pages.index(query_option))
-    except:
-        query_option = query_params['page'][0]
-        page_selected = st.sidebar.selectbox('Pick option',
-                                        pages,
-                                        index=pages.index(query_option))
-
-
+    page_selected = st.sidebar.selectbox('Pick option',
+                                            pages,
+                                            index=pages.index(query_option))
     if page_selected:
         st.experimental_set_query_params(page=page_selected)
         PAGES[page_selected].app()
