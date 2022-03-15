@@ -10,7 +10,7 @@ import about
 import experience
 import projects
 import covid
-import clstr as CLSTR
+import clstr
 import nbaclusters
 import nba_redraftables
 import bovada
@@ -31,7 +31,7 @@ def main():
     "Projects": projects,
     "Bovada": bovada,
     "COVID-Viz": covid,
-    "CLSTR": CLSTR,
+    "CLSTR": clstr,
     "FiveThirtyEight": fivethirtyeight_viz,
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
@@ -51,9 +51,22 @@ def main():
         st.experimental_set_query_params(page=pages[0])
         query_params = st.experimental_get_query_params()
         query_option = query_params['page'][0]
-    page_selected = st.sidebar.selectbox('Pick option',
-                                            pages,
-                                            index=pages.index(query_option))
+    try:
+        page_selected = st.sidebar.selectbox('Pick option',
+                                                pages,
+                                                index=pages.index(query_option))
+    try:
+        query_option = query_option.title()
+        page_selected = st.sidebar.selectbox('Pick option',
+                                        pages,
+                                        index=pages.index(query_option))
+    except:
+        query_option = query_params['page'][0]
+        page_selected = st.sidebar.selectbox('Pick option',
+                                        pages,
+                                        index=pages.index(query_option))
+
+
     if page_selected:
         st.experimental_set_query_params(page=page_selected)
         PAGES[page_selected].app()
