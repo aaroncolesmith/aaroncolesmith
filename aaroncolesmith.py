@@ -55,6 +55,8 @@ def main():
         page_selected = st.sidebar.selectbox('Pick option',
                                                 pages,
                                                 index=pages.index(query_option))
+    except:
+        pass
     try:
         query_option = query_option.title()
         page_selected = st.sidebar.selectbox('Pick option',
