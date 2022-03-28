@@ -4,7 +4,6 @@ import plotly_express as px
 import plotly.io as pio
 # pio.templates.default = 'plotly_white'
 import streamlit as st
-import geocoder
 import requests
 import about
 import experience
@@ -17,6 +16,7 @@ import bovada
 import nfl_mock_draft
 import stock_prediction
 import fivethirtyeight_viz
+import portland_crime_map
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -36,6 +36,7 @@ def main():
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
     "NFL Mock Draft DB": nfl_mock_draft,
+    "Portland Crime Map": portland_crime_map,
     "Stock Predictions": stock_prediction
     }
 
@@ -57,15 +58,6 @@ def main():
     if page_selected:
         st.experimental_set_query_params(page=page_selected)
         PAGES[page_selected].app()
-
-
-
-    # g = geocoder.ip('me')
-    # try:
-    #     print('Aaronlytics - ' + sel + ' - ' + g.city + ', '+g.state + ' - ' + g.ip + ' - ' + g.hostname)
-    # except:
-    #     pass
-    # page.app()
 
 
 def hide_footer():
