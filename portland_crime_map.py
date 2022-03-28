@@ -108,7 +108,7 @@ def group_data_day(df):
 
     return d
 
-def main():
+def app():
     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
     df['DATE'] = pd.to_datetime(df['DATE'],utc=True)
 
@@ -163,4 +163,4 @@ def main():
 
 if __name__ == "__main__":
     #execute
-    main()
+    app()
