@@ -4,10 +4,21 @@ def app():
     st.write("""
     # Work Experience
 
+    ### [Nike](https://www.nike.com)
+    #### Senior Product Manager | 2021 - Present
+    - Worked within the Commercial Analytics organization to shift Nike into a more technology and data-driven approach to their Supply Chain
+    - Partnered with Data Science and Machine Learning teams to build enhancmenents and customizations to the Supply Chain to improve the efficiency of the organization
+    - Collaborated with Business Development stakeholders to ensure they were able to visualize and understand the Supply Chain data as well as be able to increase their efficieny and make changes based on data outputs
+
+    ---
+
     ### [Openpath](https://openpath.com)
-    #### Senior Product Manager | Present
+    #### Senior Product Manager | 2020-2021
+    - Built and launched two new hardware products, a Video Reader and a Video Intercom Reader, which immediately become the most popular access control products on the market
     - Working with the advanced concepts team to start building new products and integration to support new use cases like integrating video feeds into the portal to provide a holistic security monitoring solutions
     - Introduced data driven processes and principles to the product team so that we start to build products and make decisions backed by data
+
+    ---
 
     ### [SafeRide Health](https://saferidehealth.com)
     #### Product Manager | 2020
@@ -26,7 +37,7 @@ def app():
     analyze and document processes prior to building out automations
     - Increased automation build velocity by 500% by eliciting user feedback to implement usability enhancements
 
-    #### Product Manager - Data & Analytics | 2016 - 2018
+    #### Director - Data & Analytics | 2016 - 2018
     - Built a data analytics solution to analyze our data across multiple data sources to provide the entire company with
     actionable intelligence and insights to influence product and business strategy
     - Shifted the company focus to make more data-driven decisions using the metrics and tools recently created
