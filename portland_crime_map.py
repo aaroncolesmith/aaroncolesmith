@@ -34,7 +34,10 @@ def density_map_day(d):
                             center=dict(lat=pd.to_numeric(d['LATITUDE'],errors='coerce').mean(), lon=pd.to_numeric(d['LONGITUDE'],errors='coerce').mean()),
                             height=600)
     fig.update_layout(mapbox_style="stamen-terrain")
-    fig.update_traces(hovertemplate='<b>%{hovertext}</b><br><br>Crime Count: %{customdata[1]}<br>Coordinates: (%{lat},%{lon})<br>Address: %{customdata[0]}<br>Last date: %{customdata[2]|%-m/%-d %-I:%M%p}')
+    custom_template = '<b>%{hovertext}</b><br><br>Crime Count: %{customdata[1]}<br>Coordinates: (%{lat},%{lon})<br>Address: %{customdata[0]}<br>Last date: %{customdata[2]|%-m/%-d %-I:%M%p}'
+    fig.update_traces(hovertemplate=custom_template)
+    for frame in fig.frames:
+        frame.data[0].hovertemplate = custom_template
     fig['layout']['sliders'][0]['currentvalue']['prefix'] = 'Date: '
     st.plotly_chart(fig)
 
@@ -73,7 +76,10 @@ def scatter_map_day(d):
                             zoom=10, 
                             height=600)
     fig.update_layout(mapbox_style="stamen-terrain")
-    fig.update_traces(hovertemplate='<b>%{hovertext}</b><br><br>Crime Count: %{customdata[1]}<br>Coordinates: (%{lat},%{lon})<br>Address: %{customdata[0]}<br>Last date: %{customdata[2]|%-m/%-d %-I:%M%p}')
+    custom_template = '<b>%{hovertext}</b><br><br>Crime Count: %{customdata[1]}<br>Coordinates: (%{lat},%{lon})<br>Address: %{customdata[0]}<br>Last date: %{customdata[2]|%-m/%-d %-I:%M%p}'
+    fig.update_traces(hovertemplate=custom_template)
+    for frame in fig.frames:
+        frame.data[0].hovertemplate = custom_template
     fig['layout']['sliders'][0]['currentvalue']['prefix'] = 'Date: '
     st.plotly_chart(fig)
 
