@@ -329,6 +329,7 @@ def app():
     fig=px.bar(d2,
            orientation='h',
            y='team',
+           color='team',
            x='cnt',
            template='plotly_white',
            title='What team has picked ' + player + ' the most?')
