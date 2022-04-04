@@ -237,6 +237,7 @@ def app():
            x='cnt',
            # color='#FA70C8',
            orientation='h',
+           template='plotly_white',
            title='Most Common Team - Player Pairings')
     
     fig.update_yaxes(title='Team / Player', categoryorder='total descending')
@@ -245,7 +246,14 @@ def app():
 
     st.plotly_chart(fig, use_container_width=True)
 
-    fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], x="player", y="pick", points="all", hover_data=['team','date','source'], title='Distribution of Draft Position by Player', width=1600)
+    fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], 
+            x="player", 
+            y="pick", 
+            points="all", 
+            hover_data=['team','date','source'], 
+            title='Distribution of Draft Position by Player',
+            template='plotly_white', 
+            width=1600)
     fig.update_xaxes(title='Player', categoryorder='mean ascending')
     fig.update_yaxes(title='Draft Position')
     st.plotly_chart(fig, use_container_width=True)
@@ -256,6 +264,7 @@ def app():
           x='cnt',
           y='avg_pick',
            color='team',
+           template='plotly_white',
            title='# of Times a Player is Mocked to a Given Pick / Team',
           hover_data=['player'])
     fig.update_xaxes(title='# of Occurences')
@@ -273,6 +282,7 @@ def app():
           y='avg_pick',
            size='cnt',
           color='team',
+          template='plotly_white',
           height=600,
           title='Avg. Pick Placement by Player / Team')
     fig.update_xaxes(title='Player')
@@ -303,6 +313,7 @@ def app():
                     x='mock_draft',
                     y='pick',
                     color='team',
+                    template='plotly_white',
                     category_orders={'mock_draft': d["mock_draft"]},
                     title='Mock Drafts over Time for ' + player)
     fig.update_xaxes(title='Mock Draft / Date')
@@ -313,7 +324,22 @@ def app():
     fig = update_colors(fig)
     st.plotly_chart(fig, use_container_width=True)
 
-    team = st.selectbox('Pick a player to view:',df['team'].unique())
+
+    d2=d.groupby(['team']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False)
+    fig=px.bar(d2,
+           orientation='h',
+           y='team',
+           x='cnt',
+           template='plotly_white',
+           title='What team has picked ' + player + ' the most?')
+
+    fig.update_yaxes(title='Team', categoryorder='total descending')
+    fig.update_xaxes(title='# of Times Mocked')
+    fig.update_yaxes(autorange="reversed")
+    fig = update_colors(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    team = st.selectbox('Pick a team to view:',df['team'].unique())
 
     d=df.loc[df.team == team].copy()
     d=d.reset_index(drop=True)
@@ -324,6 +350,7 @@ def app():
                     x='mock_draft',
                     y='player',
                     color='player',
+                    template='plotly_white',
                     category_orders={'mock_draft': d["mock_draft"]},
                     title='Mock Drafts over Time for ' + team)
     fig.update_xaxes(title='Mock Draft / Date')
@@ -355,6 +382,7 @@ def app():
            y=d2['team'] + ' - ' + d2['player'],
            color='position',
            x='cnt',
+           template='plotly_white',
            title='How many times a Team has been mocked to a player')
     fig.update_yaxes(title='Team', categoryorder='total descending')
     fig.update_xaxes(title='# of Times Mocked')
@@ -381,6 +409,7 @@ def app():
            orientation='h',
            y=d2['team'] + ' - ' + d2['position'],
            x='cnt',
+           template='plotly_white',
            title='How many times a Team has been mocked to a Position')
 
     fig.update_yaxes(title='Pick', categoryorder='total descending')
