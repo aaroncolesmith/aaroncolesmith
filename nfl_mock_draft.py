@@ -310,7 +310,7 @@ def app():
                         marker=dict(size=8,
                                     line=dict(width=1,
                                             color='DarkSlateGrey')))
-
+    fig = update_colors(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     team = st.selectbox('Pick a player to view:',df['team'].unique())
