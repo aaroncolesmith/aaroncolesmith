@@ -22,7 +22,8 @@ def last_minus_avg(x):
 @st.cache(ttl=43200, suppress_st_warning=True)
 def load_file():
     # df = pd.read_csv('./data/bovada.csv')
-    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
+    # df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
+    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_data.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
@@ -52,20 +53,20 @@ def load_scatter_data():
 
     return df
 
-@st.cache(suppress_st_warning=True)
-def get_s3_data(bucket, key):
-    s3 = boto3.client('s3')
-    obj = s3.get_object(Bucket=bucket, Key=key)
-    df = pd.read_csv(io.BytesIO(obj['Body'].read()))
-    df['date'] = pd.to_datetime(df['date'])
-    df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
-    return df
+# @st.cache(suppress_st_warning=True)
+# def get_s3_data(bucket, key):
+#     s3 = boto3.client('s3')
+#     obj = s3.get_object(Bucket=bucket, Key=key)
+#     df = pd.read_csv(io.BytesIO(obj['Body'].read()))
+#     df['date'] = pd.to_datetime(df['date'])
+#     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+#     return df
 
-def save_to_s3(df, bucket, key):
-    s3_resource = boto3.resource('s3')
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer,index=False)
-    s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
+# def save_to_s3(df, bucket, key):
+#     s3_resource = boto3.resource('s3')
+#     csv_buffer = StringIO()
+#     df.to_csv(csv_buffer,index=False)
+#     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
 
 def get_select_options(df, track_df):
     b=track_df.groupby(['selection']).agg({'count':'sum'}).sort_values(['count'], ascending=False).reset_index(drop=False)
