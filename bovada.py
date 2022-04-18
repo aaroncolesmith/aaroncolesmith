@@ -13,11 +13,11 @@ import sys
 color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A']
 
 
-def max_minus_min(x):
-    return max(x) - min(x)
+# def max_minus_min(x):
+#     return max(x) - min(x)
 
-def last_minus_avg(x):
-    return last(x) - mean(x)
+# def last_minus_avg(x):
+#     return last(x) - mean(x)
 
 @st.cache(ttl=43200, suppress_st_warning=True)
 def load_file():
