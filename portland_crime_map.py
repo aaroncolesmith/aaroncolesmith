@@ -177,7 +177,7 @@ def app():
     c1, c2 = st.columns(2)
 
     # Selector to view aggregate data or by day
-    view_type = c1.selectbox('View by', ['Day', 'All-Time'])
+    view_type = c1.selectbox('View by', ['Day', 'All-Time','Last 12 Hours'])
 
     # Selector to view density_map or scatter_map
     map_type = c2.selectbox('Map Type', ['Scatter Map', 'Density Map'])
@@ -195,6 +195,14 @@ def app():
             density_map_day(d)
         elif map_type == 'Scatter Map':
             scatter_map_day(d)
+
+    if view_type == 'Last 12 Hours':
+        d=df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=12)]
+        if map_type == 'Density Map':
+            density_map_agg(d)
+        elif map_type == 'Scatter Map':
+            scatter_map_agg(d)
+
 
     # Scatter plot of crime counts by hour
     # df['HOUR']=df['DATE'].dt.floor('h')
