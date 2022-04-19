@@ -197,7 +197,7 @@ def app():
             scatter_map_day(d)
 
     if view_type == 'Last 12 Hours':
-        d=df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=12)]
+        d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=12)])
         if map_type == 'Density Map':
             density_map_agg(d)
         elif map_type == 'Scatter Map':
