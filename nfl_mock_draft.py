@@ -7,6 +7,7 @@ from pyvis import network as net
 import streamlit.components.v1 as components
 import networkx as nx
 import plotly_express as px
+import plotly.graph_objects as go
 import numpy as np
 from IPython.core.display import HTML
 
@@ -47,6 +48,70 @@ def update_colors(fig):
 
     return fig
 
+def genSankey(df,cat_cols=[],value_cols='',title='Sankey Diagram'):
+    # maximum of 6 value cols -> 6 colors
+    colorPalette = ['#006778','#0076B6','#03202F','#125740','#0B2265','#0085CA','#0B2265','#A71930','#69BE28','#125740']
+    labelList = []
+    colorNumList = []
+    for catCol in cat_cols:
+        labelListTemp =  list(set(df[catCol].values))
+        colorNumList.append(len(labelListTemp))
+        labelList = labelList + labelListTemp
+        
+    # remove duplicates from labelList
+    labelList = list(dict.fromkeys(labelList))
+    
+    # define colors based on number of levels
+    colorList = []
+    for idx, colorNum in enumerate(colorNumList):
+        colorList = colorList + [colorPalette[idx]]*colorNum
+        
+    # transform df into a source-target pair
+    for i in range(len(cat_cols)-1):
+        if i==0:
+            sourceTargetDf = df[[cat_cols[i],cat_cols[i+1],value_cols]]
+            sourceTargetDf.columns = ['source','target','count']
+        else:
+            tempDf = df[[cat_cols[i],cat_cols[i+1],value_cols]]
+            tempDf.columns = ['source','target','count']
+            sourceTargetDf = pd.concat([sourceTargetDf,tempDf])
+        sourceTargetDf = sourceTargetDf.groupby(['source','target']).agg({'count':'sum'}).reset_index()
+        
+    # add index for source-target pair
+    sourceTargetDf['sourceID'] = sourceTargetDf['source'].apply(lambda x: labelList.index(x))
+    sourceTargetDf['targetID'] = sourceTargetDf['target'].apply(lambda x: labelList.index(x))
+    
+    # creating the sankey diagram
+    data = dict(
+        type='sankey',
+        node = dict(
+          pad = 10,
+          thickness = 10,
+          line = dict(
+            color = "black",
+            width = 0.2
+          ),
+          label = labelList,
+          color = colorList
+        ),
+        link = dict(
+          source = sourceTargetDf['sourceID'],
+          target = sourceTargetDf['targetID'],
+          value = sourceTargetDf['count']
+        )
+      )
+    
+    layout =  dict(
+        title = title,
+        font = dict(
+          size = 8
+        )
+    )
+       
+    fig = dict(data=[data], layout=layout)
+    return fig
+
+
 def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
@@ -66,10 +131,13 @@ def app():
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
     draft_year = st.selectbox('Draft Year?',
-        ('2022','2021'))
+        ('2022','2022 - Most Recent','2021'))
 
     if draft_year == '2022':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
+    if draft_year == '2022 - Most Recent':
+        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
+        df = df.head(1023)
     if draft_year == '2021':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
 
@@ -230,6 +298,31 @@ def app():
     html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
     source_code = html_file.read()
     components.html(source_code, height=510,width=640)
+
+
+# SANKEY DIAGRAM OF TOP 10 PICKS
+
+
+    df['player_pick'] = df['team_pick'] + ' - ' + df['player']
+    d=df.loc[df.pick.isin([1,2,3,4,5,6,7,8,9,10])].groupby(['source','date']).agg({'player_pick': lambda x: ','.join(x),
+                                                                'team_img':'size'}).reset_index()
+    d.columns = ['source','date','player','recs']
+    d = d.loc[d.recs <= 10]
+    d['player']=d['player'].str.replace('Aidan ','').str.replace('Jacksonville ','').str.replace('Kayvon ','').str.replace('Ahmand Gardner','Sauce').str.replace('New York ','').str.replace('Pick ','')
+    picks=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th']
+    d[picks]=d['player'].str.split(',',n=9,expand=True)
+
+    fig = genSankey(d.groupby(picks).size().to_frame('cnt').reset_index(),
+                    cat_cols=picks,
+                    value_cols='cnt',
+                    title='Sankey Diagram of Top 10 Picks')
+
+    del df['player_pick']
+    del d
+
+    fig = go.Figure(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
 
 
     fig=px.bar(df.groupby(['team','player']).size().to_frame('cnt').reset_index().sort_values('cnt',ascending=False).head(15),
