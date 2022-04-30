@@ -172,6 +172,11 @@ def app():
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
     st.markdown('This app is a Streamlit dashboard that shows the number of crimes in Portland, Oregon.')
 
+    # Add a multiselect widget with all the different CRIME options
+    crime_options = df['CRIME'].unique()
+    selected_crime = st.multiselect('Select Crime', crime_options, crime_options)
+    df = df[df['CRIME'].isin(selected_crime)]
+
     st.subheader('Crime Map')
 
     c1, c2 = st.columns(2)
