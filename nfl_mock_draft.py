@@ -110,6 +110,7 @@ def genSankey(df,cat_cols=[],value_cols='',title='Sankey Diagram'):
        
     fig = dict(data=[data], layout=layout)
     return fig
+  
 
 
 def app():
