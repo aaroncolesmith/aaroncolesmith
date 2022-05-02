@@ -61,6 +61,7 @@ def app():
     st.markdown('##### Welcome to Strava Viz -- login to your Strava account to see a dashboard visualizing all of your Strava activities!')
 
     query_params = st.experimental_get_query_params()
+    st.write(query_params)
     if query_params:
         auth = get_strava_auth(query_params)
         st.write('Welcome '+auth['athlete']['firstname'])
