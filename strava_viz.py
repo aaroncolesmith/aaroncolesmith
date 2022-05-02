@@ -171,7 +171,7 @@ def app():
 
         payload={"client_id": STRAVA_CLIENT_ID,"redirect_uri": APP_URL,"response_type": "code","approval_prompt": "auto","scope": "activity:read_all"}
         r=requests.post('https://www.strava.com/oauth/authorize',params=payload)
-        st.markdown("<a href=\""+str(r.url)+"\">Click here to login to Strava!</a>",
+        st.markdown("<a href=\""+str(r.url)+"\" target = \"_self\">Click here to login to Strava!</a>",
         unsafe_allow_html=True,)
 
 
