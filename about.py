@@ -23,14 +23,14 @@ def app():
         """)
         st.image('./images/bovada.gif',use_column_width=True)
 
-    with st.expander("COVID-Viz"):
-        st.write("""
-        Visualize COVID cases & deaths over time, broken down by country
+    # with st.expander("COVID-Viz"):
+    #     st.write("""
+    #     Visualize COVID cases & deaths over time, broken down by country
 
-        My goal was to not only allow someone to view COVID cases and deaths over time, but also introduce some metrics that would give an indication whether a given country was on the rise or falling.
-        Note: this one utlizes lots of data, so it may take some time to load
-        """)
-        st.image('./images/covid-viz.gif',use_column_width=True)
+    #     My goal was to not only allow someone to view COVID cases and deaths over time, but also introduce some metrics that would give an indication whether a given country was on the rise or falling.
+    #     Note: this one utlizes lots of data, so it may take some time to load
+    #     """)
+    #     st.image('./images/covid-viz.gif',use_column_width=True)
 
     with st.expander("CLSTR"):
         st.write("""
@@ -55,6 +55,11 @@ def app():
         By combining draft results with a players career statistics, you can visualize whether a given draft pick was a good choice or a poor choice.
         """)
         st.image('./images/nba-redraftables.gif',use_column_width=True)
+
+    with st.expander("Portland Crime Map"):
+        st.write("""
+        A map of Portland's crime data, broken down by neighborhood and visualized over time
+        """)
 
     st.markdown('')
     st.markdown('')

@@ -8,7 +8,7 @@ import requests
 import about
 import experience
 import projects
-import covid
+# import covid
 import clstr
 import nbaclusters
 import nba_redraftables
@@ -17,6 +17,7 @@ import nfl_mock_draft
 import stock_prediction
 import fivethirtyeight_viz
 import portland_crime_map
+import strava_viz
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -30,14 +31,15 @@ def main():
     "Experience": experience,
     "Projects": projects,
     "Bovada": bovada,
-    "COVID-Viz": covid,
+    # "COVID-Viz": covid,
     "CLSTR": clstr,
     "FiveThirtyEight": fivethirtyeight_viz,
     "NBA Clusters": nbaclusters,
     "NBA Redraftables": nba_redraftables,
     "NFL Mock Draft DB": nfl_mock_draft,
     "Portland Crime Map": portland_crime_map,
-    "Stock Predictions": stock_prediction
+    "Stock Predictions": stock_prediction,
+    "Strava Viz": strava_viz
     }
 
     st.sidebar.title('Navigation')
