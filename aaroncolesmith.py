@@ -26,6 +26,8 @@ st.set_page_config(
 
 def main():
 
+    print('Main load -- test')
+
     PAGES = {
     "About": about,
     "Experience": experience,
