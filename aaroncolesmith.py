@@ -41,7 +41,7 @@ def main():
     "NFL Mock Draft DB": nfl_mock_draft,
     "Portland Crime Map": portland_crime_map,
     "Stock Predictions": stock_prediction,
-    # "Strava Viz": strava_viz
+    "Strava Viz": strava_viz
     }
 
     st.sidebar.title('Navigation')
