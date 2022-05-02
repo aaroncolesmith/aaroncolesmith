@@ -136,6 +136,8 @@ def app():
         hover_data = st.multiselect('Select values on that will appear on hover',
             columns)
 
+        print('X Axis: ' + x_axis)
+        print('Y Axis: ' + y_axis)
 
         fig=px.scatter(df.loc[df.distance>0],
                   x=x_axis,
