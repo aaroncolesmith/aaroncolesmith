@@ -62,7 +62,7 @@ def app():
 
     query_params = st.experimental_get_query_params()
     st.write(query_params)
-    if query_params:
+    if query_params.get("code", [None])[0]:
         auth = get_strava_auth(query_params)
         st.write('Welcome '+auth['athlete']['firstname'])
 
