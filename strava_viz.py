@@ -62,6 +62,8 @@ def app():
     cookie_manager = get_manager()
     cookies = cookie_manager.get_all()
 
+    st.write(query_params)
+
     st.write(cookies)
 
     if 'strava_auth_code' in cookies.keys() and cookies['strava_auth_code'].notnull():
@@ -181,6 +183,7 @@ def app():
         unsafe_allow_html=True,)
 
         query_params = st.experimental_get_query_params()
+        st.write(query_params)
 
         if query_params.get("code"):
 
