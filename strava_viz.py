@@ -11,8 +11,6 @@ APP_URL = os.environ["APP_URL"]
 STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
 STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
 
-
-
 @st.cache(allow_output_mutation=True)
 def get_manager():
     return stx.CookieManager()
@@ -30,7 +28,6 @@ def get_strava_auth(query_params):
 
     r=requests.post('https://www.strava.com/oauth/token',params=payload)
     return r.json()
-
 
 @st.cache(show_spinner=False, suppress_st_warning=True)
 def load_strava_data(auth):
@@ -54,7 +51,6 @@ def load_strava_data(auth):
         df['date'] = pd.to_datetime(df['start_date']).dt.date
         df['elapsed_time_hours'] = round(df['elapsed_time'] / 3600,2)
         return df
-
 
 def app():
 
