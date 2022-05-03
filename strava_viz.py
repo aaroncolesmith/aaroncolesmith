@@ -187,7 +187,11 @@ def app():
         query_params = st.experimental_get_query_params()
         st.write(query_params)
 
-        if query_params.get("code"):
+        go_button = st.button('Go')
+
+        if go_button:
+
+        # if query_params.get("code"):
 
             authorization_code = query_params.get("code", [None])[0]
 
