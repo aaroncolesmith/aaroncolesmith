@@ -64,7 +64,7 @@ def app():
 
     st.write(cookies)
 
-    if 'strava_auth_code' in cookies.keys() and cookies['strava_auth_code'] != None:
+    if 'strava_auth_code' in cookies.keys() and cookies['strava_auth_code'].notnull():
         auth=cookies['strava_auth']
         st.write('Welcome '+cookies['strava_auth']['athlete']['firstname'])
 
@@ -182,29 +182,31 @@ def app():
 
         query_params = st.experimental_get_query_params()
 
-        authorization_code = query_params.get("code", [None])[0]
+        if query_params.get("code"):
 
-        payload = {
-        'client_id': STRAVA_CLIENT_ID,
-        'client_secret': STRAVA_CLIENT_SECRET,
-        'code': authorization_code,
-        "grant_type": "authorization_code"
-        }
+            authorization_code = query_params.get("code", [None])[0]
 
-        r=requests.post('https://www.strava.com/oauth/token',params=payload)
+            payload = {
+            'client_id': STRAVA_CLIENT_ID,
+            'client_secret': STRAVA_CLIENT_SECRET,
+            'code': authorization_code,
+            "grant_type": "authorization_code"
+            }
 
-        auth=r.json()
-        st.write('this is auth')
-        st.write(auth)
-        if query_params:
-            st.write(query_params)
+            r=requests.post('https://www.strava.com/oauth/token',params=payload)
+
+            auth=r.json()
+            st.write('this is auth')
             st.write(auth)
+            if query_params:
+                st.write(query_params)
+                st.write(auth)
 
 
-            cookie_manager.set('strava_auth_code', authorization_code, key='0')
-            cookie_manager.set('strava_auth', auth, key='1')
+                cookie_manager.set('strava_auth_code', authorization_code, key='0')
+                cookie_manager.set('strava_auth', auth, key='1')
 
-            # st.write(cookies)
+                # st.write(cookies)
 
 
 
