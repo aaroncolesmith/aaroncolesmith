@@ -62,6 +62,8 @@ def app():
     cookie_manager = get_manager()
     cookies = cookie_manager.get_all()
 
+    st.write(cookies)
+
     if 'strava_auth_code' in cookies.keys():
         auth=cookies['strava_auth']
         st.write('Welcome '+cookies['strava_auth']['athlete']['firstname'])
@@ -192,6 +194,8 @@ def app():
         r=requests.post('https://www.strava.com/oauth/token',params=payload)
 
         auth=r.json()
+        st.write('this is auth')
+        st.write(auth)
         if query_params:
             st.write(query_params)
             st.write(auth)
