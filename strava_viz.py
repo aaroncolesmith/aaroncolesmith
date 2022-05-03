@@ -11,6 +11,8 @@ APP_URL = os.environ["APP_URL"]
 STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
 STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
 
+
+
 @st.cache(allow_output_mutation=True)
 def get_manager():
     return stx.CookieManager()
@@ -62,11 +64,11 @@ def app():
     cookie_manager = get_manager()
     cookies = cookie_manager.get_all()
 
-    st.write(query_params)
+    # st.write(query_params)
 
     st.write(cookies)
 
-    if 'strava_auth_code' in cookies.keys() and cookies['strava_auth_code'].notnull():
+    if 'strava_auth_code' in cookies.keys() and cookies['strava_auth_code'] is not None:
         auth=cookies['strava_auth']
         st.write('Welcome '+cookies['strava_auth']['athlete']['firstname'])
 
