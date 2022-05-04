@@ -64,8 +64,9 @@ def app():
 
     st.write(cookies)
 
-    if cookies['strava_auth_code'] is not None:
+    if cookies['strava_auth_code'] != 'null':
         st.write('Cookies are set!')
+        
         auth=cookies['strava_auth']
         st.write('Welcome '+cookies['strava_auth']['athlete']['firstname'])
 
