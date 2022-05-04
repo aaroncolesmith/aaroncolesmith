@@ -50,6 +50,7 @@ def main():
 
     pages = list(PAGES.keys())
     query_params = st.experimental_get_query_params()
+    print(query_params)
     try:
         query_option = query_params['page'][0]
     except:
