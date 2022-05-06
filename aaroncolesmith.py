@@ -17,7 +17,7 @@ import nfl_mock_draft
 import stock_prediction
 import fivethirtyeight_viz
 import portland_crime_map
-import strava_viz
+# import strava_viz
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -41,7 +41,7 @@ def main():
     "NFL Mock Draft DB": nfl_mock_draft,
     "Portland Crime Map": portland_crime_map,
     "Stock Predictions": stock_prediction,
-    "Strava Viz": strava_viz
+    # "Strava Viz": strava_viz
     }
 
     st.sidebar.title('Navigation')
