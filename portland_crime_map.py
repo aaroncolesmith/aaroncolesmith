@@ -91,7 +91,7 @@ def group_data_agg(df):
     d.columns = ['LATITUDE','LONGITUDE','ADDRESS','CRIME','COUNT','LAST_DATE']
     d['LATITUDE'] = pd.to_numeric(d['LATITUDE'])
     d['LONGITUDE'] = pd.to_numeric(d['LONGITUDE'])
-    d['COUNT_SCALED'] = d['COUNT']*3
+    d['COUNT_SCALED'] = d['COUNT']*1
 
     d['LAT_LON'] = d['LATITUDE'].astype('str') + ', ' +  d['LONGITUDE'].astype('str')
 
@@ -112,7 +112,7 @@ def group_data_day(df):
     # if the crime desciption is greater than 500 characters, cut it off at 500 characters
     d['CRIME'] = d['CRIME'].apply(lambda x: x[:1500] + '...' if len(x) > 1500 else x)
     d['DAY']=d['DAY'].dt.tz_localize(None).dt.to_pydatetime()
-    d['COUNT_SCALED'] = d['COUNT']*5
+    d['COUNT_SCALED'] = d['COUNT']*1
 
     d=d.sort_values('DAY',ascending=True).reset_index(drop=True)
 
@@ -174,8 +174,16 @@ def app():
 
     # Add a multiselect widget with all the different CRIME options
     crime_options = df['CRIME'].unique()
-    selected_crime = st.multiselect('Select Crime', crime_options, crime_options)
+    selected_crime = st.sidebar.multiselect('Select Crime(s)', crime_options, crime_options)
     df = df[df['CRIME'].isin(selected_crime)]
+
+    # Add a selectbox widget with two different dataset options for twitter and pdx911
+    # dataset_options = ['Twitter Portland Crime Data', 'PDX911 Crime Data']
+    # selected_dataset = st.sidebar.selectbox('Select Dataset', dataset_options)
+    # if selected_dataset == 'Twitter Portland Crime Data':
+    #     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
+    # if selected_dataset == 'PDX911 Crime Data':
+
 
     st.subheader('Crime Map')
 

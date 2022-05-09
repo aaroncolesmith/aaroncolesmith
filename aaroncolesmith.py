@@ -26,7 +26,7 @@ st.set_page_config(
 
 def main():
 
-    print('Main load -- test')
+    print('AARONLOG - Main load ')
 
     PAGES = {
     "About": about,
@@ -61,6 +61,7 @@ def main():
                                             pages,
                                             index=pages.index(query_option))
     if page_selected:
+        print('AARONLOG - page selected ' + page_selected)
         st.experimental_set_query_params(page=page_selected)
         PAGES[page_selected].app()
 

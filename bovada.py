@@ -261,6 +261,7 @@ def app():
     # option = option[:-14]
 
     if len(option) > 0:
+            print('AARONLOG - Bovada selection ' + option)
             o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
             try:
                 option = option.split(' |')[0]

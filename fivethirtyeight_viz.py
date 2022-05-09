@@ -32,6 +32,8 @@ def app():
 
     sel = st.radio("Select sport/competition:", list(data_sources.keys()))
 
+    print('AARONLOG - 538 selection ' + sel)
+
     data = data_sources[sel]
     d=pd.read_csv(data)
     d=d.sort_values(['updated','team'], ascending=(True, True))
