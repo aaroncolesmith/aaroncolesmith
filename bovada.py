@@ -9,6 +9,8 @@ import streamlit as st
 import numpy as np
 import plotly_express as px
 import sys
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A']
 
@@ -23,7 +25,8 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 def load_file():
     # df = pd.read_csv('./data/bovada.csv')
     # df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
-    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_data.csv')
+    # df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_data.csv')
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bovada/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
