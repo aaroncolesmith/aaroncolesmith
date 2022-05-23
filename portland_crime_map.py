@@ -158,15 +158,49 @@ def crime_cnt_rolling_avg(df):
         )
     st.plotly_chart(fig)
 
-def app():
+
+def twitter_data():
     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
     df['DATE'] = pd.to_datetime(df['DATE'],utc=True)
-
     # Convert date from UTC to PST
     df['DATE'] = df['DATE'].dt.tz_convert('US/Pacific')
     df['HOUR'] = df['DATE'].dt.floor('h')
     df['DAY'] = df['DATE'].dt.floor('d')
     df['DATE_CRIME'] = df['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + df['CRIME']
+
+    return df
+
+def pdx911_data():
+    d = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.csv')
+
+    d.columns=['id', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
+        'icon', 'TEXT', 'category', 'published', 'COORDS', 'content']
+
+    d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
+    d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
+    d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
+
+    d['DATE'] = pd.to_datetime(d['DATE'])
+    d['HOUR'] = d['DATE'].dt.floor('h')
+    d['DAY'] = d['DATE'].dt.floor('d')
+    d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
+
+    d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
+
+    return d
+
+
+
+def app():
+
+    # Radio Buttons for twitter_data or pdx911_data
+    data_source = st.radio( "Which data source?",('Twitter', 'PDX911'))
+
+    if data_source == 'Twitter':
+        df = twitter_data()
+    if data_source == 'PDX911':
+        df = pdx911_data()
+    
 
     st.title('Portland Crime Map')
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
@@ -190,7 +224,7 @@ def app():
     c1, c2 = st.columns(2)
 
     # Selector to view aggregate data or by day
-    view_type = c1.selectbox('View by', ['Day', 'All-Time','Last 12 Hours'])
+    view_type = c1.selectbox('View by', ['Last 12 Hours','Day', 'All-Time'])
 
     # Selector to view density_map or scatter_map
     map_type = c2.selectbox('Map Type', ['Scatter Map', 'Density Map'])
@@ -210,7 +244,8 @@ def app():
             scatter_map_day(d)
 
     if view_type == 'Last 12 Hours':
-        d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=12)])
+        num = st.slider('How far back?', min_value=2, max_value=48, value=12, step=1)
+        d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=num)])
         if map_type == 'Density Map':
             density_map_agg(d)
         elif map_type == 'Scatter Map':
