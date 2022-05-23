@@ -85,7 +85,7 @@ def scatter_map_day(d):
 
 def group_data_agg(df):
     d=df.groupby(['LATITUDE','LONGITUDE','ADDRESS']).agg({'DATE_CRIME': lambda x: '<br>'.join(x),
-                                            'ID': 'size',
+                                            'id': 'size',
                                             'DATE':'max'}).reset_index()
 
     d.columns = ['LATITUDE','LONGITUDE','ADDRESS','CRIME','COUNT','LAST_DATE']
@@ -224,7 +224,7 @@ def app():
     c1, c2 = st.columns(2)
 
     # Selector to view aggregate data or by day
-    view_type = c1.selectbox('View by', ['Last 12 Hours','Day', 'All-Time'])
+    view_type = c1.selectbox('View by', ['Last N Hours','Day', 'All-Time'])
 
     # Selector to view density_map or scatter_map
     map_type = c2.selectbox('Map Type', ['Scatter Map', 'Density Map'])
@@ -243,7 +243,7 @@ def app():
         elif map_type == 'Scatter Map':
             scatter_map_day(d)
 
-    if view_type == 'Last 12 Hours':
+    if view_type == 'Last N Hours':
         num = st.slider('How far back?', min_value=2, max_value=48, value=12, step=1)
         d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=num)])
         if map_type == 'Density Map':
