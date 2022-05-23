@@ -85,7 +85,7 @@ def scatter_map_day(d):
 
 def group_data_agg(df):
     d=df.groupby(['LATITUDE','LONGITUDE','ADDRESS']).agg({'DATE_CRIME': lambda x: '<br>'.join(x),
-                                            'id': 'size',
+                                            'ID': 'size',
                                             'DATE':'max'}).reset_index()
 
     d.columns = ['LATITUDE','LONGITUDE','ADDRESS','CRIME','COUNT','LAST_DATE']
@@ -173,7 +173,7 @@ def twitter_data():
 def pdx911_data():
     d = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.csv')
 
-    d.columns=['id', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
+    d.columns=['ID', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
         'icon', 'TEXT', 'category', 'published', 'COORDS', 'content']
 
     d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
