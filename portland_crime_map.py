@@ -43,6 +43,12 @@ def density_map_day(d):
 
 def scatter_map_agg(d):
 
+    #setting the size max based on the input data -- 
+    if d.COUNT.max() < 10:
+        size_max=20
+    else:
+        size_max=50
+
     fig = px.scatter_mapbox(d, 
                             lat='LATITUDE', 
                             lon='LONGITUDE', 
@@ -51,7 +57,7 @@ def scatter_map_agg(d):
                             size='COUNT_SCALED',
                             color_discrete_sequence=["fuchsia"],
                             opacity=.6,
-                            size_max=50, 
+                            size_max=size_max, 
                             center=dict(lat=pd.to_numeric(d['LATITUDE'],errors='coerce').mean(), lon=pd.to_numeric(d['LONGITUDE'],errors='coerce').mean()),
                             zoom=10, 
                             height=600)
@@ -194,29 +200,24 @@ def pdx911_data():
 def app():
 
     # Radio Buttons for twitter_data or pdx911_data
-    data_source = st.radio( "Which data source?",('Twitter', 'PDX911'))
+    # data_source = st.radio( "Which data source?",('Twitter', 'PDX911'))
 
-    if data_source == 'Twitter':
-        df = twitter_data()
-    if data_source == 'PDX911':
-        df = pdx911_data()
+    # if data_source == 'Twitter':
+    #     df = twitter_data()
+    # if data_source == 'PDX911':
+    #     df = pdx911_data()
     
 
     st.title('Portland Crime Map')
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
     st.markdown('This app is a Streamlit dashboard that shows the number of crimes in Portland, Oregon.')
 
+    df = pdx911_data()
+
     # Add a multiselect widget with all the different CRIME options
     crime_options = df['CRIME'].unique()
     selected_crime = st.sidebar.multiselect('Select Crime(s)', crime_options, crime_options)
     df = df[df['CRIME'].isin(selected_crime)]
-
-    # Add a selectbox widget with two different dataset options for twitter and pdx911
-    # dataset_options = ['Twitter Portland Crime Data', 'PDX911 Crime Data']
-    # selected_dataset = st.sidebar.selectbox('Select Dataset', dataset_options)
-    # if selected_dataset == 'Twitter Portland Crime Data':
-    #     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
-    # if selected_dataset == 'PDX911 Crime Data':
 
 
     st.subheader('Crime Map')
