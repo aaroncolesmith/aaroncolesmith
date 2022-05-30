@@ -35,6 +35,8 @@ def load_file():
     df['Implied_Probability'] = round(df['Implied_Probability'],4)
     df['Prev_Probability'] = round(df['Prev_Probability'],4)
 
+    
+
     return df
 
 # @st.cache(suppress_st_warning=True)
