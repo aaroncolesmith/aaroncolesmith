@@ -207,12 +207,13 @@ def app():
     # if data_source == 'PDX911':
     #     df = pdx911_data()
     
+    df = pdx911_data()
 
     st.title('Portland Crime Map')
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
     st.markdown('This app is a Streamlit dashboard that shows the number of crimes in Portland, Oregon.')
 
-    df = pdx911_data()
+    
 
     # Add a multiselect widget with all the different CRIME options
     crime_options = df['CRIME'].unique()
