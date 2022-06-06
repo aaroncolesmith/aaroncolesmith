@@ -149,4 +149,4 @@ def scatter(df,p,hover,show_features):
 
 if __name__ == "__main__":
     #execute
-    main()
+    app()
