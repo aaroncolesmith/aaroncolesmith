@@ -71,3 +71,8 @@ def app():
     explore and expand our business relationship
     """)
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=experience">',unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    #execute
+    app()

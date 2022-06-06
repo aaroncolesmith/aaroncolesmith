@@ -46,3 +46,8 @@ def app():
     st.image('./images/queue.png',caption='Queue was our patient registration system used across 500 health systems', use_column_width=True)
 
     st.write('<img src="https://www.google-analytics.com/collect?v=1&tid=UA-18433914-1&cid=555&aip=1&t=event&ec=portfolio&ea=projects">',unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    #execute
+    app()
