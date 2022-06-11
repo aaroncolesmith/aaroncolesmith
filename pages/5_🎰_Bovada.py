@@ -84,8 +84,8 @@ def get_select_options(df, track_df):
     a=np.insert(a,0,'')
     return a
 
-def table_output(df):
-    st.write(df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min',max_minus_min,'count']}).sort_values([('Price', 'mean')], ascending=True))
+# def table_output(df):
+#     st.write(df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min',max_minus_min,'count']}).sort_values([('Price', 'mean')], ascending=True))
 
 def line_chart(df, option, color_map):
     g=px.line(df,
@@ -240,8 +240,8 @@ def app():
     st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
 
-    recent_list= recent_updates()
-    recent_list = recent_list.tolist()
+    recent_list=recent_updates()
+    recent_list=recent_list.tolist()
 
     df = load_file()
 
