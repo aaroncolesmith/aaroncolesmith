@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly_express as px
 import plotly.graph_objects as go
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 
 st.set_page_config(
@@ -182,21 +184,23 @@ def twitter_data():
     return df
 
 def pdx911_data():
-    d = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.csv')
+    # d = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.csv')
+    d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.parquet', engine='pyarrow')
 
-    d.columns=['ID', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
-        'icon', 'TEXT', 'category', 'published', 'COORDS', 'content']
 
-    d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
-    d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
-    d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
+    # d.columns=['ID', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
+    #     'icon', 'TEXT', 'category', 'published', 'COORDS', 'content']
 
-    d['DATE'] = pd.to_datetime(d['DATE'])
-    d['HOUR'] = d['DATE'].dt.floor('h')
-    d['DAY'] = d['DATE'].dt.floor('d')
-    d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
+    # d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
+    # d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
+    # d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
 
-    d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
+    # d['DATE'] = pd.to_datetime(d['DATE'])
+    # d['HOUR'] = d['DATE'].dt.floor('h')
+    # d['DAY'] = d['DATE'].dt.floor('d')
+    # d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
+
+    # d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
 
     return d
 
