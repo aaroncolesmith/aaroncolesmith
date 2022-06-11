@@ -98,7 +98,7 @@ def scatter_map_day(d):
 
 def group_data_agg(df):
     d=df.groupby(['LATITUDE','LONGITUDE','ADDRESS']).agg({'DATE_CRIME': lambda x: '<br>'.join(x),
-                                            'ID': 'size',
+                                            'DATE': 'size',
                                             'DATE':'max'}).reset_index()
 
     d.columns = ['LATITUDE','LONGITUDE','ADDRESS','CRIME','COUNT','LAST_DATE']
@@ -115,7 +115,7 @@ def group_data_agg(df):
 
 def group_data_day(df):
     d=df.groupby(['LATITUDE','LONGITUDE','ADDRESS','DAY']).agg({'DATE_CRIME': lambda x: '<br>'.join(x),
-                                            'ID': 'size',
+                                            'DATE': 'size',
                                             'DATE':'max'}).reset_index()
     d.columns = ['LATITUDE','LONGITUDE','ADDRESS','DAY','CRIME','COUNT','LAST_DATE']
     d['LATITUDE'] = pd.to_numeric(d['LATITUDE'])
