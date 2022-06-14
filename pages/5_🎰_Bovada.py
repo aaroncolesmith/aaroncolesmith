@@ -259,10 +259,10 @@ def app():
     a = recent_list + a
     tmp_list = []
 
-    # for x in a:
-    #     if x not in tmp_list:
-    #         tmp_list.append(x)
-    tmp_list.append(x) for x in a if x not in tmp_list
+    for x in a:
+        if x not in tmp_list:
+            tmp_list.append(x)
+
 
     a=tmp_list
     del tmp_list
