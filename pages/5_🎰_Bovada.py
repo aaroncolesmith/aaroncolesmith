@@ -258,12 +258,12 @@ def app():
     a=a.to_list()
     a = recent_list + a
     tmp_list = []
-    st.write('Check3')
-    for x in a:
-        if x not in tmp_list:
-            tmp_list.append(x)
-    # [tmp_list.append(x) for x in a if x not in tmp_list]
-    st.write('Check4')
+
+    # for x in a:
+    #     if x not in tmp_list:
+    #         tmp_list.append(x)
+    tmp_list.append(x) for x in a if x not in tmp_list
+
     a=tmp_list
     del tmp_list
     a=np.insert(a,0,'')
