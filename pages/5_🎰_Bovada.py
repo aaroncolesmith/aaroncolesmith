@@ -23,10 +23,8 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 
 @st.cache(ttl=43200, suppress_st_warning=True)
 def load_file():
-    # df = pd.read_csv('./data/bovada.csv')
-    # df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_new.csv')
-    # df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_data.csv')
-    df=pd.read_parquet('https://github.com/aaroncolesmith/bovada/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
+
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
@@ -41,7 +39,7 @@ def load_file():
 
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
-    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/bovada_scatter.csv')
+    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada_data/master/bovada_scatter.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
@@ -247,19 +245,24 @@ def app():
 
     ga('bovada','get_data',str(df.index.size))
 
+    st.write('Check1')
+
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     a.columns = ['title','date','count','unique']
     a['date_sort'] = a['date'].astype('datetime64[D]')
     a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
     del a['date_sort']
+    st.write('Check2')
     a['date']=a['date'].astype('str').str[:16].str[5:]
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
+    st.write('Check3')
     a = recent_list + a
     tmp_list = []
     [tmp_list.append(x) for x in a if x not in tmp_list]
     a=tmp_list
     del tmp_list
+    st.write('Check4')
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)
