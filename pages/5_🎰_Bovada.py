@@ -256,17 +256,16 @@ def app():
     a['date']=a['date'].astype('str').str[:16].str[5:]
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
-    st.write('Check1')
     a = recent_list + a
-    st.write('Check2')
     tmp_list = []
     st.write('Check3')
-    [tmp_list.append(x) for x in a if x not in tmp_list]
+    for x in a:
+        if x not in tmp_list:
+            tmp_list.append(x)
+    # [tmp_list.append(x) for x in a if x not in tmp_list]
     st.write('Check4')
     a=tmp_list
-    st.write('Check5')
     del tmp_list
-    st.write('Check6')
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)
