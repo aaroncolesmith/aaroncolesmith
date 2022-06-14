@@ -245,24 +245,28 @@ def app():
 
     ga('bovada','get_data',str(df.index.size))
 
-    st.write('Check1')
+
 
     a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     a.columns = ['title','date','count','unique']
     a['date_sort'] = a['date'].astype('datetime64[D]')
     a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
     del a['date_sort']
-    st.write('Check2')
+
     a['date']=a['date'].astype('str').str[:16].str[5:]
     a=a['title'] + ' | ' + a['date']
     a=a.to_list()
-    st.write('Check3')
+    st.write('Check1')
     a = recent_list + a
+    st.write('Check2')
     tmp_list = []
+    st.write('Check3')
     [tmp_list.append(x) for x in a if x not in tmp_list]
-    a=tmp_list
-    del tmp_list
     st.write('Check4')
+    a=tmp_list
+    st.write('Check5')
+    del tmp_list
+    st.write('Check6')
     a=np.insert(a,0,'')
 
     option=st.selectbox('Select a bet -', a)
