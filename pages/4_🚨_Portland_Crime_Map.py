@@ -290,7 +290,7 @@ def app():
     # fig = px.scatter(df.groupby('HOUR').size().to_frame('COUNT').reset_index(), x='HOUR', y='COUNT')
     # st.plotly_chart(fig)
 
-    st.write(df.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascedning=False))
+    st.write(df.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
 
     crime_cnt_rolling_avg(df)
 
