@@ -184,14 +184,15 @@ def twitter_data():
     return df
 
 def pdx911_data():
-    # d = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.csv')
     d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.parquet', engine='pyarrow')
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
     dtmp=pd.read_xml(url)
     dtmp=dtmp.loc[(dtmp.id.notnull())&(dtmp.title.notnull())].reset_index(drop=True)
+
     dtmp=dtmp[['summary','updated','point']]
     dtmp.columns=['TEXT','DATE','COORDS']
+
     dtmp[['CRIME','ADDRESS']] = dtmp['TEXT'].str.split('at',n=1, expand=True)
     dtmp[['ADDRESS','CRIME_ID']]=dtmp['ADDRESS'].str.split(' \[',n=1,expand=True)
     dtmp['ADDRESS']=dtmp['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
@@ -205,27 +206,18 @@ def pdx911_data():
 
     d = pd.concat([d,dtmp])
 
-
-    d=d.groupby(['DATE','TEXT','COORDS','ADDRESS','CRIME','CRIME_ID','HOUR','DAY','DATE_CRIME','LATITUDE','LONGITUDE']).size().to_frame('cnt').reset_index().sort_values('DATE',ascending=True).reset_index(drop=True)
-
-    st.write(d.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
-
+    d=d.groupby(['DATE','TEXT','COORDS']).size().to_frame('cnt').reset_index().sort_values('DATE',ascending=True).reset_index(drop=True)
     del d['cnt']
 
-
-    # d.columns=['ID', 'title', 'subtitle', 'href', 'rel', 'DATE', 'name', 'email',
-    #     'icon', 'TEXT', 'category', 'published', 'COORDS', 'content']
-
-    # d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
-    # d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
-    # d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
-
-    # d['DATE'] = pd.to_datetime(d['DATE'])
-    # d['HOUR'] = d['DATE'].dt.floor('h')
-    # d['DAY'] = d['DATE'].dt.floor('d')
-    # d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
-
-    # d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
+    d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
+    d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
+    d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
+    d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
+    d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
+    d['DATE'] = pd.to_datetime(d['DATE'])
+    d['HOUR'] = d['DATE'].dt.floor('h')
+    d['DAY'] = d['DATE'].dt.floor('d')
+    d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
 
     return d
 
