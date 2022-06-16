@@ -207,6 +207,9 @@ def pdx911_data():
 
 
     d=d.groupby(['DATE','TEXT','COORDS','ADDRESS','CRIME','CRIME_ID','HOUR','DAY','DATE_CRIME','LATITUDE','LONGITUDE']).size().to_frame('cnt').reset_index().sort_values('DATE',ascending=True).reset_index(drop=True)
+
+    st.write(d.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
+
     del d['cnt']
 
 
@@ -239,6 +242,8 @@ def app():
     #     df = pdx911_data()
     
     df = pdx911_data()
+
+    st.write(df.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
 
     st.title('Portland Crime Map')
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
