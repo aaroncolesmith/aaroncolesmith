@@ -235,7 +235,6 @@ def app():
     
     df = pdx911_data()
 
-    st.write(df.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
 
     st.title('Portland Crime Map')
     st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
@@ -287,7 +286,6 @@ def app():
     # fig = px.scatter(df.groupby('HOUR').size().to_frame('COUNT').reset_index(), x='HOUR', y='COUNT')
     # st.plotly_chart(fig)
 
-    st.write(df.groupby(['DATE','HOUR','CRIME','COORDS','ADDRESS']).size().to_frame('COUNT').reset_index().sort_values('COUNT',ascending=False))
 
     crime_cnt_rolling_avg(df)
 
