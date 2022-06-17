@@ -219,6 +219,29 @@ def pdx911_data():
     d['DAY'] = d['DATE'].dt.floor('d')
     d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
 
+    upd_coords=pd.merge(d.groupby(['ADDRESS','COORDS']).size().to_frame('CNT').reset_index().groupby(['ADDRESS'])['CNT'].max(),
+            d.groupby(['ADDRESS','COORDS']).size().to_frame('CNT').reset_index(),
+            how='inner',
+            left_on=['ADDRESS','CNT'],
+            right_on=['ADDRESS','CNT']
+    )
+    upd_coords.columns = ['ADDRESS','CNT','UPDATED_COORDS']
+
+    d=pd.merge(d,
+            upd_coords.groupby('ADDRESS').first().reset_index().sort_values('CNT',ascending=False)[['ADDRESS','UPDATED_COORDS']],
+            how='inner',
+            left_on='ADDRESS',
+            right_on='ADDRESS')
+
+    del d['COORDS']
+    d['COORDS'] = d['UPDATED_COORDS']
+    del d['UPDATED_COORDS']
+
+    del d['LATITUDE']
+    del d['LONGITUDE']
+
+    d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
+
     return d
 
 
@@ -273,7 +296,7 @@ def app():
             scatter_map_day(d)
 
     if view_type == 'Last N Hours':
-        num = st.slider('How far back?', min_value=2, max_value=48, value=12, step=1)
+        num = st.slider('How far back?', min_value=2, max_value=336, value=12, step=1)
         d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=num)])
         if map_type == 'Density Map':
             density_map_agg(d)
