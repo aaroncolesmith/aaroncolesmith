@@ -65,3 +65,8 @@ def app():
     st.write('This is a database of NBA mock drafts for the 2022 NBA Draft')
 
     mocks_over_time(df)
+
+
+if __name__ == "__main__":
+    #execute
+    app()
