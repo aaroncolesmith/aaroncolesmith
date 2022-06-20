@@ -57,6 +57,44 @@ def player_team_combo(df):
     st.plotly_chart(fig, use_container_width=True)
 
 
+def avg_pick_by_player(df):
+    tmp=df.loc[df.team != 'None'].groupby(['player','team']).size().to_frame('times_picked').reset_index()
+    tmp['times_picked_by_team'] = tmp['team'] + ' - ' + tmp['times_picked'].astype('str')
+    tmp = tmp.sort_values('times_picked',ascending=False)
+
+    fig=px.scatter(
+    pd.merge(pd.merge(pd.merge(df.groupby(['player']).agg(
+        times_picked=('draft_order','size'),
+        avg_pick=('draft_order','mean'),
+        big_board=('bigboard_order','mean')
+    ).sort_values('avg_pick',ascending='True').reset_index(),
+    df.loc[df.comparisons!=''].groupby(['player','comparisons']).size().reset_index().groupby(['player']).agg(comparisons=('comparisons',lambda x:','.join(x))).reset_index(),
+    how='inner'),
+    tmp.groupby(['player']).agg(times_picked_by_team = ('times_picked_by_team',lambda x:'<br>'.join(x))).reset_index(),
+    how='inner'),
+    df.loc[df.source == 'The Ringer'].groupby(['player']).first().reset_index()[['player','position','height','weight','age','school','year']],
+    how='inner'),
+                x='player',
+                y='avg_pick',
+                color='player',
+                title='Avg Draft Position by Player',
+                hover_data=['times_picked_by_team','comparisons','position','height','weight','age','school','year'])
+    fig.update_traces(mode='markers',
+                    marker=dict(size=12,
+                                opacity=.75,
+                                line=dict(width=1,
+                                            color='DarkSlateGrey')))
+
+    custom_template = '<b>%{x}</b><br><b>Height / Weight:</b> %{customdata[3]}/%{customdata[4]}<br><b>School:</b> %{customdata[6]}<br><b>Avg. Draft Position: </b>%{y:.4}<br><br><b>Player Comparisons:</b> %{customdata[1]}<br><br><b>Times Picked by Team:</b><br>%{customdata[0]}'
+    fig.update_traces(hovertemplate=custom_template)
+
+    fig.update_layout(
+        template="plotly_white",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
 color_map = get_color_map()
 
 def app():
@@ -65,6 +103,8 @@ def app():
     st.write('This is a database of NBA mock drafts for the 2022 NBA Draft')
 
     mocks_over_time(df)
+    avg_pick_by_player(df)
+    player_team_combo(df)
 
 
 if __name__ == "__main__":
