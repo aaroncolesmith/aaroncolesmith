@@ -68,12 +68,12 @@ def player_team_combo(df):
 
 
 def avg_pick_by_player(df):
+
     tmp=df.loc[df.team != 'None'].groupby(['player','team']).size().to_frame('times_picked').reset_index()
     tmp['times_picked_by_team'] = tmp['team'] + ' - ' + tmp['times_picked'].astype('str')
     tmp = tmp.sort_values('times_picked',ascending=False)
 
-    fig=px.scatter(
-    pd.merge(pd.merge(pd.merge(df.groupby(['player']).agg(
+    dviz=pd.merge(pd.merge(pd.merge(df.groupby(['player']).agg(
         times_picked=('draft_order','size'),
         avg_pick=('draft_order','mean'),
         big_board=('bigboard_order','mean')
@@ -83,7 +83,12 @@ def avg_pick_by_player(df):
     tmp.groupby(['player']).agg(times_picked_by_team = ('times_picked_by_team',lambda x:'<br>'.join(x))).reset_index(),
     how='inner'),
     df.loc[df.source == 'The Ringer'].groupby(['player']).first().reset_index()[['player','position','height','weight','age','school','year']],
-    how='inner'),
+    how='inner')
+
+    dviz.comparisons = dviz.comparisons.str.wrap(50)
+    dviz.comparisons = dviz.comparisons.apply(lambda x: x.replace('\n', '<br>'))
+
+    fig=px.scatter(dviz,
                 x='player',
                 y='avg_pick',
                 color='player',
@@ -115,11 +120,13 @@ def rising_falling(df):
     col1, col2 = st.columns(2)
     col1.success("### Players Rising :fire:")
     for i,r in avg_tmp.sort_values('pct_change',ascending=True).head(5).iterrows():
-        col1.write(r['player'] + ' - Recent Draft Position: ' + str(round(r['recent_avg'],1)) + ' | % Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
+        col1.write(r['player'] + ' - Recent Draft Position: ' + str(round(r['recent_avg'],1)))
+        col1.write('% Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
 
     col2.warning("### Players Falling 🧊")
     for i,r in avg_tmp.sort_values('pct_change',ascending=False).head(5).iterrows():
         col2.write(r['player'] + ' - Recent Draft Position: ' + str(round(r['recent_avg'],1)) + ' | % Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
+        col2.write('% Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
 
 
 color_map = get_color_map()
