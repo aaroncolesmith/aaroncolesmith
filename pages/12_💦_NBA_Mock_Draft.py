@@ -31,7 +31,7 @@ def mocks_over_time(df):
         template="plotly_white",
 
     )
-    custom_template = '<b>%{customdata[0]}</b><br>%{x}<br><b>Pick #</b>%{y}<br><b>Team:</b> %{customdata[1]}<br><b>Source:</b> %{customdata[2]}'
+    custom_template = '<b>%{customdata[0]}</b><br>%{x}<br><b>Pick #</b>%{y}<br><b>Team:</b> %{customdata[1]}<br><b>Source:</b> %{customdata[2]}<extra></extra>'
     fig.update_traces(hovertemplate=custom_template)
     fig.update_traces(showlegend=True,
                     mode='lines+markers',
@@ -60,9 +60,9 @@ def player_team_combo(df):
         template="plotly_white",
 
     )
-    custom_template = '<b>%{y}</b><br><b>Times Picked:</b> %{x}<br>'
+    custom_template = '<b>%{y}</b><br><b>Times Picked:</b> %{x}<br><extra></extra>'
     fig.update_traces(hovertemplate=custom_template)
-    fig.update_yaxes(categoryorder='total descending',
+    fig.update_yaxes(categoryorder='total ascending',
                     title='Team / Player') 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -95,7 +95,7 @@ def avg_pick_by_player(df):
                                 line=dict(width=1,
                                             color='DarkSlateGrey')))
 
-    custom_template = '<b>%{x}</b><br><b>Height / Weight:</b> %{customdata[3]}/%{customdata[4]}<br><b>School:</b> %{customdata[6]}<br><b>Avg. Draft Position: </b>%{y:.4}<br><br><b>Player Comparisons:</b> %{customdata[1]}<br><br><b>Times Picked by Team:</b><br>%{customdata[0]}'
+    custom_template = '<b>%{x}</b><br><b>Height / Weight:</b> %{customdata[3]}/%{customdata[4]}<br><b>School:</b> %{customdata[6]}<br><b>Avg. Draft Position: </b>%{y:.4}<br><br><b>Player Comparisons:</b> %{customdata[1]}<br><br><b>Times Picked by Team:</b><br>%{customdata[0]}<extra></extra>'
     fig.update_traces(hovertemplate=custom_template)
 
     fig.update_layout(
@@ -115,11 +115,11 @@ def rising_falling(df):
     col1, col2 = st.columns(2)
     col1.success("### Players Rising :fire:")
     for i,r in avg_tmp.sort_values('pct_change',ascending=True).head(5).iterrows():
-        col1.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
+        col1.write(r['player'] + ' - Recent Draft Position: ' + str(round(r['recent_avg'],1)) + ' | % Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
 
     col2.warning("### Players Falling 🧊")
     for i,r in avg_tmp.sort_values('pct_change',ascending=False).head(5).iterrows():
-        col2.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
+        col2.write(r['player'] + ' - Recent Draft Position: ' + str(round(r['recent_avg'],1)) + ' | % Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
 
 
 color_map = get_color_map()
