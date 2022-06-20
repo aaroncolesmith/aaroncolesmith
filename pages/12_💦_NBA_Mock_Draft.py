@@ -115,11 +115,11 @@ def rising_falling(df):
     col1, col2 = st.columns(2)
     col1.success("### Players Rising :fire:")
     for i,r in avg_tmp.sort_values('pct_change',ascending=True).head(5).iterrows():
-        st.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
+        col1.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
 
     col2.warning("### Players Falling 🧊")
     for i,r in avg_tmp.sort_values('pct_change',ascending=False).head(5).iterrows():
-        st.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
+        col2.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
 
 
 color_map = get_color_map()
