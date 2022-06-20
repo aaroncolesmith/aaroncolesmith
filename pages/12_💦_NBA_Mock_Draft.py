@@ -2,6 +2,11 @@ import pandas as pd
 import plotly_express as px
 import streamlit as st
 
+st.set_page_config(
+    page_title='aaroncolesmith.com',
+    page_icon='dog'
+    )
+
 def load_data():
     df=pd.read_parquet('https://github.com/aaroncolesmith/nba_draft_db/blob/main/mock_draft_db.parquet?raw=true', engine='pyarrow')
     return df
@@ -100,13 +105,30 @@ def avg_pick_by_player(df):
     st.plotly_chart(fig, use_container_width=True)
 
 
+def rising_falling(df):
+    avg_tmp=pd.merge(df.loc[df.date.isin(df.date.unique()[-5:])].groupby(['player']).agg(recent_avg=('draft_order','mean')).reset_index(),
+    df.groupby(['player']).agg(total_avg=('draft_order','mean')).reset_index()
+    )
+    avg_tmp['pct_change'] = (avg_tmp['recent_avg'] - avg_tmp['total_avg']) / avg_tmp['total_avg']
+    avg_tmp.sort_values('pct_change',ascending=False)
+
+    col1, col2 = st.columns(2)
+    col1.success("### Players Rising :fire:")
+    for i,r in avg_tmp.sort_values('pct_change',ascending=True).head(5).iterrows():
+        st.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬆️ '+str(abs(round(100*r['pct_change'],2))) +'%')
+
+    col2.warning("### Players Falling 🧊")
+    for i,r in avg_tmp.sort_values('pct_change',ascending=False).head(5).iterrows():
+        st.write(r['player'] + ' - Recent Avg Draft Position: ' + str(round(r['recent_avg'],2)) + ' | Percent Change: ⬇️ '+str(round(100*r['pct_change'],2)) +'%')
+
+
 color_map = get_color_map()
 
 def app():
     df = load_data()
     st.title('NBA Mock Draft Database')
     st.write('This is a database of NBA mock drafts for the 2022 NBA Draft')
-
+    rising_falling(df)
     mocks_over_time(df)
     avg_pick_by_player(df)
     player_team_combo(df)
