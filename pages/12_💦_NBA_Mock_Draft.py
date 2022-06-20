@@ -21,11 +21,13 @@ def mocks_over_time(df):
             y='draft_order',
             color='player',
             title='Mock Drafts Over Time',
-            hover_data=['team','source'])
+            hover_data=['player','team','source'])
     fig.update_layout(
         template="plotly_white",
 
     )
+    custom_template = '<b>%{customdata[0]}</b><br>%{x}<br><b>Pick #</b>%{y}<br><b>Team:</b> %{customdata[1]}<br><b>Source:</b> %{customdata[2]}'
+    fig.update_traces(hovertemplate=custom_template)
     fig.update_traces(showlegend=True,
                     mode='lines+markers',
                     opacity=.5,
@@ -43,8 +45,9 @@ def player_team_combo(df):
     dviz=df.loc[df.team!='None'].groupby(['team','player']).agg(times_picked=('draft_order','size'),
                                   avg_pick=('draft_order','mean')).reset_index()
     fig=px.bar(dviz,
-        x=dviz['team']+' - '+dviz['player'],
-        y='times_picked',
+        y=dviz['team']+' - '+dviz['player'],
+        x='times_picked',
+        orientation='h',
         color_discrete_map=color_map,
         color='team',
         title='Team and Player Drafted Combos')   
@@ -52,7 +55,9 @@ def player_team_combo(df):
         template="plotly_white",
 
     )
-    fig.update_xaxes(categoryorder='total descending',
+    custom_template = '<b>%{y}</b><br><b>Times Picked:</b> %{x}<br>'
+    fig.update_traces(hovertemplate=custom_template)
+    fig.update_yaxes(categoryorder='total descending',
                     title='Team / Player') 
     st.plotly_chart(fig, use_container_width=True)
 
