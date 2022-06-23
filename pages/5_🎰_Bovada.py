@@ -294,6 +294,7 @@ def app():
                 f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'mean')], ascending=True).reset_index(drop=False).head(10)
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
+            st.write(filtered_df.head(3))
             line_chart_probability(filtered_df,option,color_map)
             line_chart_probability_initial(filtered_df,option,color_map)
             line_chart(filtered_df,option,color_map)
