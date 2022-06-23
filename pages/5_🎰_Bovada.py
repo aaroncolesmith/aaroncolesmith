@@ -282,6 +282,9 @@ def app():
             
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
+                st.write(option)
+                st.write(filtered_df.head(3))
+
                 filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
                 filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
                 filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
