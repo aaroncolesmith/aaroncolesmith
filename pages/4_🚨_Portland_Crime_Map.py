@@ -296,7 +296,12 @@ def app():
             scatter_map_day(d)
 
     if view_type == 'Last N Hours':
-        num = st.slider('How far back?', min_value=2, max_value=336, value=12, step=1)
+        with st.form(key='my_form'):
+            num = st.slider('How far back?', min_value=2, max_value=336, value=12, step=1)
+            submit_button = st.form_submit_button(label='Submit')
+
+
+        # num = st.slider('How far back?', min_value=2, max_value=336, value=12, step=1)
         d=group_data_agg(df[df['DATE'] > df['DATE'].max() - pd.Timedelta(hours=num)])
         if map_type == 'Density Map':
             density_map_agg(d)
