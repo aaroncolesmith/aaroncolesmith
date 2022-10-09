@@ -184,7 +184,7 @@ def twitter_data():
     return df
 
 def pdx911_data():
-    d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/portland_crime_data.parquet', engine='pyarrow')
+    d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
     dtmp=pd.read_xml(url)

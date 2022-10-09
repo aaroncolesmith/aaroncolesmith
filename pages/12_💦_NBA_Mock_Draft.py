@@ -132,8 +132,8 @@ def rising_falling(df):
 color_map = get_color_map()
 
 def app():
-    df = load_data()
     st.title('NBA Mock Draft Database')
+    df = load_data()
     st.write('This is a database of NBA mock drafts for the 2022 NBA Draft')
     rising_falling(df)
     mocks_over_time(df)
