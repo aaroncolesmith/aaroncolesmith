@@ -7,13 +7,10 @@ import requests
 import plotly_express as px
 import extra_streamlit_components as stx
 
-# APP_URL = os.environ["APP_URL"]
-# STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
-# STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
+APP_URL = os.environ["APP_URL"]
+STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
+STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
 
-APP_URL = 'http://localhost:8501/strava_viz'
-STRAVA_CLIENT_ID = '31759'
-STRAVA_CLIENT_SECRET = '2598b3d943c65ea4ba6fccd1be1c4c20d246f534'
 
 @st.cache(allow_output_mutation=True)
 def get_manager():

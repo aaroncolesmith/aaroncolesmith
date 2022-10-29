@@ -1,7 +1,11 @@
 FROM python:3.8
+
+EXPOSE 8501
+
 WORKDIR /app
+
 COPY requirements.txt ./requirements.txt
 RUN pip3 install -r requirements.txt
-EXPOSE 8501
+
 COPY . /app
-CMD streamlit run aaroncolesmith.py
+CMD streamlit run 1_🏠_Home.py
