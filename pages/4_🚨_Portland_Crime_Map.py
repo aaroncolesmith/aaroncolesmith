@@ -212,10 +212,11 @@ def pdx911_data():
     d[['CRIME','ADDRESS']] = d['TEXT'].str.split('at',n=1, expand=True)
     d[['ADDRESS','CRIME_ID']]=d['ADDRESS'].str.split(' \[',n=1,expand=True)
     d['ADDRESS']=d['ADDRESS'].str.replace(', PORT',', PORTLAND').str.replace(', GRSM',', GRESHAM')
-    d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
+    d['DATE']=d['DATE'].apply(lambda x: pd.to_datetime(x).tz_convert('US/Pacific'))
+    d['DATE_CRIME'] = pd.to_datetime(d['DATE'], utc=False).dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']   
     d[['LATITUDE','LONGITUDE']] = d['COORDS'].str.split(' ',n=1, expand=True)
     d['DATE'] = pd.to_datetime(d['DATE'])
-    d['HOUR'] = d['DATE'].dt.floor('h')
+    d['HOUR'] = d['DATE'].dt.floor('h',ambiguous=True)
     d['DAY'] = d['DATE'].dt.floor('d')
     d['DATE_CRIME'] = d['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + d['CRIME']
 
