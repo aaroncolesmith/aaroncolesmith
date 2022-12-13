@@ -39,13 +39,13 @@ def load_strava_data(auth):
         activites_url = "https://www.strava.com/api/v3/athlete/activities"
         i=1
         size1=0
-        size2=400
+        size2=1
         while size1!=size2:
             size1=df.index.size
             param = {'per_page': 200, 'page': i}
             data = requests.get(activites_url, headers=header, params=param).json()
             df=pd.concat([df,pd.DataFrame(data)])
-            # size2=df.index.size
+            size2=df.index.size
             i+=1
             st.write(size1)
         # df['distance_miles'] = df['distance']/1609
