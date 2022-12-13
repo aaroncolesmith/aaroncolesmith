@@ -25,13 +25,13 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 def load_file():
 
     df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
-    df['date'] = pd.to_datetime(df['date'])
-    df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
-    df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
-    df['minutes_ago'] = round(df['seconds_ago']/60,2)
-    df['Prev_Probability']=df.groupby(['title','description'])['Implied_Probability'].transform(lambda x: x.shift(1))
-    df['Implied_Probability'] = round(df['Implied_Probability'],4)
-    df['Prev_Probability'] = round(df['Prev_Probability'],4)
+    # df['date'] = pd.to_datetime(df['date'])
+    # df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+    # df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
+    # df['minutes_ago'] = round(df['seconds_ago']/60,2)
+    # df['Prev_Probability']=df.groupby(['title','description'])['Implied_Probability'].transform(lambda x: x.shift(1))
+    # df['Implied_Probability'] = round(df['Implied_Probability'],4)
+    # df['Prev_Probability'] = round(df['Prev_Probability'],4)
 
     
 
