@@ -185,9 +185,11 @@ def twitter_data():
 
 def pdx911_data():
     d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
+    st.write('loaded existing data')
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
     dtmp=pd.read_xml(url)
+    st.write('pulled new data')
     dtmp=dtmp.loc[(dtmp.id.notnull())&(dtmp.title.notnull())].reset_index(drop=True)
 
     dtmp=dtmp[['summary','updated','point']]
@@ -205,6 +207,7 @@ def pdx911_data():
     dtmp[['LATITUDE','LONGITUDE']] = dtmp['COORDS'].str.split(' ',n=1, expand=True)
 
     d = pd.concat([d,dtmp])
+    st.write('concated new and old')
 
     d=d.groupby(['DATE','TEXT','COORDS']).size().to_frame('cnt').reset_index().sort_values('DATE',ascending=True).reset_index(drop=True)
     del d['cnt']
