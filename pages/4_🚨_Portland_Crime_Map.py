@@ -183,6 +183,7 @@ def twitter_data():
 
     return df
 
+@st.cache(ttl=43200, suppress_st_warning=True)
 def pdx911_data():
     d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
     st.write('loaded existing data')
