@@ -1,0 +1,14 @@
+# service: aaroncolesmith
+runtime: custom
+env: flex
+manual_scaling: 
+  instances: 1
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
+
+env_variables:
+  APP_URL: 'http://www.aaroncolesmith.com/strava_viz'
+  STRAVA_CLIENT_ID: '31759'
+  STRAVA_CLIENT_SECRET: '2598b3d943c65ea4ba6fccd1be1c4c20d246f534'

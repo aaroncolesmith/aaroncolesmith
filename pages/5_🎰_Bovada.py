@@ -225,21 +225,26 @@ def recent_updates():
 
     st.plotly_chart(fig)
 
-    d['date']=d['date'].astype('str').str[:16].str[5:]
-    d['title']=d['title'] + ' | ' + d['date']
+    # d['date']=d['date'].astype('str').str[:16].str[5:]
+    # d['title']=d['title'] + ' | ' + d['date']
     
-    return d['title'].unique()
+    # return d['title'].unique()
+
+    d['date']=d['date'].astype('str').str[:16].str[5:]
+    # d=d.groupby(['title']).agg(date=('date','max')).reset_index()
+    d['title_date'] = d['title']+' | '+d['date']
+    return d
 
 
 def app():
 
     color_map = get_color_map()
 
-    st.title('Bovada Odds Over Time')
+    st.title('Bovada Odds Over Time - Updated')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
 
     recent_list=recent_updates()
-    recent_list=recent_list.tolist()
+    # recent_list=recent_list.tolist()
 
     df = load_file()
 
@@ -247,16 +252,28 @@ def app():
 
 
 
-    a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
-    a.columns = ['title','date','count','unique']
-    a['date_sort'] = a['date'].astype('datetime64[D]')
-    a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
-    del a['date_sort']
+    # a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
+    # a.columns = ['title','date','count','unique']
+    # a['date_sort'] = a['date'].astype('datetime64[D]')
+    # a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
+    # del a['date_sort']
 
+    # a['date']=a['date'].astype('str').str[:16].str[5:]
+    # a=a['title'] + ' | ' + a['date']
+    # a=a.to_list()
+    # a = recent_list + a
+
+    df['day']=df['date'].astype('datetime64[D]')
+    a=df.groupby(['title']).agg(date=('date','max'),
+                            last_day=('day','max'),
+                            total_count=('date','size'),
+                            unique_count=('date','nunique'),
+                            ).reset_index().sort_values(['last_day','total_count','unique_count'],ascending=(False,False,False))
+    
     a['date']=a['date'].astype('str').str[:16].str[5:]
-    a=a['title'] + ' | ' + a['date']
-    a=a.to_list()
-    a = recent_list + a
+    a['title_date'] = a['title']+' | '+a['date']
+    a=pd.concat([recent_list[['date','title_date']],a[['date','title_date']]]).reset_index(drop=True)['title_date'].to_list()
+
     tmp_list = []
 
     for x in a:
