@@ -172,25 +172,24 @@ def crime_cnt_rolling_avg(df):
     st.plotly_chart(fig)
 
 
-def twitter_data():
-    df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
-    df['DATE'] = pd.to_datetime(df['DATE'],utc=True)
-    # Convert date from UTC to PST
-    df['DATE'] = df['DATE'].dt.tz_convert('US/Pacific')
-    df['HOUR'] = df['DATE'].dt.floor('h')
-    df['DAY'] = df['DATE'].dt.floor('d')
-    df['DATE_CRIME'] = df['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + df['CRIME']
+# def twitter_data():
+#     df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_map/main/data.csv')
+#     df['DATE'] = pd.to_datetime(df['DATE'],utc=True)
+#     # Convert date from UTC to PST
+#     df['DATE'] = df['DATE'].dt.tz_convert('US/Pacific')
+#     df['HOUR'] = df['DATE'].dt.floor('h')
+#     df['DAY'] = df['DATE'].dt.floor('d')
+#     df['DATE_CRIME'] = df['DATE'].dt.strftime('%-m/%-d %-I:%M%p').astype('str') + ' - ' + df['CRIME']
 
-    return df
+#     return df
 
-@st.cache(ttl=43200, suppress_st_warning=True)
-def pdx911_data():
+@st.cache(ttl=1800, suppress_st_warning=True)
+def pdx911_data(days):
     d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
-    st.write('loaded existing data')
+    d=d.loc[d.DATE.dt.date >= pd.to_datetime('today') - pd.Timedelta(days=days)]
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
     dtmp=pd.read_xml(url)
-    st.write('pulled new data')
     dtmp=dtmp.loc[(dtmp.id.notnull())&(dtmp.title.notnull())].reset_index(drop=True)
 
     dtmp=dtmp[['summary','updated','point']]
@@ -208,7 +207,6 @@ def pdx911_data():
     dtmp[['LATITUDE','LONGITUDE']] = dtmp['COORDS'].str.split(' ',n=1, expand=True)
 
     d = pd.concat([d,dtmp])
-    st.write('concated new and old')
 
     d=d.groupby(['DATE','TEXT','COORDS']).size().to_frame('cnt').reset_index().sort_values('DATE',ascending=True).reset_index(drop=True)
     del d['cnt']
@@ -252,29 +250,22 @@ def pdx911_data():
 
 
 def app():
+    url='https://www.portlandonline.com/scripts/911incidents.cfm'
+    dtmp=pd.read_xml(url)
+    st.title('Portland Crime Dashboard')
+    st.markdown('Updated as of: ' + str(pd.to_datetime(dtmp['updated']).max().strftime('%-m/%-d %-I:%M%p')))
+    days = st.sidebar.slider('How many days of data to load', min_value=1, max_value=100, value=7, step=1)
 
-    # Radio Buttons for twitter_data or pdx911_data
-    # data_source = st.radio( "Which data source?",('Twitter', 'PDX911'))
+    df = pdx911_data(days)
 
-    # if data_source == 'Twitter':
-    #     df = twitter_data()
-    # if data_source == 'PDX911':
-    #     df = pdx911_data()
-    
-    df = pdx911_data()
-
-
-    st.title('Portland Crime Map')
-    st.markdown('Updated as of: ' + str(df['DATE'].max().strftime('%-m/%-d %-I:%M%p')))
     st.markdown('This app is a Streamlit dashboard that shows the number of crimes in Portland, Oregon.')
 
+    # st.title('Portland Crime Map')
     
-
     # Add a multiselect widget with all the different CRIME options
     crime_options = df['CRIME'].unique()
     selected_crime = st.sidebar.multiselect('Select Crime(s)', crime_options, crime_options)
     df = df[df['CRIME'].isin(selected_crime)]
-
 
     st.subheader('Crime Map')
 
@@ -326,10 +317,6 @@ def app():
     # Stacked bar chart over by by crime type
     fig = px.bar(df.groupby(['HOUR','CRIME']).size().to_frame('COUNT').reset_index(), x='HOUR', y='COUNT', color='CRIME')
     st.plotly_chart(fig)  
-
-    st.write(df.tail(5))
-
-
 
 
 if __name__ == "__main__":

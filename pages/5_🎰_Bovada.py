@@ -25,15 +25,6 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 def load_file():
 
     df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
-    # df['date'] = pd.to_datetime(df['date'])
-    # df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
-    # df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
-    # df['minutes_ago'] = round(df['seconds_ago']/60,2)
-    # df['Prev_Probability']=df.groupby(['title','description'])['Implied_Probability'].transform(lambda x: x.shift(1))
-    # df['Implied_Probability'] = round(df['Implied_Probability'],4)
-    # df['Prev_Probability'] = round(df['Prev_Probability'],4)
-
-    
 
     return df
 
@@ -82,9 +73,6 @@ def get_select_options(df, track_df):
     a=np.insert(a,0,'')
     return a
 
-# def table_output(df):
-#     st.write(df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min',max_minus_min,'count']}).sort_values([('Price', 'mean')], ascending=True))
-
 def line_chart(df, option, color_map):
     g=px.line(df,
     x='Date',
@@ -106,7 +94,7 @@ def line_chart(df, option, color_map):
                    # gridwidth=1,
                    # gridcolor='#D4D4D4'
                   )
-    # g.update_layout(plot_bgcolor='white')
+
     g.update_xaxes(title='Date',
                   showgrid=False,
                   # gridwidth=1,
@@ -123,7 +111,6 @@ def line_chart_probability(df,option,color_map):
     render_mode='svg',
     color_discrete_map=color_map,
     color_discrete_sequence=color_discrete_sequence,
-    # title='Implied Probability Over Time'
     title="Implied Probability Over Time <br><sup>"+option+" </sup>")
     
     g.update_traces(mode='lines',
@@ -140,7 +127,6 @@ def line_chart_probability(df,option,color_map):
                    # gridcolor='#D4D4D4',
                    tickformat = ',.0%'
                   )
-    # g.update_layout(plot_bgcolor='white')
     g.update_xaxes(title='Date',
                   showgrid=False,
                   # gridwidth=1,
@@ -173,7 +159,6 @@ def line_chart_probability_initial(df,option,color_map):
                    # gridcolor='#D4D4D4',
                    tickformat = ',.0%'
                   )
-    # g.update_layout(plot_bgcolor='white')
     g.update_xaxes(title='Date',
                   showgrid=False,
                   # gridwidth=1,
