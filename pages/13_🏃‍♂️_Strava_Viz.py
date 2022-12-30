@@ -48,11 +48,14 @@ def load_strava_data(auth):
             size2=df.index.size
             i+=1
             st.write(size1)
-        # df['distance_miles'] = df['distance']/1609
-        # df['elapsed_time_min']=pd.to_timedelta(df['elapsed_time']).astype('timedelta64[s]').astype(int)/60
-        # df['moving_time_min']=pd.to_timedelta(df['moving_time']).astype('timedelta64[s]').astype(int)/60
-        # df['date'] = pd.to_datetime(df['start_date']).dt.date
-        # df['elapsed_time_hours'] = round(df['elapsed_time'] / 3600,2)
+
+        df['distance_miles'] = df['distance']/1609
+        df['elapsed_time_min']=df['elapsed_time']/60
+        df['moving_time_min']=df['moving_time']/60
+        df['date'] = pd.to_datetime(df['start_date']).dt.date
+        df['elapsed_time_hours'] = round(df['elapsed_time'] / 3600,2)
+        df['min_per_mile'] = df['moving_time_min']/df['distance_miles']
+
         return df
 
 
@@ -150,9 +153,14 @@ def app():
 
         df = load_strava_data(auth)
         st.write('You have a total of '+str(df.index.size)+' activities in your Strava account!')
-        st.write(df.head(5))
 
-        st.write(cookies)
+        fig=px.scatter(df.loc[df.distance>0],x='distance_miles',y='average_speed',color='type',title='Avg Speed vs. Total Miles by Type',hover_data=['name','date','id'])
+        fig.update_traces(mode='markers',marker=dict(size=8,ine=dict(width=1,color='DarkSlateGrey')))
+        st.plotly_chart(fig,use_container_width=True)
+
+        # st.write(df.head(5))
+
+        # st.write(cookies)
 
     
     except:

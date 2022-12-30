@@ -22,10 +22,12 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 
 
 @st.cache(ttl=43200, suppress_st_warning=True)
-def load_file():
+def load_file(date_select):
 
     df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
+    df['day']=df['date'].astype('datetime64[D]')
 
+    df=df.loc[df.date.dt.date >= date_select]
     return df
 
 # @st.cache(suppress_st_warning=True)
@@ -62,16 +64,16 @@ def load_scatter_data():
 #     df.to_csv(csv_buffer,index=False)
 #     s3_resource.Object(bucket, key).put(Body=csv_buffer.getvalue())
 
-def get_select_options(df, track_df):
-    b=track_df.groupby(['selection']).agg({'count':'sum'}).sort_values(['count'], ascending=False).reset_index(drop=False)
-    a=pd.merge(df, b, left_on='title',right_on='selection', how = 'left').sort_values(['count'], ascending=False)
-    a['date'] = pd.to_datetime(a['date'])
-    a=a.groupby('title').agg({'date':'max','count':'first'}).reset_index().sort_values('count',ascending=False)
-    a['date'] = a['date'].dt.floor('Min').astype('str').str[:16].str[5:]
-    a=a['title'] + ' | ' + a['date']
-    a=a.to_list()
-    a=np.insert(a,0,'')
-    return a
+# def get_select_options(df, track_df):
+#     b=track_df.groupby(['selection']).agg({'count':'sum'}).sort_values(['count'], ascending=False).reset_index(drop=False)
+#     a=pd.merge(df, b, left_on='title',right_on='selection', how = 'left').sort_values(['count'], ascending=False)
+#     a['date'] = pd.to_datetime(a['date'])
+#     a=a.groupby('title').agg({'date':'max','count':'first'}).reset_index().sort_values('count',ascending=False)
+#     a['date'] = a['date'].dt.floor('Min').astype('str').str[:16].str[5:]
+#     a=a['title'] + ' | ' + a['date']
+#     a=a.to_list()
+#     a=np.insert(a,0,'')
+#     return a
 
 def line_chart(df, option, color_map):
     g=px.line(df,
@@ -181,6 +183,11 @@ def ga(event_category, event_action, event_label):
 def recent_updates():
     # d=df.loc[(df.Pct_Change.abs() > .01) & (df.date >= df.date.max() - pd.Timedelta(hours=4)) & (df.Pct_Change.notnull())].sort_values('Pct_Change',ascending=False).reset_index(drop=False)
     d=load_scatter_data()
+    d2=d.copy()
+    d2['date']=d2['date'].astype('str').str[:16].str[5:]
+    d2['title_date'] = d2['title']+' | '+d2['date']
+
+    d['title']=d['title'].str.replace(' - ','<br>     ')
     fig=px.scatter(d,
                y='Pct_Change',
                title='Recent Updates - Wagers Rising / Falling',
@@ -206,19 +213,11 @@ def recent_updates():
                     categoryorder='total descending'
                   )
 
-    fig.update_traces(hovertemplate='Bet Title: %{customdata[0]}<br>Bet Wager: %{customdata[1]}<br>Probability Change: %{customdata[3]:.2%} > %{customdata[2]:.2%}<br>Pct Change: %{y:.1%}<br>Last Update: %{customdata[4]} hrs ago')
+    fig.update_traces(hovertemplate='<b>Bet Title:</b> %{customdata[0]}<br><b>Bet Wager:</b> %{customdata[1]}<br><b>Probability Change:</b> %{customdata[3]:.2%} > %{customdata[2]:.2%}<br><b>Pct Change:</b> %{y:.1%}<br><b>Last Update:</b> %{customdata[4]} hrs ago')
 
     st.plotly_chart(fig)
 
-    # d['date']=d['date'].astype('str').str[:16].str[5:]
-    # d['title']=d['title'] + ' | ' + d['date']
-    
-    # return d['title'].unique()
-
-    d['date']=d['date'].astype('str').str[:16].str[5:]
-    # d=d.groupby(['title']).agg(date=('date','max')).reset_index()
-    d['title_date'] = d['title']+' | '+d['date']
-    return d
+    return d2
 
 
 def app():
@@ -231,7 +230,14 @@ def app():
     recent_list=recent_updates()
     # recent_list=recent_list.tolist()
 
-    df = load_file()
+    date_select = st.sidebar.date_input(
+        "How far back do you want to pull bets?",
+        value=pd.to_datetime('today') - pd.Timedelta(days=30),
+        min_value=pd.to_datetime('2019-02-19'),
+        max_value=pd.to_datetime('today')
+        )
+
+    df = load_file(date_select)
 
     ga('bovada','get_data',str(df.index.size))
 
@@ -248,7 +254,6 @@ def app():
     # a=a.to_list()
     # a = recent_list + a
 
-    df['day']=df['date'].astype('datetime64[D]')
     a=df.groupby(['title']).agg(date=('date','max'),
                             last_day=('day','max'),
                             total_count=('date','size'),
