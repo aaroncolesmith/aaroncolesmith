@@ -1,5 +1,7 @@
 import pandas as pd
 import plotly_express as px
+import plotly.io as pio
+pio.templates.default = "simple_white"
 import streamlit as st
 
 st.set_page_config(

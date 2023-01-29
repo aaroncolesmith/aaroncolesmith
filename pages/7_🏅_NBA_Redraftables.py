@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import plotly_express as px
+import plotly.io as pio
+pio.templates.default = "simple_white"
 from datetime import datetime
 import requests
 import streamlit as st

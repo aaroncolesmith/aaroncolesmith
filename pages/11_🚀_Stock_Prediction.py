@@ -4,7 +4,8 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
-import random
+import plotly.io as pio
+pio.templates.default = "simple_white"
 
 st.set_page_config(
     page_title='aaroncolesmith.com',

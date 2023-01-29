@@ -8,7 +8,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_iris
 import plotly.graph_objects as go
-import datetime
+import plotly.io as pio
+pio.templates.default = "simple_white"
 
 st.set_page_config(
     page_title='aaroncolesmith.com',

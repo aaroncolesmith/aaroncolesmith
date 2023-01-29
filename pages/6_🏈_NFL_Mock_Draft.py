@@ -8,6 +8,8 @@ import streamlit.components.v1 as components
 import networkx as nx
 import plotly_express as px
 import plotly.graph_objects as go
+import plotly.io as pio
+pio.templates.default = "simple_white"
 import numpy as np
 from IPython.core.display import HTML
 
@@ -137,8 +139,10 @@ def app():
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
     draft_year = st.selectbox('Draft Year?',
-        ('2022','2022 - Most Recent','2021'))
+        ('2023','2022','2022 - Most Recent','2021'))
 
+    if draft_year == '2023':
+        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv')
     if draft_year == '2022':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
     if draft_year == '2022 - Most Recent':

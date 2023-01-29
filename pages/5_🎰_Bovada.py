@@ -1,16 +1,18 @@
 import pandas as pd
-import requests
+# import requests
 from pandas.io.json import json_normalize
 import datetime
-import io
-from io import StringIO
+# import io
+# from io import StringIO
 # import boto3
 import streamlit as st
 import numpy as np
 import plotly_express as px
-import sys
-import pyarrow as pa
-import pyarrow.parquet as pq
+import plotly.io as pio
+pio.templates.default = "simple_white"
+# import sys
+# import pyarrow as pa
+# import pyarrow.parquet as pq
 
 st.set_page_config(
     page_title='aaroncolesmith.com',

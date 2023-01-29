@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly_express as px
 import plotly.graph_objects as go
-import pyarrow as pa
-import pyarrow.parquet as pq
+import plotly.io as pio
+pio.templates.default = "simple_white"
+# import pyarrow as pa
+# import pyarrow.parquet as pq
 
 
 st.set_page_config(

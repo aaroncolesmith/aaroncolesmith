@@ -3,6 +3,8 @@ import plotly_express as px
 import pandas as pd
 import numpy as np
 import datetime
+import plotly.io as pio
+pio.templates.default = "simple_white"
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
