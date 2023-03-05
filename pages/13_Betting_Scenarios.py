@@ -27,6 +27,9 @@ def update_df(df):
     df['ml_home_p'] = df['ml_home'].apply(get_prob)
     df['ml_away_p'] = df['ml_away'].apply(get_prob)
 
+    for col in ['ml_away','ml_home','draw','total_over_money','ml_away_p','ml_home_p']:
+        df[col]=pd.to_numeric(df[col])
+
     return df
 
 
@@ -79,9 +82,10 @@ def app():
 
     game_id = int(game_id)
 
+
     fig=px.scatter(df.query('id==@game_id'),
             x='date_scraped',
-             y=['ml_away','ml_home','draw','total_over_money','ml_away_p','ml_home_p'],
+            y=['ml_away','ml_home','draw','total_over_money','ml_away_p','ml_home_p'],
             hover_data=['home_team','away_team','status']
     )
 
@@ -109,8 +113,6 @@ def app():
                     )
 
     st.plotly_chart(fig,use_container_width=True)
-
-
 
     d4=d3.query('status=="complete"').sort_values('start_time',ascending=True).copy()
 
@@ -232,6 +234,9 @@ def app():
     c2.write('Money lost: '+str(
         round(d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum(),2)
         ))
+
+
+    st.write(df.query('id==@game_id'))
 
 if __name__ == "__main__":
     #execute
