@@ -105,6 +105,7 @@ def line_chart(df, option, color_map):
                   # gridcolor='#D4D4D4'
                   )
     # g=color_update(g)
+    # g.update_layout({'plot_bgcolor': 'rgba(0, 0, 0, 0)','paper_bgcolor': 'rgba(0, 0, 0, 0)',})
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability(df,option,color_map):
