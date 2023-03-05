@@ -124,7 +124,7 @@ def app():
     payout='ml_home'
     result_title='betting_line_chg_home_result'
     total_title='betting_line_chg_home_total'
-    pct_chg_threshold=.02
+    # pct_chg_threshold=.02
 
     ## Scenario 1 -- Bet 1 dollar on home team money line
     d4.loc[
@@ -153,7 +153,7 @@ def app():
     payout='ml_away'
     result_title='betting_line_chg_away_result'
     total_title='betting_line_chg_away_total'
-    pct_chg_threshold=.1
+    # pct_chg_threshold=.1
 
     ## Scenario 1 -- Bet 1 dollar on away team money line
     d4.loc[
@@ -223,6 +223,15 @@ def app():
         round(d4.query("betting_line_chg_home_result < 0").betting_line_chg_home_result.sum(),2)
         ))
 
+    if d4.query("betting_line_chg_home_result > 0").betting_line_chg_home_result.sum() + d4.query("betting_line_chg_home_result < 0").betting_line_chg_home_result.sum() >= 0:
+        c1.success('Net Results: '+str(
+            round(d4.query("betting_line_chg_home_result > 0").betting_line_chg_home_result.sum() + d4.query("betting_line_chg_home_result < 0").betting_line_chg_home_result.sum(),2)
+        ))
+    if d4.query("betting_line_chg_home_result > 0").betting_line_chg_home_result.sum() + d4.query("betting_line_chg_home_result < 0").betting_line_chg_home_result.sum() < 0:
+        c1.warning('Net Results: '+str(
+            round(d4.query("betting_line_chg_home_result > 0").betting_line_chg_home_result.sum() + d4.query("betting_line_chg_home_result < 0").betting_line_chg_home_result.sum(),2)
+        ))
+
 
     c2.subheader('Betting Away team')
     c2.write('Number of wins: '+str(d4.query("betting_line_chg_away_result > 0").index.size))
@@ -233,6 +242,15 @@ def app():
         )
     c2.write('Money lost: '+str(
         round(d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum(),2)
+        ))
+
+    if d4.query("betting_line_chg_away_result > 0").betting_line_chg_away_result.sum() + d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum() >= 0:
+        c2.success('Net Results: '+str(
+            round(d4.query("betting_line_chg_away_result > 0").betting_line_chg_away_result.sum() + d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum(),2)
+        ))
+    if d4.query("betting_line_chg_away_result > 0").betting_line_chg_away_result.sum() + d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum() < 0:
+        c2.warning('Net Results: '+str(
+            round(d4.query("betting_line_chg_away_result > 0").betting_line_chg_away_result.sum() + d4.query("betting_line_chg_away_result < 0").betting_line_chg_away_result.sum(),2)
         ))
 
 
