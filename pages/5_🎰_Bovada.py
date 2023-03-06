@@ -227,7 +227,7 @@ def app():
 
     color_map = get_color_map()
 
-    st.title('Bovada Odds Over Time - Updated')
+    st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
 
     recent_list=recent_updates()
