@@ -17,6 +17,12 @@ def load_data_cbb():
     df=update_df(df)
     return df
 
+@st.cache(suppress_st_warning=True)
+def load_data_nba():
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_nba.parquet?raw=true', engine='pyarrow')
+    df=update_df(df)
+    return df
+
 
 def update_df(df):
     df.columns = [x.lower() for x in df.columns]
@@ -59,13 +65,15 @@ def app():
     st.markdown('TBD')
 
     data_select = st.sidebar.radio(
-            "Soccer of CBB?",
-            ('Soccer','CBB')
+            "Which sport?",
+            ('Soccer','CBB','NBA')
     )
     if data_select == 'Soccer':
         df = load_data_soccer()
     if data_select == 'CBB':
         df = load_data_cbb()
+    if data_select == 'NBA':
+        df = load_data_nba()
 
     d3=pd.concat([pd.merge(df, df.groupby(['id'])['date_scraped'].max(),on=['id','date_scraped']).reset_index(drop=True),pd.merge(df, df.groupby(['id'])['date_scraped'].min(),on=['id','date_scraped']).reset_index(drop=True)])
     d3=d3.drop_duplicates(subset=d3.columns.to_list()[:-1]).reset_index(drop=True).sort_values(['id','date_scraped'],ascending=[True,True])
@@ -77,8 +85,8 @@ def app():
 
     pct_chg_threshold = st.number_input('Pct Change Threshold',value=.05)
     st.dataframe(d3.query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','start_time','league_name','home_team','away_team','ml_home_p','ml_home_change']].sort_values('start_time',ascending=True))
-
-    game_id = st.text_input('Input Game ID',value=189729)
+    initial_game_id=d3.query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','start_time','league_name','home_team','away_team','ml_home_p','ml_home_change']].sort_values('start_time',ascending=True).head(1)['id'].min()
+    game_id = st.text_input('Input Game ID',value=initial_game_id)
 
     game_id = int(game_id)
 
