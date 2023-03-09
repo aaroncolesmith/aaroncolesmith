@@ -95,7 +95,15 @@ def app():
     d3['ml_home_change']=d3.groupby('id')['ml_home_p'].apply(lambda x: x.diff() / x.shift().abs())
     d3['ml_away_change']=d3.groupby('id')['ml_away_p'].apply(lambda x: x.diff() / x.shift().abs())
 
-    df_todays_games = pd.merge(d3, d3.groupby(["id"])["date_scraped"].max(), on=["id", "date_scraped"])[pd.to_datetime(d3["start_time"]).dt.date == datetime.date.today()].sort_values("start_time", ascending=True).reset_index(drop=True)[['id','game_time','home_team','away_team','ml_home_p','ml_away_p','ml_home_change','ml_away_change']]
+    date_filter=st.date_input("Games for date:",
+        datetime.date.today(),
+        min_value=pd.to_datetime(df.start_time).dt.date.min(),
+        max_value=pd.to_datetime(df.start_time).dt.date.max())
+
+
+    df_todays_games = pd.merge(d3, d3.groupby(["id"])["date_scraped"].max(), on=["id", "date_scraped"])
+    df_todays_games = df_todays_games.loc[pd.to_datetime(df_todays_games['start_time']).dt.date==date_filter].sort_values("start_time", ascending=True).reset_index(drop=True)[['id','game_time','home_team','away_team','ml_home_p','ml_away_p','ml_home_change','ml_away_change']]
+
 
     for col in ['ml_home_p','ml_away_p']:
         df_todays_games[col]=df_todays_games[col].apply(lambda x: '{:.2%}'.format(x))
@@ -106,6 +114,7 @@ def app():
     df_todays_games.columns=['ID','Game Time','Home','Away','Home Probability','Away Probability','Home Probability % Change','Away Probability % Change']
 
     st.write('Today\'s Games')
+    st.write()
     st.dataframe(df_todays_games)
 
 
