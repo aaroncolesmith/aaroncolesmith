@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 import datetime
 pio.templates.default = "simple_white"
 
+import colorsys
+
 @st.cache(suppress_st_warning=True)
 def load_data_soccer():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_soccer.parquet?raw=true', engine='pyarrow')
@@ -26,6 +28,10 @@ def load_data_nba():
     df=update_df(df)
     return df
 
+@st.cache(suppress_st_warning=True)
+def load_df_teams():
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/teams_db.parquet?raw=true', engine='pyarrow')
+    return df
 
 def update_df(df):
     df.columns = [x.lower() for x in df.columns]
@@ -53,7 +59,6 @@ def update_df(df):
 
     return df
 
-
 def get_prob(a):
     odds = 0
     if a < 0:
@@ -69,15 +74,241 @@ def fav_payout(ml):
 def dog_payout(ml):
   return ml/100
 
+def get_different_hex_colors(hex_color1, hex_color2):
+    # Convert the input colors to RGB values
+    rgb_color1 = tuple(int(hex_color1[i:i+2], 16) for i in (1, 3, 5))
+    rgb_color2 = tuple(int(hex_color2[i:i+2], 16) for i in (1, 3, 5))
+    
+    # Convert the RGB colors to HSV values
+    hsv_color1 = colorsys.rgb_to_hsv(*rgb_color1)
+    hsv_color2 = colorsys.rgb_to_hsv(*rgb_color2)
+    
+    # Calculate the difference in hue between the input colors
+    hue_diff = abs(hsv_color1[0] - hsv_color2[0])
+    
+    # Calculate the hue values for the five new colors
+    new_hue1 = (hsv_color1[0] + 0.2) % 1.0
+    new_hue2 = (hsv_color1[0] + 0.4) % 1.0
+    new_hue3 = (hsv_color1[0] + 0.6) % 1.0
+    new_hue4 = (hsv_color1[0] + 0.8) % 1.0
+    new_hue5 = (hsv_color1[0] + hue_diff / 2) % 1.0
+    
+    # Convert the new HSV values to RGB values
+    rgb_color3 = tuple(round(x * 255) for x in colorsys.hsv_to_rgb(new_hue1, 0.8, 0.8))
+    rgb_color4 = tuple(round(x * 255) for x in colorsys.hsv_to_rgb(new_hue2, 0.8, 0.8))
+    rgb_color5 = tuple(round(x * 255) for x in colorsys.hsv_to_rgb(new_hue3, 0.8, 0.8))
+    rgb_color6 = tuple(round(x * 255) for x in colorsys.hsv_to_rgb(new_hue4, 0.8, 0.8))
+    rgb_color7 = tuple(round(x * 255) for x in colorsys.hsv_to_rgb(new_hue5, 0.8, 0.8))
+    
+    # Convert the RGB values to hex codes
+    hex_color3 = '#' + ''.join(f'{x:02x}' for x in rgb_color3)
+    hex_color4 = '#' + ''.join(f'{x:02x}' for x in rgb_color4)
+    hex_color5 = '#' + ''.join(f'{x:02x}' for x in rgb_color5)
+    hex_color6 = '#' + ''.join(f'{x:02x}' for x in rgb_color6)
+    hex_color7 = '#' + ''.join(f'{x:02x}' for x in rgb_color7)
+    
+    return [hex_color3, hex_color4, hex_color5, hex_color6, hex_color7]
 
 
+def plot_game(df,df_teams,game_id):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+ 
+    home_team_color='#'+df_teams.loc[df_teams.team_id==df.query('id==@game_id')['home_team_id'].min()]['team_primary_color'].values[0]
+    away_team_color='#'+df_teams.loc[df_teams.team_id==df.query('id==@game_id')['away_team_id'].min()]['team_primary_color'].values[0]
+
+    colors=get_different_hex_colors(home_team_color, away_team_color)
+
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').ml_away,
+            mode="markers+lines",
+            name=df.query('id==@game_id')['away_team'].min() + ' Money Line (Away)',
+            marker=dict(
+                color=away_team_color, size=10, line=dict(color=away_team_color, width=2),opacity=.75
+            ),
+            line = dict(width=4, dash='dash'),
+            opacity=0.6,
+            customdata=df.query('id==@game_id'),
+            hovertemplate=df.query('id==@game_id')['away_team'].min() + ' Money Line %{y} <br>Status: %{customdata[1]}<extra></extra>',
+
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').ml_away_p,
+            mode="lines",
+            name=df.query('id==@game_id')['away_team'].min() + ' Probability (Away)',
+            marker=dict(
+                color=away_team_color, size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+            ),
+            # marker_symbol='diamond',
+            line = dict(width=4),
+            opacity=0.6,
+            hovertemplate=df.query('id==@game_id')['away_team'].min() + ' Probability %{y}<extra></extra>',
+        ),
+        secondary_y=True,
+    )
+
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').ml_home,
+            mode="markers+lines",
+            name=df.query('id==@game_id')['home_team'].min() + ' Money Line (Home)',
+            marker=dict(
+                color=home_team_color, size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+            ),
+            line = dict(width=4, dash='dash'),
+            opacity=0.6,
+            hovertemplate=df.query('id==@game_id')['home_team'].min() + ' Money Line %{y}<extra></extra>',
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').ml_home_p,
+            mode="lines",
+            name=df.query('id==@game_id')['home_team'].min() + ' Probability (Home)',
+            marker=dict(
+                color=home_team_color, size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+            ),
+            # marker_symbol='diamond',
+            line = dict(width=4),
+            opacity=0.6,
+            hovertemplate=df.query('id==@game_id')['home_team'].min() + ' Probability %{y}<extra></extra>',
+        ),
+        secondary_y=True,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').draw,
+            mode="lines",
+            name='Money Line - Tie',
+            marker=dict(
+                color=colors[0], size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+            ),
+            # marker_symbol='diamond',
+            line = dict(width=4),
+            opacity=0.6,
+            hovertemplate='Money Line Tie - %{y}<extra></extra>'
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.query('id==@game_id').date_scraped,
+            y=df.query('id==@game_id').total,
+            mode="lines",
+            name='Over / Under',
+            marker=dict(
+                color=colors[1], size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+            ),
+            # marker_symbol='diamond',
+            line = dict(width=4),
+            opacity=0.6,
+            hovertemplate='Over / Under - %{y}<extra></extra>'
+        ),
+        secondary_y=False,
+    )
+
+
+    if df.query('id==@game_id').total_over_money.max() > 0:
+        fig.add_trace(
+            go.Scatter(
+                x=df.query('id==@game_id').date_scraped,
+                y=df.query('id==@game_id').total_over_money,
+                mode="lines",
+                name='Total Over Money',
+                marker=dict(
+                    color=colors[2], size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+                ),
+                # marker_symbol='diamond',
+                line = dict(width=4),
+                opacity=0.6,
+                hovertemplate='Total Over Money - %{y}<extra></extra>'
+            ),
+            secondary_y=False,
+        )
+
+
+    if df.query('id==@game_id').ml_home_money.max() > 0:
+        fig.add_trace(
+            go.Scatter(
+                x=df.query('id==@game_id').date_scraped,
+                y=df.query('id==@game_id').ml_home_money,
+                mode="lines",
+                name='ML Home Money',
+                marker=dict(
+                    color=colors[3], size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+                ),
+                # marker_symbol='diamond',
+                line = dict(width=4),
+                opacity=0.6,
+                hovertemplate='ML Home Money - %{y}<extra></extra>'
+            ),
+            secondary_y=False,
+        )
+
+    if df.query('id==@game_id').ml_away_money.max() > 0:
+        fig.add_trace(
+            go.Scatter(
+                x=df.query('id==@game_id').date_scraped,
+                y=df.query('id==@game_id').ml_away_money,
+                mode="lines",
+                name='ML Away Money',
+                marker=dict(
+                    color=colors[4], size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
+                ),
+                # marker_symbol='diamond',
+                line = dict(width=4),
+                opacity=0.6,
+                hovertemplate='ML Away Money - %{y}<extra></extra>'
+            ),
+            secondary_y=False,
+        )
+
+
+    fig.update_layout(hovermode="x", 
+                    # template="simple_white",
+                    height=600,
+                    title=df.query('id==@game_id')['game_title'].min(),
+                    legend=dict(yanchor="bottom", 
+                        y=-0.35, 
+                        xanchor="left", 
+                        x=0.0,
+                        orientation="h")
+                    )
+
+    fig.update_traces(textposition="top right", 
+                    mode="lines", 
+                    line_shape="spline",
+                    opacity=.75,
+                        marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
+                        line = dict(width=4)
+                    )
+
+    fig.update_yaxes(title='Win Probability', tickformat=',.1%', secondary_y=True)
+    fig.update_yaxes(title='',secondary_y=False)
+
+    st.plotly_chart(fig,use_container_width=False)
 
 
 def app():
 
 
     st.title('Betting Scenarios')
-    st.markdown('TBD')
+    df_teams = load_df_teams()
 
     data_select = st.sidebar.radio(
             "Which sport?",
@@ -102,7 +333,7 @@ def app():
 
 
     df_todays_games = pd.merge(d3, d3.groupby(["id"])["date_scraped"].max(), on=["id", "date_scraped"])
-    df_todays_games = df_todays_games.loc[pd.to_datetime(df_todays_games['start_time']).dt.date==date_filter].sort_values("start_time", ascending=True).reset_index(drop=True)[['id','game_time','home_team','away_team','ml_home_p','ml_away_p','ml_home_change','ml_away_change']]
+    df_todays_games = df_todays_games.loc[pd.to_datetime(df_todays_games['start_time']).dt.tz_convert('US/Pacific').dt.date==date_filter].sort_values("start_time", ascending=True).reset_index(drop=True)[['id','game_time','home_team','away_team','ml_home_p','ml_away_p','ml_home_change','ml_away_change']]
 
 
     for col in ['ml_home_p','ml_away_p']:
@@ -113,9 +344,29 @@ def app():
 
     df_todays_games.columns=['ID','Game Time','Home','Away','Home Probability','Away Probability','Home Probability % Change','Away Probability % Change']
 
-    st.write('Today\'s Games')
-    st.write()
     st.dataframe(df_todays_games)
+
+    ## plot today's first game as well as selector for any game
+    # game_dict = dict(
+    #         zip(
+    #             df.loc[pd.to_datetime(df['start_time']).dt.tz_convert('US/Pacific').dt.date==date_filter]['game_title'].unique(),
+    #             df.loc[pd.to_datetime(df['start_time']).dt.tz_convert('US/Pacific').dt.date==date_filter]['game_id'].unique()
+    #             )
+    #             )
+
+    # group by game_id and game_title, and get unique values
+    df_unique = df.loc[pd.to_datetime(df['start_time']).dt.tz_convert('US/Pacific').dt.date==date_filter].groupby(['game_id', 'game_title']).agg({'start_time': 'min'}).reset_index()
+
+    # sort by start_time
+    df_unique = df_unique.sort_values(by='start_time')
+
+    # create dictionary from the values
+    game_dict = {row['game_title']: row['game_id'] for _, row in df_unique[['game_title', 'game_id']].iterrows()}
+      
+    game_select = st.selectbox('Select a game to view the odds over time: ', game_dict.keys())
+    game_select_id = game_dict[game_select]
+
+    plot_game(df,df_teams,game_select_id)
 
 
 
@@ -126,242 +377,14 @@ def app():
     game_id = st.text_input('Input Game ID',value=initial_game_id)
 
     game_id = int(game_id)
+    plot_game(df,df_teams,game_id)
 
-
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').ml_away,
-            mode="markers+lines",
-            name=df.query('id==@game_id')['away_team'].min() + ' Money Line (Away)',
-            marker=dict(
-                color="SpringGreen", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            line = dict(width=4, dash='dash'),
-            opacity=0.6,
-            customdata=df.query('id==@game_id'),
-            hovertemplate=df.query('id==@game_id')['away_team'].min() + ' Money Line %{y} <br>Status: %{customdata[1]}<extra></extra>',
-
-        ),
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').ml_away_p,
-            mode="lines+markers",
-            name=df.query('id==@game_id')['away_team'].min() + ' Probability (Away)',
-            marker=dict(
-                color="SpringGreen", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            # marker_symbol='diamond',
-            line = dict(width=4),
-            opacity=0.6,
-            hovertemplate=df.query('id==@game_id')['away_team'].min() + ' Probability %{y}<extra></extra>',
-        ),
-        secondary_y=True,
-    )
-
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').ml_home,
-            mode="markers+lines",
-            name=df.query('id==@game_id')['home_team'].min() + ' Money Line (Home)',
-            marker=dict(
-                color="SpringGreen", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            line = dict(width=4, dash='dash'),
-            opacity=0.6,
-            hovertemplate=df.query('id==@game_id')['home_team'].min() + ' Money Line %{y}<extra></extra>',
-        ),
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').ml_home_p,
-            mode="lines+markers",
-            name=df.query('id==@game_id')['home_team'].min() + ' Probability (Home)',
-            marker=dict(
-                color="SpringGreen", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            # marker_symbol='diamond',
-            line = dict(width=4),
-            opacity=0.6,
-            hovertemplate=df.query('id==@game_id')['home_team'].min() + ' Probability %{y}<extra></extra>',
-        ),
-        secondary_y=True,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').draw,
-            mode="lines+markers",
-            name='Money Line - Tie',
-            marker=dict(
-                color="Blue", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            # marker_symbol='diamond',
-            line = dict(width=4),
-            opacity=0.6,
-            hovertemplate='Money Line Tie - %{y}<extra></extra>'
-        ),
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.query('id==@game_id').date_scraped,
-            y=df.query('id==@game_id').total,
-            mode="lines+markers",
-            name='Over / Under',
-            marker=dict(
-                color="Blue", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-            ),
-            # marker_symbol='diamond',
-            line = dict(width=4),
-            opacity=0.6,
-            hovertemplate='Over / Under - %{y}<extra></extra>'
-        ),
-        secondary_y=False,
-    )
-
-
-    if df.query('id==@game_id').total_over_money.max() > 0:
-        fig.add_trace(
-            go.Scatter(
-                x=df.query('id==@game_id').date_scraped,
-                y=df.query('id==@game_id').total_over_money,
-                mode="lines+markers",
-                name='Total Over Money',
-                marker=dict(
-                    color="Blue", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-                ),
-                # marker_symbol='diamond',
-                line = dict(width=4),
-                opacity=0.6,
-                hovertemplate='Total Over Money - %{y}<extra></extra>'
-            ),
-            secondary_y=False,
-        )
-
-
-    if df.query('id==@game_id').ml_home_money.max() > 0:
-        fig.add_trace(
-            go.Scatter(
-                x=df.query('id==@game_id').date_scraped,
-                y=df.query('id==@game_id').ml_home_money,
-                mode="lines+markers",
-                name='ML Home Money',
-                marker=dict(
-                    color="Blue", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-                ),
-                # marker_symbol='diamond',
-                line = dict(width=4),
-                opacity=0.6,
-                hovertemplate='ML Home Money - %{y}<extra></extra>'
-            ),
-            secondary_y=False,
-        )
-
-    if df.query('id==@game_id').ml_away_money.max() > 0:
-        fig.add_trace(
-            go.Scatter(
-                x=df.query('id==@game_id').date_scraped,
-                y=df.query('id==@game_id').ml_away_money,
-                mode="lines+markers",
-                name='ML Away Money',
-                marker=dict(
-                    color="Blue", size=10, line=dict(color="DarkSlateGrey", width=2),opacity=.75
-                ),
-                # marker_symbol='diamond',
-                line = dict(width=4),
-                opacity=0.6,
-                hovertemplate='ML Away Money - %{y}<extra></extra>'
-            ),
-            secondary_y=False,
-        )
-
-
-    fig.update_layout(hovermode="x", 
-                    # template="simple_white",
-                    height=600,
-                    title=df.query('id==@game_id')['game_title'].min(),
-                    legend=dict(yanchor="bottom", 
-                        y=-0.35, 
-                        xanchor="left", 
-                        x=0.0,
-                        orientation="h")
-                    )
-
-    fig.update_traces(textposition="top right", 
-                    mode="lines+markers", 
-                    line_shape="spline",
-                    opacity=.75,
-                        marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
-                        line = dict(width=4)
-                    )
-
-    fig.update_yaxes(title='Win Probability', tickformat=',.1%', secondary_y=True)
-    fig.update_yaxes(title='',secondary_y=False)
-
-    st.plotly_chart(fig,use_container_width=False)
-
-
-
-
-
-
-
-
-
-    fig=px.scatter(df.query('id==@game_id'),
-            x='date_scraped',
-            y=['ml_away','ml_home','draw','total',
-            'total_over_money','ml_home_money','ml_away_money',
-            
-            'ml_away_p','ml_home_p'],
-            hover_data=['home_team','away_team','status']
-    )
-
-    fig.update_traces(
-        # texttemplate = "%{text:}",
-                    textposition='top right',
-                    mode='lines+markers+text',
-        line_shape='spline')
-    fig.update_layout(
-        template="plotly_white"
-    )
-
-
-    fig.update_layout(hovermode="x", 
-                    template="plotly_white",
-                    height=600)
-
-    fig.update_traces(textposition="top right", 
-                    mode="lines+markers", 
-                    line_shape="spline",
-                    opacity=.75,
-                        marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
-                        line = dict(width=4),
-                    # hovertemplate=('%{x}<br>$ Amt: %{y:$,.2s} <br>GEOs: %{customdata[0]} / Countries: %{customdata[1]}')
-                    )
-
-    st.plotly_chart(fig,use_container_width=True)
-
+    
     d4=d3.query('status=="complete"').sort_values('start_time',ascending=True).copy()
 
     for col in d4.columns:
         if col.startswith('betting_'):
             del d4[col]
-
 
     payout='ml_home'
     result_title='betting_line_chg_home_result'
