@@ -117,7 +117,19 @@ def line_chart_probability(df,option,color_map):
     color_discrete_map=color_map,
     color_discrete_sequence=color_discrete_sequence,
     title="Implied Probability Over Time <br><sup>"+option+" </sup>")
-    
+    # g.update_layout(hovermode='x unified',
+    #                 hoverlabel=dict(
+    #                     bordercolor="rgba(24, 59, 218, 0.8)",
+    #                     bgcolor="rgba(230, 230, 250, 0.75)",
+    #                     font_size=14,
+    #                     # font_family="Raleway",
+    #                     # "Arial", "Balto", "Courier New", "Droid Sans",, "Droid Serif", 
+    #                     # "Droid Sans Mono", "Gravitas One", "Old Standard TT", "Open Sans", 
+    #                     # "Overpass", "PT Sans Narrow", "Raleway", "Times New Roman"
+    #                     align="right"
+    #                     ),
+    #                     hoverlabel_namelength=100
+    #                     )
     g.update_traces(mode='lines',
                     line_shape='spline',
                     opacity=.75,

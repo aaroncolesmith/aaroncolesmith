@@ -304,6 +304,140 @@ def plot_game(df,df_teams,game_id):
     st.plotly_chart(fig,use_container_width=False)
 
 
+##DEFINING SIMULATION FUNCTIONS
+def betting_home_above_threshold(d4, pct_chg_threshold):
+    payout='ml_home'
+    result_title='betting_line_chg_home_result'
+    total_title='betting_line_chg_home_total'
+    # pct_chg_threshold=.02
+
+    ## Scenario 1 -- Bet 1 dollar on home team money line
+    d4.loc[
+        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+        & (d4[payout] < 0)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = fav_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+        & (d4[payout] > 0)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = dog_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_home_points <= d4.boxscore_total_away_points)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = -1
+    d4[result_title] = d4[result_title].fillna(0)
+    d4[total_title] = d4[result_title].cumsum()
+    
+    return d4
+
+def betting_away_above_threshold(d4, pct_chg_threshold):
+
+    payout='ml_away'
+    result_title='betting_line_chg_away_result'
+    total_title='betting_line_chg_away_total'
+    # pct_chg_threshold=.1
+
+    ## Scenario 1 -- Bet 1 dollar on away team money line
+    d4.loc[
+        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
+        & (d4[payout] < 0)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = fav_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
+        & (d4[payout] > 0)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = dog_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_away_points <= d4.boxscore_total_home_points)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = -1
+    d4[result_title] = d4[result_title].fillna(0)
+    d4[total_title] = d4[result_title].cumsum()
+
+    return d4
+
+def betting_both_above_threshold(d4, pct_chg_threshold):
+
+    ## Betting either home or away if they meet the threshold
+    payout='ml_away'
+    result_title='betting_line_chg_both_result'
+    total_title='betting_line_chg_both_total'
+    # pct_chg_threshold=.1
+
+    ## Scenario 1 -- Bet 1 dollar on away team money line
+    d4.loc[
+        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
+        & (d4[payout] < 0)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = fav_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
+        & (d4[payout] > 0)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = dog_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_away_points <= d4.boxscore_total_home_points)
+        & (d4.ml_away_change > pct_chg_threshold),
+        result_title,
+    ] = -1
+
+    payout='ml_home'
+    d4.loc[
+        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+        & (d4[payout] < 0)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = fav_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+        & (d4[payout] > 0)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = dog_payout(d4[payout])
+
+    d4.loc[
+        (d4.boxscore_total_home_points <= d4.boxscore_total_away_points)
+        & (d4.ml_home_change > pct_chg_threshold),
+        result_title,
+    ] = -1
+    d4[result_title] = d4[result_title].fillna(0)
+    d4[total_title] = d4[result_title].cumsum()
+
+    return d4
+
+def betting_all_home(d4):
+  d4.loc[
+      (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+      & (d4.ml_home < 0),
+      "betting_all_home_result",
+  ] = fav_payout(d4.ml_home)
+  d4.loc[
+      (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
+      & (d4.ml_home > 0),
+      "betting_all_home_result",
+  ] = dog_payout(d4.ml_home)
+  d4["betting_all_home_result"] = d4["betting_all_home_result"].fillna(-1)
+  d4["betting_all_home_total"] = d4["betting_all_home_result"].cumsum()
+  return d4
+
+
 def app():
 
 
@@ -372,11 +506,25 @@ def app():
     else:
         st.write('No games on selected date 😔')
 
-    st.markdown('Home Teams in Upcoming Games Meeting Pct Change Threshold')
+    st.markdown('Upcoming Games Meeting Pct Change Threshold')
     pct_chg_threshold = st.number_input('Pct Change Threshold',value=.05)
 
-    st.dataframe(d3.query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','start_time','league_name','home_team','away_team','ml_home_p','ml_home_change']].sort_values('start_time',ascending=True))
-    initial_game_id=d3.query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','start_time','league_name','home_team','away_team','ml_home_p','ml_home_change']].sort_values('start_time',ascending=True).head(1)['id'].min()
+    df_threshold_games_h = d3.query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','game_time','home_team','away_team','ml_home_p','ml_home','ml_home_change']]
+    df_threshold_games_h.columns=['ID','Game Time','Team','Opponent','Probability','Money Line','Probability % Change']
+    df_threshold_games_h['Home / Away'] = 'Home'
+
+    df_threshold_games_a = d3.query("status == 'scheduled' & ml_away_change > @pct_chg_threshold")[['id','game_time','away_team','home_team','ml_away_p','ml_away','ml_away_change']]
+    df_threshold_games_a.columns=['ID','Game Time','Team','Opponent','Probability','Money Line','Probability % Change']
+    df_threshold_games_a['Home / Away'] = 'Away'
+
+    df_threshold_games = pd.concat([df_threshold_games_h,df_threshold_games_a]).sort_values('Game Time',ascending=True).reset_index(drop=True)
+
+    del df_threshold_games_h
+    del df_threshold_games_a
+
+    st.dataframe(df_threshold_games)
+
+    initial_game_id=df_threshold_games.head(1)['ID'].min()
     game_id = st.text_input('Input Game ID',value=initial_game_id)
 
     game_id = int(game_id)
@@ -384,118 +532,67 @@ def app():
 
     
     d4=d3.query('status=="complete"').sort_values('start_time',ascending=True).copy()
+    d4['start_time'] = pd.to_datetime(d4['start_time'])
+
+    # start_date = pd.to_datetime('today') - pd.Timedelta(days=30)
+    # start_date = start_date.date()
+
+    start_date=st.date_input("How far back to test betting scenarios:",
+        pd.to_datetime('today') - pd.Timedelta(days=30),
+        min_value=pd.to_datetime(d4.start_time).dt.date.min(),
+        max_value=pd.to_datetime(d4.start_time).dt.date.max())
+
+    d4 = d4.loc[d4.start_time.dt.date > start_date].reset_index(drop=True)
 
     for col in d4.columns:
         if col.startswith('betting_'):
             del d4[col]
 
-    payout='ml_home'
-    result_title='betting_line_chg_home_result'
-    total_title='betting_line_chg_home_total'
-    # pct_chg_threshold=.02
 
-    ## Scenario 1 -- Bet 1 dollar on home team money line
-    d4.loc[
-        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
-        & (d4[payout] < 0)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = fav_payout(d4[payout])
+    d4 = betting_home_above_threshold(d4, pct_chg_threshold)
+    d4 = betting_away_above_threshold(d4, pct_chg_threshold)
+    d4 = betting_both_above_threshold(d4, pct_chg_threshold)
+    d4=betting_all_home(d4)
 
-    d4.loc[
-        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
-        & (d4[payout] > 0)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = dog_payout(d4[payout])
+    d4['score'] = d4['boxscore_total_away_points'].astype('int').astype('str') + '-'+d4['boxscore_total_home_points'].astype('int').astype('str')
 
-    d4.loc[
-        (d4.boxscore_total_home_points <= d4.boxscore_total_away_points)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = -1
-    d4[result_title] = d4[result_title].fillna(0)
-    d4[total_title] = d4[result_title].cumsum()
+    betting_cols_result = [col for col in d4.columns if col.startswith('betting_') and col.endswith('_result')]
+    betting_cols_total = [col for col in d4.columns if col.startswith('betting_') and col.endswith('_total')]
+    betting_dict = {result_col: total_col for result_col, total_col in zip(betting_cols_result, betting_cols_total)}
 
 
-    payout='ml_away'
-    result_title='betting_line_chg_away_result'
-    total_title='betting_line_chg_away_total'
-    # pct_chg_threshold=.1
+    fig=go.Figure()
+    for key, value in betting_dict.items():
+        fig.add_trace(go.Scatter(
+            x=d4.loc[d4[key]!=0].start_time,
+            y=d4.loc[d4[key]!=0][value],
+            mode='markers+lines',
+            name=key.replace('_result','').replace('_',' ').title(),
+            customdata=d4.loc[d4[key]!=0][['id','game_time','game_title','score',key]],
+            hovertemplate='<b>'+key.replace('_result','').replace('_',' ').title()+': %{y:.1f}</b><br>Date: %{customdata[1]}<br>%{customdata[2]}<br>ID: %{customdata[0]} | Score: %{customdata[3]} | Bet Result: %{customdata[4]:.2}<extra></extra>'
+        )
+        )
 
-    ## Scenario 1 -- Bet 1 dollar on away team money line
-    d4.loc[
-        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
-        & (d4[payout] < 0)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = fav_payout(d4[payout])
+    fig.update_layout(
+        # hovermode="x", 
+                    # template="simple_white",
+                    height=600,
+                    # title=df.query('id==@game_id')['game_title'].min(),
+                    legend=dict(yanchor="bottom", 
+                        y=-0.35, 
+                        xanchor="left", 
+                        x=0.0,
+                        orientation="h")
+                    )
 
-    d4.loc[
-        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
-        & (d4[payout] > 0)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = dog_payout(d4[payout])
-
-    d4.loc[
-        (d4.boxscore_total_away_points <= d4.boxscore_total_home_points)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = -1
-    d4[result_title] = d4[result_title].fillna(0)
-    d4[total_title] = d4[result_title].cumsum()
-
-
-    ## Betting either home or away if they meet the threshold
-    payout='ml_away'
-    result_title='betting_line_chg_both_result'
-    total_title='betting_line_chg_both_total'
-    # pct_chg_threshold=.1
-
-    ## Scenario 1 -- Bet 1 dollar on away team money line
-    d4.loc[
-        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
-        & (d4[payout] < 0)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = fav_payout(d4[payout])
-
-    d4.loc[
-        (d4.boxscore_total_away_points > d4.boxscore_total_home_points)
-        & (d4[payout] > 0)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = dog_payout(d4[payout])
-
-    d4.loc[
-        (d4.boxscore_total_away_points <= d4.boxscore_total_home_points)
-        & (d4.ml_away_change > pct_chg_threshold),
-        result_title,
-    ] = -1
-
-    payout='ml_home'
-    d4.loc[
-        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
-        & (d4[payout] < 0)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = fav_payout(d4[payout])
-
-    d4.loc[
-        (d4.boxscore_total_home_points > d4.boxscore_total_away_points)
-        & (d4[payout] > 0)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = dog_payout(d4[payout])
-
-    d4.loc[
-        (d4.boxscore_total_home_points <= d4.boxscore_total_away_points)
-        & (d4.ml_home_change > pct_chg_threshold),
-        result_title,
-    ] = -1
-    d4[result_title] = d4[result_title].fillna(0)
-    d4[total_title] = d4[result_title].cumsum()
+    fig.update_traces(textposition="top right", 
+                    mode="markers+lines", 
+                    line_shape="spline",
+                    opacity=.75,
+                        marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')),
+                        line = dict(width=4)
+                    )
+    st.plotly_chart(fig,use_container_width=True)
 
 
     fig=px.scatter(d4.query("betting_line_chg_home_result != 0 | betting_line_chg_away_result != 0 | betting_line_chg_both_total != 0"),
@@ -529,6 +626,11 @@ def app():
                     )
 
     st.plotly_chart(fig,use_container_width=True)
+
+
+
+
+
 
 
     c1,c2=st.columns(2)
