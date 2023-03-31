@@ -10,19 +10,19 @@ pio.templates.default = "simple_white"
 
 import colorsys
 
-@st.cache(suppress_st_warning=True)
+@st.cache(suppress_st_warning=True,ttl=3600)
 def load_data_soccer():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_soccer.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
     return df
 
-@st.cache(suppress_st_warning=True)
+@st.cache(suppress_st_warning=True,ttl=3600)
 def load_data_cbb():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_cbb.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
     return df
 
-@st.cache(suppress_st_warning=True)
+@st.cache(suppress_st_warning=True,ttl=3600)
 def load_data_nba():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_nba.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
@@ -435,6 +435,21 @@ def betting_all_home(d4):
   ] = dog_payout(d4.ml_home)
   d4["betting_all_home_result"] = d4["betting_all_home_result"].fillna(-1)
   d4["betting_all_home_total"] = d4["betting_all_home_result"].cumsum()
+  return d4
+
+def betting_all_away(d4):
+  d4.loc[
+      (d4.boxscore_total_home_points < d4.boxscore_total_away_points)
+      & (d4.ml_away < 0),
+      "betting_all_away_result",
+  ] = fav_payout(d4.ml_away)
+  d4.loc[
+      (d4.boxscore_total_home_points < d4.boxscore_total_away_points)
+      & (d4.ml_away > 0),
+      "betting_all_away_result",
+  ] = dog_payout(d4.ml_away)
+  d4["betting_all_away_result"] = d4["betting_all_away_result"].fillna(-1)
+  d4["betting_all_away_total"] = d4["betting_all_away_result"].cumsum()
   return d4
 
 
