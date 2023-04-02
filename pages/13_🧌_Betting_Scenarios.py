@@ -479,6 +479,7 @@ def app():
     d3=d3.drop_duplicates(subset=d3.columns.to_list()[:-1]).reset_index(drop=True).sort_values(['id','date_scraped'],ascending=[True,True])
     d3['ml_home_change']=d3.groupby('id')['ml_home_p'].apply(lambda x: x.diff() / x.shift().abs())
     d3['ml_away_change']=d3.groupby('id')['ml_away_p'].apply(lambda x: x.diff() / x.shift().abs())
+    
 
 
     df_todays_games = pd.merge(d3, d3.groupby(["id"])["date_scraped"].max(), on=["id", "date_scraped"])
@@ -496,6 +497,8 @@ def app():
 
         st.dataframe(df_todays_games)
 
+        del df_todays_games
+
         ## plot today's first game as well as selector for any game
         # game_dict = dict(
         #         zip(
@@ -512,6 +515,8 @@ def app():
 
         # create dictionary from the values
         game_dict = {row['game_title']: row['game_id'] for _, row in df_unique[['game_title', 'game_id']].iterrows()}
+
+        del df_unique
         
         game_select = st.selectbox('Select a game to view the odds over time: ', game_dict.keys())
 
@@ -534,20 +539,24 @@ def app():
 
     df_threshold_games = pd.concat([df_threshold_games_h,df_threshold_games_a]).sort_values('Game Time',ascending=True).reset_index(drop=True)
 
-    del df_threshold_games_h
-    del df_threshold_games_a
+
 
     st.dataframe(df_threshold_games)
 
-    initial_game_id=df_threshold_games.head(1)['ID'].min()
+    initial_game_id=df_threshold_games.head(1)['ID'].min()    
     game_id = st.text_input('Input Game ID',value=initial_game_id)
+
+    del df_threshold_games_h
+    del df_threshold_games_a  
+    del df_threshold_games
 
     game_id = int(game_id)
     plot_game(df,df_teams,game_id)
 
-    
     d4=d3.query('status=="complete"').sort_values('start_time',ascending=True).copy()
     d4['start_time'] = pd.to_datetime(d4['start_time'])
+
+    del d3
 
     # start_date = pd.to_datetime('today') - pd.Timedelta(days=30)
     # start_date = start_date.date()
@@ -574,7 +583,6 @@ def app():
     betting_cols_result = [col for col in d4.columns if col.startswith('betting_') and col.endswith('_result')]
     betting_cols_total = [col for col in d4.columns if col.startswith('betting_') and col.endswith('_total')]
     betting_dict = {result_col: total_col for result_col, total_col in zip(betting_cols_result, betting_cols_total)}
-
 
     fig=go.Figure()
     for key, value in betting_dict.items():
@@ -641,12 +649,6 @@ def app():
                     )
 
     st.plotly_chart(fig,use_container_width=True)
-
-
-
-
-
-
 
     c1,c2=st.columns(2)
     c1.subheader('Betting Home team')

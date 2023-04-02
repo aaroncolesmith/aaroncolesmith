@@ -2,29 +2,16 @@ import pandas as pd
 import numpy as np
 import plotly_express as px
 import plotly.io as pio
-# pio.templates.default = 'plotly_white'
+pio.templates.default = 'plotly_white'
 import streamlit as st
 import requests
-# import about
-# import experience
-# import projects
-# # import covid
-# import clstr
-# import nbaclusters
-# import nba_redraftables
-# import bovada
-# import nfl_mock_draft
-# import stock_prediction
-# import fivethirtyeight_viz
-# import portland_crime_map
-# import strava_viz
 
-st.set_page_config(
+
+def main():
+    st.set_page_config(
     page_title='aaroncolesmith.com',
     page_icon='dog'
     )
-
-def main():
 
     print('AARONLOG - Main load ')
 
@@ -142,5 +129,6 @@ def hide_footer():
 
 if __name__ == "__main__":
     #execute
-    hide_footer()
+
     main()
+    hide_footer()
