@@ -256,7 +256,9 @@ def app():
     dtmp=pd.read_xml(url)
     st.title('Portland Crime Dashboard')
     st.markdown('Updated as of: ' + str(pd.to_datetime(dtmp['updated']).max().strftime('%-m/%-d %-I:%M%p')))
-    days = st.sidebar.slider('How many days of data to load', min_value=1, max_value=100, value=7, step=1)
+
+    days = st.sidebar.slider('How many days of data to load', min_value=1, max_value=365, value=7, step=1)
+
 
     df = pdx911_data(days)
 
