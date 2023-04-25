@@ -143,6 +143,8 @@ def app():
 
     if draft_year == '2023':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv')
+        ## DROP A BAD MOCK DRAFT
+        df=df.drop(df.query("source == 'TWSN' & date == '2023-04-21'").index).reset_index(drop=True)
     if draft_year == '2022':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
     if draft_year == '2022 - Most Recent':
@@ -311,7 +313,6 @@ def app():
 
 
 # SANKEY DIAGRAM OF TOP 10 PICKS
-
 
     df['player_pick'] = df['team_pick'] + ' - ' + df['player']
     d=df.loc[df.pick.isin([1,2,3,4,5,6,7,8,9,10])].groupby(['source','date']).agg({'player_pick': lambda x: ','.join(x),
