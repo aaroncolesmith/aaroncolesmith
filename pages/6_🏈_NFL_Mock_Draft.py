@@ -57,7 +57,7 @@ def update_colors(fig):
 
 def genSankey(df,cat_cols=[],value_cols='',title='Sankey Diagram'):
     # maximum of 6 value cols -> 6 colors
-    colorPalette = ['#006778','#0076B6','#03202F','#125740','#0B2265','#0085CA','#0B2265','#A71930','#69BE28','#125740']
+    colorPalette = ['#0085CA','#03202F','#97233F','#002C5F','#69BE28','#0076B6','#A5ACAF','#A71930','#0B162A','#125740']
     labelList = []
     colorNumList = []
     for catCol in cat_cols:

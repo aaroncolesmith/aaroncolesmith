@@ -1,9 +1,22 @@
 import streamlit as st
+import base64
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
     page_icon='dog'
     )
+
+def display_gif(file, title,width=700):
+    file_ = open(file, "rb")
+    contents = file_.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    file_.close()
+    
+    st.markdown(
+        f'<img src="data:image/gif;base64,{data_url}" alt={title} width="{width}">',
+        unsafe_allow_html=True,
+    )
+
 
 def app():
     st.write("""
@@ -12,8 +25,8 @@ def app():
     **Problem:** Process discovery and process documentation were very difficult and time consuming for our team. We would go into meetings with customers and struggle to identify what were some good areas for automation and we would try to document existing processes, but interviews would only uncover a small set of the entire scope of the process.
 
     **Solution:** We built Pupil which was a Process Discovery & Process Mapping product. Pupil would ingest process related data like system logs and using machine learning and process mining algorithms, it would cluster processes together. We could then display those processes in a 3d scatter visualization that would allow users to group similar sets of processes together. Finally, they could output those groups to a process map which could be handed off to the automation team to build an Olive.""")
-    st.image('./images/pupil.gif',caption='Pupil was used for Process Mining & Process Discovery',use_column_width=True)
-
+    # st.image('./images/pupil.gif',caption='Pupil was used for Process Mining & Process Discovery',use_column_width=True)
+    display_gif("./images/pupil.gif",'pupil')
     st.write("""
 
     ---
@@ -22,8 +35,8 @@ def app():
     **Problem:** As a company, we realized that we had product market fit, but we needed to build a platform to enable our team to efficiently scale operations of building and deploying Olive.
 
     **Solution:** We built a process automation platform, speficially for our internal team to build Olives. Built the platform specifically for our team and for our industry so that we could build healthcare automations as quickly, resiliently & easily as possible.""")
-    st.image('./images/mimic.gif',caption='The OliveBuilder platform was used to build & deploy thousands of automated workers',use_column_width=True)
-
+    # st.image('./images/mimic.gif',caption='The OliveBuilder platform was used to build & deploy thousands of automated workers',use_column_width=True)
+    display_gif("./images/mimic.gif",'mimic')
     st.write("""
     ---
 
