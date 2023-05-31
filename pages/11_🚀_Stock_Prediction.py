@@ -1,4 +1,5 @@
-from fbprophet import Prophet
+from prophet import Prophet
+# import prophet
 from yahooquery import Ticker
 import streamlit as st
 import datetime
