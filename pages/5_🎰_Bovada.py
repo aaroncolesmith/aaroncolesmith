@@ -288,7 +288,7 @@ def app():
 
     if len(option) > 0:
             print('AARONLOG - Bovada selection ' + option)
-            o = st.radio( "Show all or favorites only?",('Show All', 'Favorites'))
+            o = st.radio( "Show all or favorites only?",('Show All', 'Favorites', 'Recent Favorites'))
             try:
                 option = option.split(' |')[0]
             except:
@@ -297,8 +297,6 @@ def app():
             
             if o == 'Show All':
                 filtered_df = df.loc[df.title == option]
-
-
                 filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
                 filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
                 filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
@@ -309,6 +307,15 @@ def app():
                 filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
                 filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
                 f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'mean')], ascending=True).reset_index(drop=False).head(10)
+                f=f['Winner']
+                filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
+
+            if o == 'Recent Favorites':
+                filtered_df = df.loc[df.title == option]
+                filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
+                filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
+                filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
+                f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'last')], ascending=True).reset_index(drop=False).head(10)
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
 

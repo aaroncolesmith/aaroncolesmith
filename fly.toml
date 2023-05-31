@@ -1,8 +1,9 @@
-# fly.toml file generated for aaroncolesmith on 2023-03-11T16:21:39-08:00
+# fly.toml file generated for aaroncolesmith on 2023-05-05T10:36:28-07:00
 
 app = "aaroncolesmith"
 kill_signal = "SIGINT"
 kill_timeout = 5
+primary_region = "sea"
 processes = []
 
 [env]
