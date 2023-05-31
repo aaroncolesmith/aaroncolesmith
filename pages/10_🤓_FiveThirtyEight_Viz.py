@@ -22,7 +22,7 @@ non_pct = ['ELO','SPI','Proj Point Diff','Proj Goal Diff','Proj Points','Points'
 
 # https://raw.githubusercontent.com/aaroncolesmith/538_viz/main/538_champions_league.csv
 
-@st.cache(ttl=3600)
+@st.cache_data(ttl=3600)
 def load_data_sources():
     df_files = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/538_viz/main/last_updated.csv')
     df_files['hours_since'] = (datetime.datetime.utcnow()-pd.to_datetime(df_files.updated))/np.timedelta64(1, 'h')

@@ -14,7 +14,7 @@ st.set_page_config(
     page_icon='dog'
     )
 
-@st.cache(suppress_st_warning=True)
+@st.cache_data(suppress_st_warning=True)
 def load_nba_data():
     df = pd.read_csv('./data/nba_year_stats.csv')
     df=df.loc[df.Year >= 1952]
