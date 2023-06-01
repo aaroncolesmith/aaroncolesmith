@@ -10,25 +10,25 @@ pio.templates.default = "simple_white"
 
 import colorsys
 
-@st.cache(suppress_st_warning=True,ttl=3600)
+@st.cache(ttl=3600)
 def load_data_soccer():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_soccer.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
     return df
 
-@st.cache(suppress_st_warning=True,ttl=3600)
+@st.cache(ttl=3600)
 def load_data_cbb():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_cbb.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
     return df
 
-@st.cache(suppress_st_warning=True,ttl=3600)
+@st.cache(ttl=3600)
 def load_data_nba():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/df_nba.parquet?raw=true', engine='pyarrow')
     df=update_df(df)
     return df
 
-@st.cache(suppress_st_warning=True)
+@st.cache()
 def load_df_teams():
     df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/teams_db.parquet?raw=true', engine='pyarrow')
     return df

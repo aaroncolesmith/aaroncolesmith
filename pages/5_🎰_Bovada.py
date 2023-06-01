@@ -12,7 +12,7 @@ pio.templates.default = "simple_white"
 color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A']
 
 
-@st.cache_data(ttl=43200, suppress_st_warning=True)
+@st.cache_data(ttl=43200)
 def load_file(date_select):
 
     df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
