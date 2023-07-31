@@ -268,9 +268,24 @@ def app():
                             unique_count=('date','nunique'),
                             ).reset_index().sort_values(['last_day','total_count','unique_count'],ascending=(False,False,False))
     
-    a['date']=a['date'].astype('str').str[:16].str[5:]
-    a['title_date'] = a['title']+' | '+a['date']
-    a=pd.concat([recent_list[['date','title_date']],a[['date','title_date']]]).reset_index(drop=True)['title_date'].to_list()
+    a['title_subject'] = a['title'].str.split(' - ',expand=True)[0]
+
+    bet_subjects = a['title_subject'].unique()
+    bet_subjects = np.insert(bet_subjects,0,'')
+    selected_subjects = st.selectbox('[Optional] - Filter to a specific category', bet_subjects)
+
+    if selected_subjects != '':
+
+        a = a[a['title_subject'] == selected_subjects]
+        a['date']=a['date'].astype('str').str[:16].str[5:]
+        a['title_date'] = a['title']+' | '+a['date']
+        a=a['title_date'].to_list()
+
+    else:
+
+        a['date']=a['date'].astype('str').str[:16].str[5:]
+        a['title_date'] = a['title']+' | '+a['date']
+        a=pd.concat([recent_list[['date','title_date']],a[['date','title_date']]]).reset_index(drop=True)['title_date'].to_list()
 
     tmp_list = []
 
