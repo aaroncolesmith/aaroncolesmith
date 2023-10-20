@@ -7,9 +7,14 @@ import requests
 import plotly_express as px
 import extra_streamlit_components as stx
 
-APP_URL = os.environ["APP_URL"]
-STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
-STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
+# APP_URL = os.environ["APP_URL"]
+# STRAVA_CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
+# STRAVA_CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
+
+APP_URL = 'http://localhost/'
+APP_URL = 'http://localhost:8502/Strava_Viz'
+STRAVA_CLIENT_ID = '31759'
+STRAVA_CLIENT_SECRET = '2598b3d943c65ea4ba6fccd1be1c4c20d246f534'
 
 
 @st.cache(allow_output_mutation=True)
@@ -70,7 +75,9 @@ def strava_login(cookie_manager):
 
     if query_params.get("code"):
 
-        authorization_code = query_params.get("code", [None])[0]
+        # authorization_code = query_params.get("code", [None])[0]
+        authorization_code = query_params['code'][0]
+        st.write(authorization_code)
 
         payload = {
         'client_id': STRAVA_CLIENT_ID,
@@ -78,15 +85,32 @@ def strava_login(cookie_manager):
         'code': authorization_code,
         "grant_type": "authorization_code"
         }
+        st.write(payload)
         r=requests.post('https://www.strava.com/oauth/token',params=payload)
+        st.write(r.url)
+        st.write('this is request post json')
+        st.write(r.json())
+
+
+
+
         auth=r.json()
         st.write('this is auth')
         st.write(auth)
+
+        access_token=r.json()['access_token']
+        st.write(f'this is access token {access_token}')
+
         if query_params:
             cookie_manager.set('strava_auth_code', authorization_code, key='0')
             cookie_manager.set('strava_auth', auth, key='1')
 
             return cookie_manager
+
+
+
+
+
 
 
 def app():
@@ -155,15 +179,16 @@ def app():
         st.write('You have a total of '+str(df.index.size)+' activities in your Strava account!')
 
         fig=px.scatter(df.loc[df.distance>0],x='distance_miles',y='average_speed',color='type',title='Avg Speed vs. Total Miles by Type',hover_data=['name','date','id'])
-        fig.update_traces(mode='markers',marker=dict(size=8,ine=dict(width=1,color='DarkSlateGrey')))
+        fig.update_traces(mode='markers',marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey')))
         st.plotly_chart(fig,use_container_width=True)
 
         # st.write(df.head(5))
 
         # st.write(cookies)
 
-    
-    except:
+    except Exception as e:
+        st.write('Error')
+        st.write(e)
         st.write('no auth')
         cookie_manager = strava_login(cookie_manager)
 

@@ -9,13 +9,14 @@ pio.templates.default = "simple_white"
 
 
 
-color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A']
+color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A','#39FF14','#FF3131']
 
 
 @st.cache_data(ttl=43200)
 def load_file(date_select):
 
-    df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
+    # df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
     df['day']=df['date'].astype('datetime64[D]')
 
     df=df.loc[df.date.dt.date >= date_select]
@@ -23,7 +24,7 @@ def load_file(date_select):
 
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
-    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada_data/master/bovada_scatter.csv')
+    df=pd.read_csv('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_scatter.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
@@ -240,7 +241,7 @@ def app():
 
     date_select = st.sidebar.date_input(
         "How far back do you want to pull bets?",
-        value=pd.to_datetime('today') - pd.Timedelta(days=30),
+        value=pd.to_datetime('today') - pd.Timedelta(days=365),
         min_value=pd.to_datetime('2019-02-19'),
         max_value=pd.to_datetime('today')
         )
