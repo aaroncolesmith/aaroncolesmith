@@ -12,4 +12,4 @@ pystan==2.19.1.1
 prophet==1.1.1
 yahooquery==2.2.15
 extra-streamlit-components==0.1.53
-pyarrow==6.0.1
+pyarrow==14.0.1

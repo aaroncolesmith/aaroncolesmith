@@ -80,13 +80,14 @@ def quick_clstr(df, num_cols, str_cols, color):
 
     df['Cluster'] = df['Cluster'].astype('str')
 
-    fig=px.scatter(df,
+    fig=px.scatter(df.sort_values(color,ascending=True),
                    x='Cluster_x',
                    y='Cluster_y',
                    width=800,
                    height=800,
                    color=color,
-                   hover_data=str_cols+key_vals
+                   hover_data=str_cols+key_vals,
+                   color_continuous_scale='jet'
                   )
     fig.update_layout(legend_title_text=color)
 
