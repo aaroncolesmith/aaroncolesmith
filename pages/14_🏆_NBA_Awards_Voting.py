@@ -278,21 +278,6 @@ def app():
         }
     }
 
-    fig = px.bar(
-        vote_df1,
-        x=column_mapping[votes_points]['x'],
-        y='Player',
-        title=column_mapping[votes_points]['title'],
-        hover_data=['Count_By_Vote'],
-        color_discrete_sequence=['skyblue', 'red'],
-        orientation='h'
-    )
-
-    fig.update_traces(marker_line_color='DarkSlateGray', marker_line_width=1.5, opacity=0.6)
-    fig.update_traces(hovertemplate=column_mapping[votes_points]['hovertemplate'])
-    fig.update_yaxes(title='Player', categoryorder='total ascending')
-    fig.update_xaxes(title=column_mapping[votes_points]['xaxis_title'])
-    fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)')
 
     c2.plotly_chart(fig, config=config, use_container_width=True)
 
