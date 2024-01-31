@@ -73,34 +73,83 @@ def upload_s3_data(df, filename):
 
 
 
+# def generate_gradient(start_color, end_color, num_colors):
+#     def hex_to_rgb(hex_color):
+#         hex_color = hex_color.lstrip('#')
+#         return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+#     def rgb_to_hex(rgb_color):
+#         return '#{0:02X}{1:02X}{2:02X}'.format(*rgb_color)
+
+#     start_rgb = hex_to_rgb(start_color)
+#     end_rgb = hex_to_rgb(end_color)
+
+#     color_gradient = [
+#         rgb_to_hex((
+#             int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
+#             int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
+#             int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
+#         ))
+#         for i in range(num_colors)
+#     ]
+
+#     return color_gradient
+
+
+
 def generate_gradient(start_color, end_color, num_colors):
     def hex_to_rgb(hex_color):
         hex_color = hex_color.lstrip('#')
-        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
 
     def rgb_to_hex(rgb_color):
         return '#{0:02X}{1:02X}{2:02X}'.format(*rgb_color)
 
+    def calculate_opposite_color(color1_rgb, color2_rgb):
+        return rgb_to_hex((
+            255 - int((color1_rgb[0] + color2_rgb[0]) / 2),
+            255 - int((color1_rgb[1] + color2_rgb[1]) / 2),
+            255 - int((color1_rgb[2] + color2_rgb[2]) / 2)
+        ))
+
     start_rgb = hex_to_rgb(start_color)
     end_rgb = hex_to_rgb(end_color)
 
-    color_gradient = [
-        rgb_to_hex((
-            int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
-            int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
-            int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
-        ))
-        for i in range(num_colors)
-    ]
+    if num_colors <= 10:
+        color_gradient = [
+            rgb_to_hex((
+                int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
+                int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
+                int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
+            ))
+            for i in range(num_colors)
+        ]
+    else:
+        additional_color = calculate_opposite_color(start_rgb, end_rgb)
+        additional_rgb = hex_to_rgb(additional_color)
+
+        color_gradient = [
+            rgb_to_hex((
+                int(start_rgb[0] + (additional_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
+                int(start_rgb[1] + (additional_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
+                int(start_rgb[2] + (additional_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
+            ))
+            for i in range(num_colors // 2)
+        ]
+
+        color_gradient.append(additional_color)
+
+        color_gradient.extend([
+            rgb_to_hex((
+                int(additional_rgb[0] + (end_rgb[0] - additional_rgb[0]) * i / (num_colors // 2 - 1)),
+                int(additional_rgb[1] + (end_rgb[1] - additional_rgb[1]) * i / (num_colors // 2 - 1)),
+                int(additional_rgb[2] + (end_rgb[2] - additional_rgb[2]) * i / (num_colors // 2 - 1))
+            ))
+            for i in range(num_colors // 2)
+        ])
 
     return color_gradient
 
-# # Example usage:
-# start_color = '#FF1493'
-# end_color = '#00C2BA'
-# num_colors = 5
-# gradient_colors = generate_gradient(start_color, end_color, num_colors)
-# print(gradient_colors)
 
 
 
@@ -547,7 +596,7 @@ def normalize_bet_team_names(d, field):
         d[field] = d[field].str.replace(key, value, regex=True)
 
     replacements = ['Musketeers','Longhorns','Wildcats','Panthers','Tigers','Warriors','Skyhawks','Sharks','Flames','Bulldogs','Cougars','Runnin\'','Rebels',
-                    'Spartans','Razorbacks','Bears','Raiders','Cardinal','Buckeyes','Hawkeyes','Bobcats','Rockets',
+                    'Spartans','Razorbacks','Bears','Raiders','Cardinals','Cardinal','Buckeyes','Hawkeyes','Bobcats','Rockets',
                     'Gauchos']
     for replacement in replacements:
         d[field] = d[field].str.replace(replacement, '', regex=True)
@@ -683,6 +732,46 @@ def add_bins(df):
   away_rank_labels = ['away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus']
   df = create_category_columns(df, 'away_team_rank', bins, away_rank_labels)
 
+  ## added these to support the three model
+  df.loc[df.spread_home_public > 50, 'home_betting_fav'] = 1
+
+  df.loc[df.spread_away_public > 50, 'away_betting_fav'] = 1
+
+  df.loc[df.spread_home_public >= 75, 'big_home_betting_fav'] = 1
+
+  df.loc[df.spread_away_public > 75, 'big_away_betting_fav'] = 1
+
+  df.loc[(df.spread_home_public > 50)&(df.spread_home <0), 'public_on_fav'] = 1
+  df.loc[(df.spread_away_public > 50)&(df.spread_away <0), 'public_on_fav'] = 1
+
+  df.loc[(df.spread_home_public > 50)&(df.spread_home >0), 'public_on_dog'] = 1
+  df.loc[(df.spread_away_public > 50)&(df.spread_away >0), 'public_on_dog'] = 1
+
+  for col in ['home_betting_fav','away_betting_fav','big_home_betting_fav','big_away_betting_fav','public_on_fav','public_on_dog']:
+    df[col] = df[col].fillna(0)
+
+  d5=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/d5_against_spread.parquet?raw=true', engine='pyarrow')
+
+  df=pd.merge(df,
+          d5[['id','team_id','rolling_cover_10','rolling_cover_25','rolling_cover_50','rolling_cover_100']],
+          left_on=['id','home_team_id'],
+          right_on=['id','team_id']
+          ).rename(columns={'rolling_cover_10':'home_rolling_cover_10',
+                            'rolling_cover_25':'home_rolling_cover_25',
+                            'rolling_cover_50':'home_rolling_cover_50',
+                            'rolling_cover_100':'home_rolling_cover_100'})
+  del df['team_id']
+  df=pd.merge(df,
+          d5[['id','team_id','rolling_cover_10','rolling_cover_25','rolling_cover_50','rolling_cover_100']],
+          left_on=['id','away_team_id'],
+          right_on=['id','team_id']
+          ).rename(columns={'rolling_cover_10':'away_rolling_cover_10',
+                            'rolling_cover_25':'away_rolling_cover_25',
+                            'rolling_cover_50':'away_rolling_cover_50',
+                            'rolling_cover_100':'away_rolling_cover_100'})
+  del df['team_id']
+
+
   return df
 
 
@@ -710,6 +799,79 @@ def run_ttq_model(df):
 
 
 
+def run_three_headed_model(df):
+
+
+  ## FIRST MODEL 
+  model_path='models/StackedEnsemble_AllModels_3_AutoML_1_20240130_191752'
+  feat_list=['away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'num_bets', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100']
+
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+  h2o_d = h2o.H2OFrame(df[feat_list])
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+
+  model=h2o.load_model(model_path)
+  predictions = model.predict(h2o_d)
+
+  predictions_df = h2o.as_list(predictions)
+  df['spread_home_pred'] = predictions_df['predict'].values
+
+  df['pred_diff']=df['spread_home_pred'] - df['spread_home']
+
+  df.loc[((df['score_away']-df['score_home'])<df['spread_home']), 'home_cover_spread'] = 1
+  df.loc[((df['score_away']-df['score_home'])>df['spread_home']), 'home_cover_spread'] = 0
+  df.loc[(df['score_home']-df['score_away'])<df['spread_away'], 'away_cover_spread'] = 1
+  df.loc[(df['score_home']-df['score_away'])>df['spread_away'], 'away_cover_spread'] = 0
+  df.loc[(df.pred_diff >= 1)& (df.pred_diff <= 15), 'bet_away_cover_spread'] = 1
+  df.loc[(df.pred_diff <= -1)& (df.pred_diff >= -15), 'bet_home_cover_spread'] = 1
+
+
+  ## SECOND MODEL
+  model_path='models/GBM_model_python_1705530383880_25'
+  feat_list=['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100']
+
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+  h2o_d = h2o.H2OFrame(df)
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+
+  df=run_model(df, model_path, h2o_d, model_run)
+
+  df['second_model_advice'] = df['ensemble_model_advice']
+
+  ## THIRD MODEL
+  model_path='models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'
+  feat_list=['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred']
+
+
+  try:
+    del df['fav_wins']
+    del df['confidence_level']
+    # del df['fav_wins_pred']
+    del df['ensemble_model_advice']
+  except:
+    pass
+
+
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+  h2o_d = h2o.H2OFrame(df[feat_list])
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+
+  df=run_model(df, model_path, h2o_d, model_run)
+
+  return df
+
 
 
 ####### APP
@@ -722,6 +884,10 @@ model_dict['v3'] = {'model_name':'model_runs_v5',
 model_dict['v3_no_ttq'] = {'model_name':'model_runs_v5_no_ttq',
                     'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus','spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
                     'model_path':'models/StackedEnsemble_BestOfFamily_4_AutoML_1_20231231_193113'} 
+
+model_dict['v6_three_model'] = {'model_name':'v6_three_model',
+                    'feat_list': ['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred'],
+                    'model_path':'models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'} 
 
 
 
@@ -768,45 +934,6 @@ def app():
         model_path=model_dict[model_select]['model_path']
         feat_list=model_dict[model_select]['feat_list']
 
-        
-
-        df=get_bet_data(date)
-        d1=get_trank_schedule_data(date)
-        rank_date=date-timedelta(1)
-        d2=get_bart_rank(rank_date)
-        d1['date_join'] = rank_date
-        d3=merge_trank_schedule_bet(d1,d2)
-        df=merge_bet_trank(df,d3)
-        df=add_bins(df)
-
-        if filename == 'model_runs_v6_modeled_ttq':
-          df = run_ttq_model(df)
-
-        # model_path='models/StackedEnsemble_BestOfFamily_4_AutoML_1_20231231_193113'
-        # feat_list=['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff']
-
-        for col in feat_list:
-            df[col]=pd.to_numeric(df[col].fillna(0))
-
-        if filename == 'model_runs_v5_no_ttq':
-          del_cols = ['ttq','ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus']
-          for col in del_cols:
-              del df[col]
-        
-        h2o.init()
-
-        h2o_d = h2o.H2OFrame(df)
-
-        df = run_model(df, model_path, h2o_d, model_run)
-
-        df['time_to_tip'] = (df['start_time_et']-pd.Timestamp.now(tz='US/Eastern')).dt.total_seconds() / 60
-
-        df['score'] = df['home_team'] +' (' + df['score_home'].astype('str') + ') - ' + df['away_team'] +' (' + df['score_away'].astype('str')+ ')'
-
-        df1=df.loc[(pd.to_numeric(df.confidence_level)>=pd.to_numeric(confidence_threshold))]
-
-
-
 
         try:
             hist_df = get_s3_data(filename)
@@ -814,10 +941,82 @@ def app():
            st.write('bad input file')
            hist_df=pd.DataFrame()
 
+        if hist_df.index.size == 0:
+           update_ind = 0
+           records_for_selected_date=0
+        else:
+          records_for_selected_date = hist_df.loc[(pd.to_datetime(hist_df.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))].index.size
+          last_model_run_selected_date = hist_df.loc[(pd.to_datetime(hist_df.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))].model_run.max()
+          last_run_record_count_selected_date = hist_df.loc[(pd.to_datetime(hist_df.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))&
+                      (hist_df.model_run == last_model_run_selected_date)
+                      ].index.size
+          complete_record_count_selected_date = hist_df.loc[(pd.to_datetime(hist_df.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))&
+                      (hist_df.model_run == last_model_run_selected_date)&
+                      (hist_df.status.isin(['complete','postponed']))
+                      ].index.size
+        
+        if records_for_selected_date == 0:
+           update_ind = 'update'
+        elif complete_record_count_selected_date != last_run_record_count_selected_date:
+           update_ind='update'
+        else:
+           update_ind = 'no_update'
 
+        if update_ind == 'update':
+
+          df=get_bet_data(date)
+          d1=get_trank_schedule_data(date)
+          rank_date=date-timedelta(1)
+          d2=get_bart_rank(rank_date)
+          d1['date_join'] = rank_date
+          d3=merge_trank_schedule_bet(d1,d2)
+          df=merge_bet_trank(df,d3)
+          df=add_bins(df)
+
+          if filename == 'model_runs_v6_modeled_ttq':
+            df = run_ttq_model(df)
+
+
+
+          try:
+            h2o.init()
+          except:
+            h2o.cluster().shutdown(prompt=False) 
+            h2o.init()
+
+
+          if filename in (['model_runs_v5','model_runs_v5_no_ttq']):
+            for col in feat_list:
+                df[col]=pd.to_numeric(df[col].fillna(0))
+
+            if filename == 'model_runs_v5_no_ttq':
+              del_cols = ['ttq','ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus']
+              for col in del_cols:
+                  del df[col]
+            h2o_d = h2o.H2OFrame(df)
+            df = run_model(df, model_path, h2o_d, model_run)
+
+
+          
+          if filename == 'v6_three_model':
+             df=run_three_headed_model(df)
+
+
+          
+
+          df['time_to_tip'] = (df['start_time_et']-pd.Timestamp.now(tz='US/Eastern')).dt.total_seconds() / 60
+
+          df['score'] = df['home_team'] +' (' + df['score_home'].astype('str') + ') - ' + df['away_team'] +' (' + df['score_away'].astype('str')+ ')'
+
+        # df1=df.loc[(pd.to_numeric(df.confidence_level)>=pd.to_numeric(confidence_threshold))]
+        else:
+           df=pd.DataFrame()
 
 
         df1=pd.concat([hist_df,df]).reset_index(drop=True)
+        df1=df1.drop(df1[(df1.away_team_rank ==0)&(df1.home_team_rank==0)].index)
+
+
 
         df1['score'] = df1['home_team'] +' (' + df1['score_home'].astype('str') + ') - ' + df1['away_team'] +' (' + df1['score_away'].astype('str')+ ')'
         df1.loc[df1.status!='complete','ensemble_model_win']=np.nan
@@ -830,17 +1029,25 @@ def app():
         except:
            time_since_last_model = 30
 
-
         if time_since_last_model > 15:
+        #     if hours_diff < 32:
+
             upload_s3_data(df1, filename)
             
-
         df2=df1.loc[(pd.to_datetime(df1.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))&
                     (pd.to_numeric(df1.confidence_level)>=pd.to_numeric(confidence_threshold))].reset_index(drop=True)
 
 
-        wins=df2.loc[(df2.ensemble_model_win==1)&(df2.status=='complete')].index.size
-        losses=df2.loc[(df2.ensemble_model_win==0)&(df2.status=='complete')].index.size
+        wins = df2.loc[(df2.date==pd.to_datetime(df2.date.max()))&
+                         (df2.model_run==df2.model_run.max())&
+                         (df2.ensemble_model_win==1)&(df2.status=='complete')
+                         ].index.size
+        losses = df2.loc[(df2.date==pd.to_datetime(df2.date.max()))&
+                         (df2.model_run==df2.model_run.max())&
+                         (df2.ensemble_model_win==0)&(df2.status=='complete')
+                         ].index.size
+        
+
         try:
             win_pct=wins/(wins+losses)
         except:
