@@ -3,3 +3,4 @@ model_runs_v5_no_ttq.parquet
 model_runs_v5.parquet
 v6_three_model.parquet
 .DS_Store
+v6_three_model_fixed.parquet

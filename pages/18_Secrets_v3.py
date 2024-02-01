@@ -829,7 +829,6 @@ def run_three_headed_model(df):
   df.loc[(df.pred_diff >= 1)& (df.pred_diff <= 15), 'bet_away_cover_spread'] = 1
   df.loc[(df.pred_diff <= -1)& (df.pred_diff >= -15), 'bet_home_cover_spread'] = 1
 
-
   ## SECOND MODEL
   model_path='models/GBM_model_python_1705530383880_25'
   feat_list=['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100']
@@ -844,8 +843,10 @@ def run_three_headed_model(df):
 
   df=run_model(df, model_path, h2o_d, model_run)
 
-  df['second_model_advice'] = df['ensemble_model_advice']
 
+  df['second_model_advice'] = df['ensemble_model_advice']
+  df['second_model_fav_wins_pred'] = df['fav_wins_pred']
+  st.write(df)
   ## THIRD MODEL
   model_path='models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'
   feat_list=['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred']
@@ -874,10 +875,123 @@ def run_three_headed_model(df):
 
 
 
+def run_three_headed_model_updated(df):
+
+
+
+  ## FIRST MODEL 
+
+  model_path='models/StackedEnsemble_AllModels_3_AutoML_1_20240201_160421'
+  feat_list=['away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'num_bets', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100']
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+
+
+  h2o_d = h2o.H2OFrame(df[feat_list])
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+
+  model=h2o.load_model(model_path)
+  predictions = model.predict(h2o_d)
+
+  predictions_df = h2o.as_list(predictions)
+  df['spread_home_pred'] = predictions_df['predict'].values
+
+  df['pred_diff']=df['spread_home_pred'] - df['spread_home']
+
+  df.loc[((df['score_away']-df['score_home'])<df['spread_home']), 'home_cover_spread'] = 1
+  df.loc[((df['score_away']-df['score_home'])>df['spread_home']), 'home_cover_spread'] = 0
+  df.loc[(df['score_home']-df['score_away'])<df['spread_away'], 'away_cover_spread'] = 1
+  df.loc[(df['score_home']-df['score_away'])>df['spread_away'], 'away_cover_spread'] = 0
+  df.loc[(df.pred_diff >= 1)& (df.pred_diff <= 15), 'bet_away_cover_spread'] = 1
+  df.loc[(df.pred_diff <= -1)& (df.pred_diff >= -15), 'bet_home_cover_spread'] = 1
+
+
+
+
+  ## SECOND MODEL
+  model_path='models/GBM_model_python_1706803444560_25'
+  feat_list=['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100']
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+
+
+  h2o_d = h2o.H2OFrame(df[feat_list])
+
+  model=h2o.load_model(model_path)
+  predictions = model.predict(h2o_d)
+
+  # Convert H2OFrame back to pandas DataFrame if needed
+  predictions_df = h2o.as_list(predictions)
+
+  # Add the predictions to your original DataFrame
+  df['fav_wins_binary_model_pred'] = predictions_df['predict'].values
+
+  df.loc[(df.spread_away<0)&(df.bet_result=='away_wins'), 'fav_result'] = 'fav_wins'
+  df.loc[(df.spread_home<0)&(df.bet_result=='home_wins'), 'fav_result'] = 'fav_wins'
+
+  df.loc[(df.spread_away>0)&(df.bet_result=='away_wins'), 'fav_result'] = 'dog_wins'
+  df.loc[(df.spread_home>0)&(df.bet_result=='home_wins'), 'fav_result'] = 'dog_wins'
+
+  df.loc[df.fav_result == 'fav_wins','fav_wins'] = 1
+  df.loc[df.fav_result == 'dog_wins','fav_wins'] = 0
+
+  df['fav_wins'] = pd.to_numeric(df['fav_wins'])
+  df['fav_wins_binary_model_pred'] = pd.to_numeric(df['fav_wins_binary_model_pred'])
+
+  df.loc[df.fav_wins_binary_model_pred == df.fav_wins, 'binary_model_win'] = 1
+
+  df.loc[((df['fav_wins_binary_model_pred'] == 0) & (df['fav_wins'] == 1)) | ((df['fav_wins_binary_model_pred'] == 1) & (df['fav_wins'] == 0)), 'binary_model_win'] = 0
+
+  df.loc[((df.spread_home<0)&(df.fav_wins_binary_model_pred==1)),
+  'binary_model_advice'] = df['home_team'] + ' (' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_home>0)&(df.fav_wins_binary_model_pred==0)),
+  'binary_model_advice'] = df['home_team'] + ' (+' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_away<0)&(df.fav_wins_binary_model_pred==1)),
+  'binary_model_advice'] = df['away_team'] + ' (' + df['spread_away'].astype(str) + ')'
+
+  df.loc[((df.spread_away>0)&(df.fav_wins_binary_model_pred==0)),
+  'binary_model_advice'] = df['away_team'] + ' (+' + df['spread_away'].astype(str) + ')'
+  
+  
+  ## THIRD MODEL
+  model_path='models/StackedEnsemble_AllModels_3_AutoML_1_20240201_203243'
+  feat_list=['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_binary_model_pred']
+
+
+  for col in feat_list:
+    try:
+      df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+  h2o_d = h2o.H2OFrame(df[feat_list])
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+
+  df=run_model(df, model_path, h2o_d, model_run)
+
+  return df
+
+
+
 ####### APP
 
 
 model_dict = {}
+
+model_dict['v6_three_model_fixed'] = {'model_name':'v6_three_model_fixed',
+                    'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus','spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
+                    'model_path':'models/StackedEnsemble_AllModels_3_AutoML_1_20240201_203243'} 
+model_dict['v6_three_model'] = {'model_name':'v6_three_model',
+                    'feat_list': ['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred'],
+                    'model_path':'models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'} 
+
 model_dict['v3'] = {'model_name':'model_runs_v5',
                     'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
                     'model_path':'models/StackedEnsemble_BestOfFamily_4_AutoML_1_20231231_193113'} 
@@ -885,9 +999,6 @@ model_dict['v3_no_ttq'] = {'model_name':'model_runs_v5_no_ttq',
                     'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus','spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
                     'model_path':'models/StackedEnsemble_BestOfFamily_4_AutoML_1_20231231_193113'} 
 
-model_dict['v6_three_model'] = {'model_name':'v6_three_model',
-                    'feat_list': ['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred'],
-                    'model_path':'models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'} 
 
 
 
@@ -1000,9 +1111,10 @@ def app():
           
           if filename == 'v6_three_model':
              df=run_three_headed_model(df)
+             feat_list.append('second_model_fav_wins_pred')
 
-
-          
+          if filename == 'v6_three_model_fixed':
+             df=run_three_headed_model_updated(df)
 
           df['time_to_tip'] = (df['start_time_et']-pd.Timestamp.now(tz='US/Eastern')).dt.total_seconds() / 60
 
@@ -1084,12 +1196,20 @@ def app():
         st.write(
             df2.loc[df2.id==id_select][['status','model_run','time_to_tip','matchup','ensemble_model_advice','confidence_level']+feat_list].sort_values('model_run',ascending=True).style.background_gradient(axis=0)
         )
-        try:
-          st.write(
-              df2.loc[df2.id==id_select][['status','model_run','time_to_tip','matchup','ensemble_model_advice','confidence_level','ttq','score']].sort_values('model_run',ascending=True).style.background_gradient(axis=0)
-          )
-        except:
-           pass
+
+        st.write(
+           df2.groupby(['id','matchup']).agg(
+              ttp=('time_to_tip','last'),
+              ensemble_model_advice=('ensemble_model_advice',lambda x: ', '.join(x.unique())),
+                                        ensemble_model_advice_count=('ensemble_model_advice','nunique'),
+                                        total_count=('ensemble_model_advice','size'),
+                                        avg_conf=('confidence_level','mean'),
+                                        last_conf=('confidence_level','last')
+                                        ).sort_values('ensemble_model_advice_count',ascending=False).reset_index().style.background_gradient(subset=['ensemble_model_advice_count','total_count','avg_conf','last_conf','ttp'])
+              )
+                 
+              
+
 
 
         with st.expander('All data for date:'):

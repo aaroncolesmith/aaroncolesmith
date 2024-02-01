@@ -97,7 +97,6 @@ def app():
     p['Cluster'] = pd.to_numeric(p['Cluster'])
 
     pviz=p.groupby(['Cluster']).agg({'field' : lambda x: ', '.join(x),'x':'mean','y':'mean'}).reset_index()
-
     pviz['field']=pviz.field.str.replace('\(10 points\)_','').str.replace('\(7 points\)_','').str.replace('\(5 points\)_','').str.replace('\(3 points\)_','').str.replace('\(1 point\)_','')
     pviz.field = pviz.field.str.wrap(50)
     pviz.field = pviz.field.apply(lambda x: x.replace('\n', '<br>'))
