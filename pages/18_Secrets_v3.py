@@ -747,11 +747,11 @@ def add_bins(df):
   df.loc[(df.spread_home_public > 50)&(df.spread_home >0), 'public_on_dog'] = 1
   df.loc[(df.spread_away_public > 50)&(df.spread_away >0), 'public_on_dog'] = 1
 
+
   for col in ['home_betting_fav','away_betting_fav','big_home_betting_fav','big_away_betting_fav','public_on_fav','public_on_dog']:
     df[col] = df[col].fillna(0)
 
   d5=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/blob/main/d5_against_spread.parquet?raw=true', engine='pyarrow')
-
   df=pd.merge(df,
           d5[['id','team_id','rolling_cover_10','rolling_cover_25','rolling_cover_50','rolling_cover_100']],
           left_on=['id','home_team_id'],
@@ -761,6 +761,7 @@ def add_bins(df):
                             'rolling_cover_50':'home_rolling_cover_50',
                             'rolling_cover_100':'home_rolling_cover_100'})
   del df['team_id']
+
   df=pd.merge(df,
           d5[['id','team_id','rolling_cover_10','rolling_cover_25','rolling_cover_50','rolling_cover_100']],
           left_on=['id','away_team_id'],
@@ -770,6 +771,9 @@ def add_bins(df):
                             'rolling_cover_50':'away_rolling_cover_50',
                             'rolling_cover_100':'away_rolling_cover_100'})
   del df['team_id']
+
+  # st.write(d5)
+  # st.write(d5[d5.team_id==751])
 
 
   return df
@@ -846,7 +850,7 @@ def run_three_headed_model(df):
 
   df['second_model_advice'] = df['ensemble_model_advice']
   df['second_model_fav_wins_pred'] = df['fav_wins_pred']
-  st.write(df)
+
   ## THIRD MODEL
   model_path='models/StackedEnsemble_AllModels_2_AutoML_2_20240130_193812'
   feat_list=['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred']
@@ -900,6 +904,8 @@ def run_three_headed_model_updated(df):
   df['spread_home_pred'] = predictions_df['predict'].values
 
   df['pred_diff']=df['spread_home_pred'] - df['spread_home']
+
+
 
   df.loc[((df['score_away']-df['score_home'])<df['spread_home']), 'home_cover_spread'] = 1
   df.loc[((df['score_away']-df['score_home'])>df['spread_home']), 'home_cover_spread'] = 0
@@ -986,7 +992,7 @@ def run_three_headed_model_updated(df):
 model_dict = {}
 
 model_dict['v6_three_model_fixed'] = {'model_name':'v6_three_model_fixed',
-                    'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus','spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
+                    'feat_list': ['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_binary_model_pred'],
                     'model_path':'models/StackedEnsemble_AllModels_3_AutoML_1_20240201_203243'} 
 model_dict['v6_three_model'] = {'model_name':'v6_three_model',
                     'feat_list': ['spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'ttq', 'trank_spread', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'favorite_spread_bovada', 'updated_spread_diff', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus', 'ttq_less_than_34', 'ttq_34_to_44', 'ttq_44_to_56', 'ttq_56_to_75', 'ttq_75_plus', 'home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'home_betting_fav', 'away_betting_fav', 'big_home_betting_fav', 'big_away_betting_fav', 'public_on_fav', 'public_on_dog', 'home_rolling_cover_10', 'home_rolling_cover_25', 'home_rolling_cover_50', 'home_rolling_cover_100', 'away_rolling_cover_10', 'away_rolling_cover_25', 'away_rolling_cover_50', 'away_rolling_cover_100', 'spread_home_pred', 'pred_diff', 'bet_away_cover_spread', 'bet_home_cover_spread', 'fav_wins_pred'],
@@ -1084,6 +1090,7 @@ def app():
           df=merge_bet_trank(df,d3)
           df=add_bins(df)
 
+
           if filename == 'model_runs_v6_modeled_ttq':
             df = run_ttq_model(df)
 
@@ -1123,6 +1130,7 @@ def app():
         # df1=df.loc[(pd.to_numeric(df.confidence_level)>=pd.to_numeric(confidence_threshold))]
         else:
            df=pd.DataFrame()
+
 
 
         df1=pd.concat([hist_df,df]).reset_index(drop=True)
