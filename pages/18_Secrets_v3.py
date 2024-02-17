@@ -1156,7 +1156,7 @@ def app():
             
         df2=df1.loc[(pd.to_datetime(df1.date)==pd.to_datetime(date.strftime('%Y-%m-%d')))&
                     (pd.to_numeric(df1.confidence_level)>=pd.to_numeric(confidence_threshold))].reset_index(drop=True)
-
+        df2['date'] = pd.to_datetime(df2['date'])
 
         wins = df2.loc[(df2.date==pd.to_datetime(df2.date.max()))&
                          (df2.model_run==df2.model_run.max())&
@@ -1200,11 +1200,10 @@ def app():
             'Select a game id',
             id_list
         )
-
         st.write(
             df2.loc[df2.id==id_select][['status','model_run','time_to_tip','matchup','ensemble_model_advice','confidence_level']+feat_list].sort_values('model_run',ascending=True).style.background_gradient(axis=0)
         )
-
+        df2=df2.loc[df2.ensemble_model_advice.notnull()].reset_index(drop=True)
         st.write(
            df2.groupby(['id','matchup']).agg(
               ttp=('time_to_tip','last'),
