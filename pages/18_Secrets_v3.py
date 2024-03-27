@@ -14,9 +14,26 @@ import numpy as np
 from bs4 import BeautifulSoup
 import io
 import pickle
-# import xgboost
-# from sklearn.preprocessing import LabelEncoder
-# le = LabelEncoder()
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import RobustScaler
+from sklearn.linear_model import LinearRegression, Lasso, ElasticNet
+from sklearn.kernel_ridge import KernelRidge
+
+from sklearn.ensemble import BaggingRegressor
+
+from sklearn.ensemble import GradientBoostingRegressor
+import xgboost as xgb
+# import lightgbm as lgb
+from sklearn.ensemble import StackingRegressor
+
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import mean_squared_error
+from sklearn.utils import Bunch
+
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -31,7 +48,14 @@ st.set_page_config(
 @st.cache_data(ttl=300)
 def get_s3_data(filename):
     conn = st.connection('s3', type=FilesConnection)
-    df = conn.read(f"bet-model-data/{filename}.parquet", input_format="parquet", ttl=600)
+    try:
+       df = conn.read(f"bet-model-data/{filename}.parquet", 
+                   input_format="parquet", 
+                   ttl=600
+                   )
+    except:
+       st.write('failed to get hist')
+       df = get_hist(filename)
     return df
 
 def upload_s3_data(df, filename):
@@ -311,7 +335,6 @@ def get_bet_data(date):
   df.loc[(df.spread_home_result+df.spread_home)<0,'bet_result'] = 'away_wins'
   df.loc[(df.spread_home_result+df.spread_home)==0,'bet_result'] = 'push'
 
-
   return df
 
 @st.cache_data(ttl=300)
@@ -327,6 +350,7 @@ def merge_trank_schedule_bet(d1,d2):
       right_on=['date','team'],
       suffixes=('','_rank_data')
   )
+
 
   result_df_merge = result_df_merge.drop(['date_rank_data','team'], axis=1)
   result_df_merge = result_df_merge.rename(columns={'rank':'away_team_rank',
@@ -677,8 +701,11 @@ def get_trank_schedule_data(date):
 
       trank=trank.loc[~trank.matchup.str.contains('MOV Mean')].reset_index(drop=True)
 
-      trank.loc[trank.matchup.str.contains(' at '), 'away_team']= trank.matchup.str.split(' at ',expand=True)[0].str.strip()
-      trank.loc[trank.matchup.str.contains(' at '), 'home_team']= trank.matchup.str.split(' at ',expand=True)[1].str.strip()
+      try:
+        trank.loc[trank.matchup.str.contains(' at '), 'away_team']= trank.matchup.str.split(' at ',expand=True)[0].str.strip()
+        trank.loc[trank.matchup.str.contains(' at '), 'home_team']= trank.matchup.str.split(' at ',expand=True)[1].str.strip()
+      except:
+         pass
 
       try:
         trank.loc[trank.matchup.str.contains(' vs '), 'away_team']= trank.matchup.str.split(' vs ',expand=True)[0].str.strip()
@@ -694,7 +721,7 @@ def get_trank_schedule_data(date):
       for replacement in replacements:
         trank['home_team'] = trank['home_team'].str.replace(replacement, '', regex=True).str.strip()
   except Exception as e:
-    print(e)
+    st.write(e)
 
 
   return trank
@@ -771,10 +798,6 @@ def add_bins(df):
                             'rolling_cover_50':'away_rolling_cover_50',
                             'rolling_cover_100':'away_rolling_cover_100'})
   del df['team_id']
-
-  # st.write(d5)
-  # st.write(d5[d5.team_id==751])
-
 
   return df
 
@@ -986,6 +1009,212 @@ def run_three_headed_model_updated(df):
 
 
 
+
+def run_elastic_net(df):
+  feat_list=['spread_away',
+            'spread_home',
+            'spread_away_min',
+            'spread_away_max',
+            'spread_away_std',
+            'spread_home_min',
+            'spread_home_max',
+            'spread_home_std',
+            'spread_home_public',
+            'spread_away_public',
+            'num_bets',
+            'similarity_score',
+            'away_team_rank',
+            'home_team_rank',
+            'favorite_spread_bovada',
+            'fav_similarity',
+            'updated_spread_diff',
+            'spread_diff_less_than_8',
+            'spread_diff_8_to_16',
+            'spread_diff_16_to_28',
+            'spread_diff_28_to_58',
+            'spread_diff_58_plus',
+            'bets_less_than_1900',
+            'bets_1900_to_3500',
+            'bets_3500_to_6900',
+            'bets_6900_to_14k',
+            'bets_14k_plus',
+            'home_rank_less_than_10',
+            'home_rank_10_to_25',
+            'home_rank_100_to_200',
+            'home_rank_200_plus',
+            'away_rank_less_than_10',
+            'away_rank_10_to_25',
+            'away_rank_100_to_200',
+            'away_rank_200_plus',
+            'home_betting_fav',
+            'away_betting_fav',
+            'big_home_betting_fav',
+            'big_away_betting_fav',
+            'public_on_fav',
+            'public_on_dog',
+            'home_rolling_cover_10',
+            'home_rolling_cover_25',
+            'home_rolling_cover_50',
+            'home_rolling_cover_100',
+            'away_rolling_cover_10',
+            'away_rolling_cover_25',
+            'away_rolling_cover_50',
+            'away_rolling_cover_100']
+   
+  with open('models/elastic_net.pkl', 'rb') as f:
+     model = pickle.load(f)
+
+  for col in feat_list:
+    try:
+        df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+   
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+  preds = model.predict(df[feat_list])
+
+  df['fav_wins_pred']=preds
+  df.loc[df.fav_wins_pred>=.5,'fav_wins_bin'] = 1
+  df.loc[df.fav_wins_pred<.5,'fav_wins_bin'] = 0
+  df['confidence_level'] = abs(df['fav_wins_pred']-.5)
+
+  df.loc[(df.spread_away<0)&(df.bet_result=='away_wins'), 'fav_result'] = 'fav_wins'
+  df.loc[(df.spread_home<0)&(df.bet_result=='home_wins'), 'fav_result'] = 'fav_wins'
+
+  df.loc[(df.spread_away>0)&(df.bet_result=='away_wins'), 'fav_result'] = 'dog_wins'
+  df.loc[(df.spread_home>0)&(df.bet_result=='home_wins'), 'fav_result'] = 'dog_wins'
+
+  df.loc[df.fav_result == 'fav_wins','fav_wins'] = 1
+  df.loc[df.fav_result == 'dog_wins','fav_wins'] = 0
+
+  df['fav_wins'] = pd.to_numeric(df['fav_wins'])
+  df['fav_wins_bin'] = pd.to_numeric(df['fav_wins_bin'])
+
+  df.loc[df.fav_wins_bin == df.fav_wins, 'ensemble_model_win'] = 1
+  df.loc[((df['fav_wins_bin'] == 0) & (df['fav_wins'] == 1)) | ((df['fav_wins_bin'] == 1) & (df['fav_wins'] == 0)), 'ensemble_model_win'] = 0
+
+
+  df.loc[((df.spread_home<0)&(df.fav_wins_bin==1)),
+  'ensemble_model_advice'] = df['home_team'] + ' (' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_home>0)&(df.fav_wins_bin==0)),
+  'ensemble_model_advice'] = df['home_team'] + ' (+' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_away<0)&(df.fav_wins_bin==1)),
+  'ensemble_model_advice'] = df['away_team'] + ' (' + df['spread_away'].astype(str) + ')'
+
+  df.loc[((df.spread_away>0)&(df.fav_wins_bin==0)),
+  'ensemble_model_advice'] = df['away_team'] + ' (+' + df['spread_away'].astype(str) + ')'
+
+  df['model_run'] = model_run
+  df['model'] = 'elastic_net'
+
+  return df
+
+
+
+def run_knr(df):
+  feat_list=['spread_away',
+            'spread_home',
+            'spread_away_min',
+            'spread_away_max',
+            'spread_away_std',
+            'spread_home_min',
+            'spread_home_max',
+            'spread_home_std',
+            'spread_home_public',
+            'spread_away_public',
+            'num_bets',
+            'similarity_score',
+            'away_team_rank',
+            'home_team_rank',
+            'favorite_spread_bovada',
+            'fav_similarity',
+            'updated_spread_diff',
+            'spread_diff_less_than_8',
+            'spread_diff_8_to_16',
+            'spread_diff_16_to_28',
+            'spread_diff_28_to_58',
+            'spread_diff_58_plus',
+            'bets_less_than_1900',
+            'bets_1900_to_3500',
+            'bets_3500_to_6900',
+            'bets_6900_to_14k',
+            'bets_14k_plus',
+            'home_rank_less_than_10',
+            'home_rank_10_to_25',
+            'home_rank_100_to_200',
+            'home_rank_200_plus',
+            'away_rank_less_than_10',
+            'away_rank_10_to_25',
+            'away_rank_100_to_200',
+            'away_rank_200_plus',
+            'home_betting_fav',
+            'away_betting_fav',
+            'big_home_betting_fav',
+            'big_away_betting_fav',
+            'public_on_fav',
+            'public_on_dog',
+            'home_rolling_cover_10',
+            'home_rolling_cover_25',
+            'home_rolling_cover_50',
+            'home_rolling_cover_100',
+            'away_rolling_cover_10',
+            'away_rolling_cover_25',
+            'away_rolling_cover_50',
+            'away_rolling_cover_100']
+   
+  with open('models/tuned_knr.pkl', 'rb') as f:
+     model = pickle.load(f)
+
+  for col in feat_list:
+    try:
+        df[col]=pd.to_numeric(df[col].fillna(0))
+    except:
+      print(f'{col} doesnt exist')
+   
+  model_run=pd.Timestamp.now(tz='US/Eastern')
+  preds = model.predict(df[feat_list])
+
+  df['fav_wins_pred']=preds
+  df.loc[df.fav_wins_pred>=.5,'fav_wins_bin'] = 1
+  df.loc[df.fav_wins_pred<.5,'fav_wins_bin'] = 0
+  df['confidence_level'] = abs(df['fav_wins_pred']-.5)
+
+  df.loc[(df.spread_away<0)&(df.bet_result=='away_wins'), 'fav_result'] = 'fav_wins'
+  df.loc[(df.spread_home<0)&(df.bet_result=='home_wins'), 'fav_result'] = 'fav_wins'
+
+  df.loc[(df.spread_away>0)&(df.bet_result=='away_wins'), 'fav_result'] = 'dog_wins'
+  df.loc[(df.spread_home>0)&(df.bet_result=='home_wins'), 'fav_result'] = 'dog_wins'
+
+  df.loc[df.fav_result == 'fav_wins','fav_wins'] = 1
+  df.loc[df.fav_result == 'dog_wins','fav_wins'] = 0
+
+  df['fav_wins'] = pd.to_numeric(df['fav_wins'])
+  df['fav_wins_bin'] = pd.to_numeric(df['fav_wins_bin'])
+
+  df.loc[df.fav_wins_bin == df.fav_wins, 'ensemble_model_win'] = 1
+  df.loc[((df['fav_wins_bin'] == 0) & (df['fav_wins'] == 1)) | ((df['fav_wins_bin'] == 1) & (df['fav_wins'] == 0)), 'ensemble_model_win'] = 0
+
+
+  df.loc[((df.spread_home<0)&(df.fav_wins_bin==1)),
+  'ensemble_model_advice'] = df['home_team'] + ' (' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_home>0)&(df.fav_wins_bin==0)),
+  'ensemble_model_advice'] = df['home_team'] + ' (+' + df['spread_home'].astype(str) + ')'
+
+  df.loc[((df.spread_away<0)&(df.fav_wins_bin==1)),
+  'ensemble_model_advice'] = df['away_team'] + ' (' + df['spread_away'].astype(str) + ')'
+
+  df.loc[((df.spread_away>0)&(df.fav_wins_bin==0)),
+  'ensemble_model_advice'] = df['away_team'] + ' (+' + df['spread_away'].astype(str) + ')'
+
+  df['model_run'] = model_run
+  df['model'] = 'tuned_knr'
+
+  return df
+
+
 ####### APP
 
 
@@ -1005,20 +1234,128 @@ model_dict['v3_no_ttq'] = {'model_name':'model_runs_v5_no_ttq',
                     'feat_list': ['home_rank_less_than_10', 'home_rank_10_to_25', 'home_rank_100_to_200', 'home_rank_200_plus', 'away_rank_less_than_10', 'away_rank_10_to_25', 'away_rank_100_to_200', 'away_rank_200_plus', 'spread_diff_less_than_8', 'spread_diff_8_to_16', 'spread_diff_16_to_28', 'spread_diff_28_to_58', 'spread_diff_58_plus', 'bets_less_than_1900', 'bets_1900_to_3500', 'bets_3500_to_6900', 'bets_6900_to_14k', 'bets_14k_plus','spread_away', 'spread_home', 'spread_away_min', 'spread_away_max', 'spread_away_std', 'spread_home_min', 'spread_home_max', 'spread_home_std', 'spread_home_public', 'spread_away_public', 'num_bets', 'away_team_rank', 'away_team_adjoe', 'away_team_adjde', 'away_team_barthag', 'away_team_wab', 'home_team_rank', 'home_team_adjoe', 'home_team_adjde', 'home_team_barthag', 'home_team_wab', 'updated_spread_diff'],
                     'model_path':'models/StackedEnsemble_BestOfFamily_4_AutoML_1_20231231_193113'} 
 
+model_dict['v7_fixing_rolling_cover_pct'] = {'model_name':'elastic_net',
+                    'feat_list': ['spread_away',
+ 'spread_home',
+ 'spread_away_min',
+ 'spread_away_max',
+ 'spread_away_std',
+ 'spread_home_min',
+ 'spread_home_max',
+ 'spread_home_std',
+ 'spread_home_public',
+ 'spread_away_public',
+ 'num_bets',
+ 'similarity_score',
+ 'away_team_rank',
+ 'home_team_rank',
+ 'favorite_spread_bovada',
+ 'fav_similarity',
+ 'updated_spread_diff',
+ 'spread_diff_less_than_8',
+ 'spread_diff_8_to_16',
+ 'spread_diff_16_to_28',
+ 'spread_diff_28_to_58',
+ 'spread_diff_58_plus',
+ 'bets_less_than_1900',
+ 'bets_1900_to_3500',
+ 'bets_3500_to_6900',
+ 'bets_6900_to_14k',
+ 'bets_14k_plus',
+ 'home_rank_less_than_10',
+ 'home_rank_10_to_25',
+ 'home_rank_100_to_200',
+ 'home_rank_200_plus',
+ 'away_rank_less_than_10',
+ 'away_rank_10_to_25',
+ 'away_rank_100_to_200',
+ 'away_rank_200_plus',
+ 'home_betting_fav',
+ 'away_betting_fav',
+ 'big_home_betting_fav',
+ 'big_away_betting_fav',
+ 'public_on_fav',
+ 'public_on_dog',
+ 'home_rolling_cover_10',
+ 'home_rolling_cover_25',
+ 'home_rolling_cover_50',
+ 'home_rolling_cover_100',
+ 'away_rolling_cover_10',
+ 'away_rolling_cover_25',
+ 'away_rolling_cover_50',
+ 'away_rolling_cover_100'],
+ 'model_path':'models/elastic_net.pkl'} 
+
+
+model_dict['v8_tuned_knr'] = {'model_name':'tuned_knr',
+                    'feat_list': ['spread_away',
+            'spread_home',
+            'spread_away_min',
+            'spread_away_max',
+            'spread_away_std',
+            'spread_home_min',
+            'spread_home_max',
+            'spread_home_std',
+            'spread_home_public',
+            'spread_away_public',
+            'num_bets',
+            'similarity_score',
+            'away_team_rank',
+            'home_team_rank',
+            'favorite_spread_bovada',
+            'fav_similarity',
+            'updated_spread_diff',
+            'spread_diff_less_than_8',
+            'spread_diff_8_to_16',
+            'spread_diff_16_to_28',
+            'spread_diff_28_to_58',
+            'spread_diff_58_plus',
+            'bets_less_than_1900',
+            'bets_1900_to_3500',
+            'bets_3500_to_6900',
+            'bets_6900_to_14k',
+            'bets_14k_plus',
+            'home_rank_less_than_10',
+            'home_rank_10_to_25',
+            'home_rank_100_to_200',
+            'home_rank_200_plus',
+            'away_rank_less_than_10',
+            'away_rank_10_to_25',
+            'away_rank_100_to_200',
+            'away_rank_200_plus',
+            'home_betting_fav',
+            'away_betting_fav',
+            'big_home_betting_fav',
+            'big_away_betting_fav',
+            'public_on_fav',
+            'public_on_dog',
+            'home_rolling_cover_10',
+            'home_rolling_cover_25',
+            'home_rolling_cover_50',
+            'home_rolling_cover_100',
+            'away_rolling_cover_10',
+            'away_rolling_cover_25',
+            'away_rolling_cover_50',
+            'away_rolling_cover_100'],
+ 'model_path':'models/tuned_knr.pkl'} 
+
 
 
 
 def app():
     st.markdown('# Welcome to the Secret Page')
     st.markdown('### Enter Password to Continue')
+
+    if 'input_pass' not in st.session_state:
+      st.session_state['input_pass'] = ''
     with st.form(key='pass_input'):
-        input_pass=st.text_input('What\'s the password?')
+        input_pass=st.text_input('What\'s the password?', st.session_state['input_pass'])
         password=os.environ["TEST_PASS"]
         submit_button=st.form_submit_button(label='Go!')
 
 
     if input_pass==password:
-        st.write('correct')
+        st.session_state.input_pass = input_pass
         
         today=pd.Timestamp.now(tz='US/Eastern').date()
         model_run=pd.Timestamp.now(tz='US/Eastern')
@@ -1052,10 +1389,12 @@ def app():
         feat_list=model_dict[model_select]['feat_list']
 
 
+        # try:
         try:
-            hist_df = get_s3_data(filename)
-        except:
-           st.write('bad input file')
+           hist_df = get_s3_data(filename)
+        except Exception as e: 
+           print(e)
+           print('bad input file or no input file')
            hist_df=pd.DataFrame()
 
         if hist_df.index.size == 0:
@@ -1082,6 +1421,7 @@ def app():
         if update_ind == 'update':
 
           df=get_bet_data(date)
+          # st.write(df)
           d1=get_trank_schedule_data(date)
           rank_date=date-timedelta(1)
           d2=get_bart_rank(rank_date)
@@ -1122,6 +1462,12 @@ def app():
 
           if filename == 'v6_three_model_fixed':
              df=run_three_headed_model_updated(df)
+
+          if filename == 'elastic_net':
+             df=run_elastic_net(df)
+
+          if filename == 'tuned_knr':
+             df=run_knr(df)
 
           df['time_to_tip'] = (df['start_time_et']-pd.Timestamp.now(tz='US/Eastern')).dt.total_seconds() / 60
 
@@ -1211,13 +1557,133 @@ def app():
                                         ensemble_model_advice_count=('ensemble_model_advice','nunique'),
                                         total_count=('ensemble_model_advice','size'),
                                         avg_conf=('confidence_level','mean'),
-                                        last_conf=('confidence_level','last')
-                                        ).sort_values('ensemble_model_advice_count',ascending=False).reset_index().style.background_gradient(subset=['ensemble_model_advice_count','total_count','avg_conf','last_conf','ttp'])
+                                        last_conf=('confidence_level','last'),
+                                        ensemble_model_win=('ensemble_model_win','last')
+                                        ).sort_values('ensemble_model_advice_count',ascending=False).reset_index().style.background_gradient(subset=['ensemble_model_advice_count','total_count','avg_conf','last_conf','ensemble_model_win','ttp'])
               )
+        
+        
+        
+        
+        
+        c1,c2 = st.columns(2)
+        df_game_results = df2.groupby(['id']).agg(fav_wins_game=('fav_wins','last'),
+                                             game_result_status=('status','last')).reset_index()
+
+        df_game_results_merged= pd.merge(
+                  df2[['model_run','status','time_to_tip','id','matchup','ensemble_model_advice','fav_wins_bin']],
+                  df_game_results
+                  )
+        df_game_results_merged.loc[df_game_results_merged.fav_wins_game == df_game_results_merged.fav_wins_bin, 'bet_pred_result'] = 1
+        df_game_results_merged.loc[df_game_results_merged.fav_wins_game != df_game_results_merged.fav_wins_bin, 'bet_pred_result'] = 0
+
+        df_game_results_agg = df_game_results_merged.groupby(['model_run']).agg(
+           bet_pred_result = ('bet_pred_result','sum'),
+           total_games = ('bet_pred_result','size')
+        ).reset_index()
+
+        df_game_results_agg['win_pct'] = df_game_results_agg['bet_pred_result'] / df_game_results_agg['total_games']
                  
-              
+        fig=px.scatter(
+           df_game_results_agg,
+           x='model_run',
+           y='win_pct',
+           render_mode='svg',
+          template='simple_white',
+          title='Win % Based on when the bet was made'
+                )
+        fig.update_traces(
+        mode='lines+markers',
+        line_shape='spline',
+        line=dict(width=4),
+        marker=dict(size=12,opacity=.9,
+            line=dict(width=1,color='DarkSlateGrey')
+                )
+        )
+        
+        fig.update_yaxes(title='Win %',
+                    tickformat = ',.0%')
+        fig.update_xaxes(title='Model Run',
+                    )
+        fig.update_layout(
+       legend_title_text='',
+       legend=dict(orientation = "h",   # show entries horizontally
+                     xanchor = "center",  # use center of legend as anchor
+                     x = 0.5
+                     )
+                     )
+        c1.plotly_chart(fig,use_container_width=True)
 
+        df_game_results_agg = df_game_results_merged.loc[df_game_results_merged.status != 'complete'].groupby(['model_run']).agg(
+           bet_pred_result = ('bet_pred_result','sum'),
+           total_games = ('bet_pred_result','size')
+        ).reset_index()
 
+        df_game_results_agg['win_pct'] = df_game_results_agg['bet_pred_result'] / df_game_results_agg['total_games']
+
+        fig=px.scatter(
+           df_game_results_agg,
+           x='model_run',
+           y='win_pct',
+           render_mode='svg',
+          template='simple_white',
+          title='Win % Based on when the bet was made -- incomplete games only'
+                )
+        fig.update_traces(
+        mode='lines+markers',
+        line_shape='spline',
+        line=dict(width=4),
+        marker=dict(size=12,opacity=.9,
+            line=dict(width=1,color='DarkSlateGrey')
+                )
+        )
+        
+        fig.update_yaxes(title='Win %',
+                    tickformat = ',.0%')
+        fig.update_xaxes(title='Model Run',
+                    )
+        fig.update_layout(
+       legend_title_text='',
+       legend=dict(orientation = "h",   # show entries horizontally
+                     xanchor = "center",  # use center of legend as anchor
+                     x = 0.5
+                     )
+                     )
+        c2.plotly_chart(fig,use_container_width=True)
+
+        
+        df_game_results = df1.loc[pd.to_numeric(df1.confidence_level)>=pd.to_numeric(confidence_threshold)].groupby(['date','id']).agg(fav_wins_game=('fav_wins','last'),
+                                             game_result_status=('status','last')).reset_index()
+
+        df_game_results_merged= pd.merge(
+                  df1.loc[pd.to_numeric(df1.confidence_level)>=pd.to_numeric(confidence_threshold)][['model_run','status','time_to_tip','id','matchup','ensemble_model_advice','fav_wins_bin']],
+                  df_game_results
+                  )
+        df_game_results_merged.loc[df_game_results_merged.fav_wins_game == df_game_results_merged.fav_wins_bin, 'bet_pred_result'] = 1
+        df_game_results_merged.loc[df_game_results_merged.fav_wins_game != df_game_results_merged.fav_wins_bin, 'bet_pred_result'] = 0
+
+        st.write(df_game_results_merged)
+
+        df_game_results_agg = df_game_results_merged.groupby(['model_run']).agg(
+           bet_pred_result = ('bet_pred_result','sum'),
+           total_games = ('bet_pred_result','size')
+        ).reset_index()
+
+        df_game_results_agg['win_pct'] = df_game_results_agg['bet_pred_result'] / df_game_results_agg['total_games']
+
+        st.write(df_game_results_agg)
+
+        df_game_results_agg = df_game_results_merged.loc[(df_game_results_merged.status=='scheduled')&(df_game_results_merged.game_result_status=='complete')].groupby(['date','model_run']).agg(
+           bet_pred_result = ('bet_pred_result','sum'),
+           total_games = ('bet_pred_result','size')
+        ).reset_index().groupby(['date']).agg(
+           bet_pred_result = ('bet_pred_result','max'),
+           total_games = ('total_games','max')
+        ).reset_index()
+
+        df_game_results_agg['win_pct'] = df_game_results_agg['bet_pred_result'] / df_game_results_agg['total_games']
+
+        st.write(df_game_results_agg)
 
         with st.expander('All data for date:'):
            st.write(df2.loc[df2.date==date.strftime('%Y-%m-%d')].sort_values(['id','model_run'],ascending=[True,True]))

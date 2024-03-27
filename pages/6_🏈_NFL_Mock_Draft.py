@@ -127,19 +127,23 @@ def app():
     st.title('NFL Mock Draft Database')
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
-    last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
+    # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
     
-    if last_update <60:
-        st.write('Last update: '+str(round(last_update,2))+' seconds ago')
-    elif last_update <3600:
-        st.write('Last update: '+str(round(last_update/60,2))+' minutes ago')
-    else:
-        st.write('Last update: '+str(round(last_update/3600,2))+' hours ago')
+    # if last_update <60:
+    #     st.write('Last update: '+str(round(last_update,2))+' seconds ago')
+    # elif last_update <3600:
+    #     st.write('Last update: '+str(round(last_update/60,2))+' minutes ago')
+    # else:
+    #     st.write('Last update: '+str(round(last_update/3600,2))+' hours ago')
 
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
     draft_year = st.selectbox('Draft Year?',
-        ('2023','2022','2022 - Most Recent','2021'))
+        ('2024','2023','2022','2022 - Most Recent','2021'))
+    
+    if draft_year == '2024':
+        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2024.csv')
+        ## DROP A BAD MOCK DRAFT
 
     if draft_year == '2023':
         df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv')
