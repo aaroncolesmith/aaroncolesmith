@@ -193,7 +193,10 @@ def visualize_model_over_time(df, num):
     start_color = '#FF1493'
     end_color = '#55E0FF'
     num_colors = len(matchups)
-    gradient_colors = generate_gradient(start_color, end_color, num_colors)
+    try:
+      gradient_colors = generate_gradient(start_color, end_color, num_colors)
+    except:
+       gradient_colors = ['red','blue','green','gray']
 
     df.loc[(df.status=='inprogress')&(df.ensemble_model_win==1), 'bet_status'] = 'winning'
     df.loc[(df.status=='inprogress')&(df.ensemble_model_win==0.0), 'bet_status'] = 'losing'
