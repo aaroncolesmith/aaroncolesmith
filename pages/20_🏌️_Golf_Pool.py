@@ -155,39 +155,7 @@ def quick_clstr(df, num_cols, str_cols, color):
     
 
 
-
-
-def app():
-    st.title('Masters Pool')
-    df=pd.read_html('https://www.espn.com/golf/leaderboard')[0]
-    try:
-        del df['Unnamed: 0']
-    except:
-        pass
-    
-    df_picks = pd.DataFrame([
-              ['Bobby', 'Scottie Scheffler', 'Wyndham Clark', 'Cameron Young', 'Corey Conners', 'Nick Taylor', 'Taylor Moore'],
-              ['Mikey', 'Scottie Scheffler', 'Joaquín Niemann', 'Sam Burns', 'Brian Harman', 'Byeong Hun An', 'Lucas Glover'],
-              ['Robby', 'Scottie Scheffler', 'Cameron Smith', 'Collin Morikawa', 'Min Woo Lee', 'Phil Mickelson', 'Eric Cole'],
-              ['Dave', 'Jon Rahm', 'Wyndham Clark', 'Collin Morikawa', 'Brian Harman', 'Sepp Straka', 'Gary Woodland'],
-              ['Bole', 'Scottie Scheffler', 'Jordan Spieth', 'Bryson DeChambeau', 'Russell Henley', 'Tiger Woods', 'Austin Eckroat'],
-              ['Aaron', 'Scottie Scheffler', 'Ludvig Åberg', 'Sahith Theegala', 'Tom Kim', 'Keegan Bradley', 'Eric Cole'],
-              ['Casey', 'Scottie Scheffler', 'Hideki Matsuyama', 'Shane Lowry', 'Brian Harman', 'Keegan Bradley', 'Neal Shipley (a)'],
-              ['Sudi', 'Scottie Scheffler', 'Hideki Matsuyama', 'Sahith Theegala', 'Russell Henley', 'Harris English', 'Taylor Moore'],
-              ['Gay Ass Suzo', 'Scottie Scheffler', 'Hideki Matsuyama', 'Sahith Theegala', 'Si Woo Kim', 'Harris English', 'Austin Eckroat'],
-              ['Dr Gaycor', 'Scottie Scheffler', 'Hideki Matsuyama', 'Dustin Johnson', 'Brian Harman', 'Keegan Bradley', 'Lucas Glover'],
-              ['Brian', 'Scottie Scheffler', 'Will Zalatoris', 'Cameron Young', 'Si Woo Kim', 'Stephan Jaeger', 'Nick Dunlap']
-          ],
-          columns=['Team', 'Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']
-      )
-    
-    df2 = pd.melt(df_picks,
-                     id_vars=['Team'],
-                     value_vars=['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6'],
-                     var_name='Pick', 
-                     value_name='Golfer'
-                     )
-
+def tourney(df,df2):
     try:
         df2=pd.merge(df2,df[['PLAYER','SCORE','THRU']],
                     left_on='Golfer',
@@ -302,6 +270,45 @@ def app():
         c2.markdown('##### Similarity of picks for each team')
         fig=quick_clstr(df_picks, num_cols, str_cols, color)
         c2.plotly_chart(fig,use_container_width=True)
+
+def app():
+    st.title('Golf Pool')
+    try:
+        df=pd.read_html('https://www.espn.com/golf/leaderboard')[0]
+    except:
+        st.write('tourney not started')
+    try:
+        del df['Unnamed: 0']
+    except:
+        pass
+
+    url='https://docs.google.com/spreadsheets/d/1DYnvfi7uzaOPVz2_gThJLyZQKI6YNID0a6jH4-yw0LY/gviz/tq?tqx=out:csv&gid=0'
+    df_picks=pd.read_csv(url, on_bad_lines='skip')
+    df_picks.columns=['timestamp','Team', 'Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']
+    for col in ['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']:
+        df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','')
+    
+    df2 = pd.melt(df_picks,
+                     id_vars=['Team'],
+                     value_vars=['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6'],
+                     var_name='Pick', 
+                     value_name='Golfer'
+                     )
+
+
+    if 'SCORE' in df.columns:
+        tourney(df,df2)
+    else:
+        st.write('tourney not started')
+        st.write('Submitted teams')
+        st.write(df_picks[['Team']])
+        st.write('Leaderboard Tee Times')
+        st.write(df)
+
+
+
+
+    
 
 
 

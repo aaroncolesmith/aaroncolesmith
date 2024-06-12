@@ -15,9 +15,9 @@ from IPython.core.display import HTML
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
-    page_icon='dog'
+    page_icon='dog',
+    layout='wide'
     )
-
 
 def update_colors(fig):
     fig.for_each_trace(lambda trace: trace.update(marker_color='#FB4F14') if trace.name == "Cincinnati Bengals" else ())
@@ -336,6 +336,7 @@ def app():
     del d
 
     fig = go.Figure(fig)
+    fig.update_layout(height=800)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -354,7 +355,7 @@ def app():
 
     st.plotly_chart(fig, use_container_width=True)
 
-    fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(25)['player'])], 
+    fig = px.box(df.loc[df.player.isin(df.groupby('player').agg({'pick':'size'}).reset_index().sort_values('pick',ascending=False).head(40)['player'])], 
             x="player", 
             y="pick", 
             points="all", 

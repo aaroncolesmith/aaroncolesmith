@@ -132,7 +132,9 @@ def quick_clstr(df, num_cols, str_cols, color):
                       )
     fig.update_xaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
     fig.update_yaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
-    st.plotly_chart(fig,use_container_width=True)
+    # st.plotly_chart(fig,use_container_width=True)
+    sel_data = st.plotly_chart(fig,use_container_width=True,on_select='rerun')
+    st.write(sel_data)
 
 
 
