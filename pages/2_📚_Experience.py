@@ -10,10 +10,10 @@ def app():
     # Work Experience
 
     ### [Nike](https://www.nike.com)
-    #### Senior Product Manager | 2021 - Present
-    - Worked within the Commercial Analytics organization to shift Nike into a more technology and data-driven approach to their Supply Chain
-    - Partnered with Data Science and Machine Learning teams to build enhancmenents and customizations to the Supply Chain to improve the efficiency of the organization
-    - Collaborated with Business Development stakeholders to ensure they were able to visualize and understand the Supply Chain data as well as be able to increase their efficieny and make changes based on data outputs
+    #### Lead Product Manager | 2021 - Present
+    - Built a brand new product in the Commercial Analytics space in order to provide detailed diagnostics and root cause analysis on our supply chain systems and accompanying data science optimization engines
+    - Uncovered more than $6M of inefficiencies that were running undiagnosed in the first 30 days of launching our new product due to undiagnosed system misconfigurations
+    - Worked with multiple different data science teams and business operations teams to ensure our product was capable of being flexible enough to cover many use cases, but still usable to be able to discover valuable and actionable insights
 
     ---
 

@@ -32,10 +32,10 @@ def app():
     def create_new_column(row):
         if row['PK'] >= 100:
             return '100+'
-        if row['PK'] >= 50:
-            return '50-99'
-        if row['PK'] >= 20:
-            return '20-49'
+        if row['PK'] >= 31:
+            return '31-99'
+        if row['PK'] >= 15:
+            return '15-30'
         else:
             return str(row['PK'])
 
@@ -55,8 +55,8 @@ def app():
     c1,c2=st.columns(2)
     axis_sort = [
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-        "11", "12", "13", "14", "15", "16", "17", "18", "19",
-        "20-49", "50-99", "100+"
+        "11", "12", "13", "14",
+        "15-30", "31-99", "100+"
     ]
 
     fig = px.box(

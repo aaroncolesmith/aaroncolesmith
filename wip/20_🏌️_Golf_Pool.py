@@ -5,8 +5,14 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import requests
+import boto3
+import pyarrow as pa
+import pyarrow.parquet as pq
+import os
+from st_files_connection import FilesConnection
+import json
 
-import numpy as np
 
 
 st.set_page_config(
@@ -81,10 +87,10 @@ def quick_clstr(df, num_cols, str_cols, color):
     p['distance_from_zero'] = np.sqrt((p['x'] - 0)**2 + (p['y'] - 0)**2)
 
     dvz=pd.DataFrame()
-    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).head(2)])
-    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).tail(2)])
-    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).head(2)])
-    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).tail(2)])
+    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).head(4)])
+    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).tail(4)])
+    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).head(4)])
+    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).tail(4)])
     dvz=dvz.drop_duplicates()
 
     # key_vals=p.sort_values('distance_from_zero',ascending=False).head(20).field.tolist()
@@ -155,18 +161,18 @@ def quick_clstr(df, num_cols, str_cols, color):
     
 
 
-def tourney(df,df2):
+def tourney(df,df2,df_picks):
     try:
         df2=pd.merge(df2,df[['PLAYER','SCORE','THRU']],
                     left_on='Golfer',
-                    right_on='PLAYER')
+                    right_on='PLAYER',
+                    how='left')
     except:
         df2=pd.merge(df2,df[['PLAYER','SCORE']],
                     left_on='Golfer',
                     right_on='PLAYER')
         df2['THRU'] = 'DONE'        
-    # st.write(df2)
-    df2['SCORE_NUM'] = pd.to_numeric(df2['SCORE'].replace('E','0').replace('CUT',20))
+    df2['SCORE_NUM'] = pd.to_numeric(df2['SCORE'].replace('E','0').replace('CUT',20).replace('-',0))
     df2=df2.sort_values(['SCORE_NUM','Pick'],ascending=[True,True])
 
     df3=df2.groupby('Team').head(4)
@@ -209,32 +215,61 @@ def tourney(df,df2):
                      
                      )
     with tab3:
-
         team_list = df2.sort_values('Team',ascending=True).Team.unique().tolist()
         cols = st.columns(4)
 
+        url='https://datagolf.com/live-model/pga-tour'
+        r=requests.get(url)
+        url_str = r.text
+        content = url_str.split('response = JSON.parse(')[1].split('\'.replace(/\\')[0]
+        data=json.loads(content[1:])
+        df_ld = pd.DataFrame(data['main'])
+
+        # Function to convert "Last, First" to "First Last"
+        def convert_name(name):
+            parts = name.split(',')
+            return parts[1].strip() + ' ' + parts[0].strip()
+
+        # Apply the function to the 'name' column
+        df_ld['name'] = df_ld['name'].apply(convert_name)
+
+        df_ld = df_ld[['name','cut','top5','win']]
+        df_ld.columns = ['Golfer','Cut %','Top 5 %','Win %']
+        df_ld['Golfer'] = df_ld['Golfer'].str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren')
+
+        df2 = pd.merge(df2,df_ld,how='left')
+
+
+
+
+        data_cols = ['Pick','Golfer','SCORE','THRU','Cut %']
         for i,x in enumerate(cols):
             team = team_list[i]
             score = df3.loc[df3.Team == team, 'SCORE'].values[0]
             score = '+' + str(score) if score > 0 else str(score)
-            x.write(f'{team} ({score})')
-            x.dataframe(df2.loc[df2.Team==team_list[i]][['Pick','Golfer','SCORE','THRU']],hide_index=True)
+
+            avg_cut = round(df2.loc[df2.Team==team_list[i]]['Cut %'].mean()*100,1)
+
+            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+            x.dataframe(df2.loc[df2.Team==team_list[i]][data_cols],hide_index=True)
         
         cols = st.columns(4)
         for i,x in enumerate(cols):
             team = team_list[i+4]
             score = df3.loc[df3.Team == team, 'SCORE'].values[0]
             score = '+' + str(score) if score > 0 else str(score)
-            x.write(f'{team} ({score})')
-            x.dataframe(df2.loc[df2.Team==team_list[i+4]][['Pick','Golfer','SCORE','THRU']],hide_index=True)
+            avg_cut = round(df2.loc[df2.Team==team_list[i+4]]['Cut %'].mean()*100,1)
+            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+            x.dataframe(df2.loc[df2.Team==team_list[i+4]][data_cols],hide_index=True)
 
         cols = st.columns(3)
         for i,x in enumerate(cols):
             team = team_list[i+8]
             score = df3.loc[df3.Team == team, 'SCORE'].values[0]
             score = '+' + str(score) if score > 0 else str(score)
-            x.write(f'{team} ({score})')
-            x.dataframe(df2.loc[df2.Team==team_list[i+8]][['Pick','Golfer','SCORE','THRU']],hide_index=True)
+            avg_cut = round(df2.loc[df2.Team==team_list[i+8]]['Cut %'].mean()*100,1)
+            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+            x.dataframe(df2.loc[df2.Team==team_list[i+8]][data_cols],hide_index=True)
 
     with tab4:
         c1,c2=st.columns(2)
@@ -259,7 +294,7 @@ def tourney(df,df2):
         df_picks = df_picks.loc[:, ~df_picks.columns.duplicated()]
 
 
-        num_cols=df_picks.columns.tolist()[7:]
+        num_cols=df_picks.columns.tolist()[8:]
         str_cols=['Team','Pick1','Pick2','Pick3','Pick4','Pick5','Pick6']
 
         df_picks = pd.merge(df_picks,df3,)
@@ -270,6 +305,75 @@ def tourney(df,df2):
         c2.markdown('##### Similarity of picks for each team')
         fig=quick_clstr(df_picks, num_cols, str_cols, color)
         c2.plotly_chart(fig,use_container_width=True)
+
+def get_prob(a):
+    odds = 0
+    if a < 0:
+        odds = (-a)/(-a + 100)
+    else:
+        odds = 100/(100+a)
+
+    return odds
+
+def get_action_network_odds():
+    headers = {
+        'Authority': 'api.actionnetwork',
+        'Accept': 'application/json',
+        'Origin': 'https://www.actionnetwork.com',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+    }
+    url='https://api.actionnetwork.com/web/v1/scoreboard/pga?period=game&bookIds=15,30,76,75,123,69,68,972,71,247,79&date=20240613'
+    r=requests.get(url,headers=headers)
+    df_golfers = pd.json_normalize(r.json()['competitions'][0]['competitors'])
+    df_odds = pd.json_normalize(r.json()['competitions'][0]['tournament_odds'][0]['competitors'])
+    df = pd.merge(df_golfers, df_odds, left_on='id', right_on='competitor_id').sort_values('moneyline',ascending=True).reset_index(drop=True)
+    df['implied_probability'] = df['moneyline'].apply(get_prob)
+    df['timestamp']=pd.Timestamp.now(tz='US/Eastern')
+    return df[['timestamp','full_name','moneyline','implied_probability','player.image']]
+
+
+def upload_s3_data(df, filename):
+
+    # for x in ['date','start_time_et','model_run']:
+    #     try:
+    #         df[x]=pd.to_datetime(df[x])
+    #     except:
+    #        df[x]=df[x].apply(lambda x: pd.to_datetime(x).tz_convert('US/Eastern'))
+
+    # for x in ['id','score_home','score_away','spread_home','spread_away','spread_home_public','spread_away_public','num_bets','ttq','updated_spread_diff','fav_wins_pred','fav_wins_bin','confidence_level','fav_wins','ensemble_model_win']:
+    #     try:
+    #        df[x] = df[x].replace('nan',np.nan).apply(lambda x: pd.to_numeric(x))
+    #     except Exception as e:
+    #        print(e)
+
+    table = pa.Table.from_pandas(df)
+
+    pq.write_table(table, f'./{filename}.parquet',compression='BROTLI',use_deprecated_int96_timestamps=True)
+
+    session = boto3.Session(
+    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    s3 = session.resource('s3')
+    # Filename - File to upload
+    # Bucket - Bucket to upload to (the top level directory under AWS S3)
+    # Key - S3 object name (can contain subdirectories). If not specified then file_name is used
+    s3.meta.client.upload_file(Filename=f'./{filename}.parquet', 
+                               Bucket='bet-model-data', 
+                               Key=f'{filename}.parquet'
+                               )
+    # st.write('data uploaded')
+
+@st.cache_data(ttl=300)
+def get_s3_data(filename):
+    conn = st.connection('s3', type=FilesConnection)
+    df = conn.read(f"bet-model-data/{filename}.parquet", 
+                input_format="parquet", 
+                ttl=600
+                )
+    return df
+
+
 
 def app():
     st.title('Golf Pool')
@@ -286,8 +390,11 @@ def app():
     df_picks=pd.read_csv(url, on_bad_lines='skip')
     df_picks.columns=['timestamp','Team', 'Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']
     for col in ['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']:
-        df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','')
+        df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','').str.strip()
     
+
+    df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard')
+
     df2 = pd.melt(df_picks,
                      id_vars=['Team'],
                      value_vars=['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6'],
@@ -295,15 +402,29 @@ def app():
                      value_name='Golfer'
                      )
 
+ 
+
 
     if 'SCORE' in df.columns:
-        tourney(df,df2)
+        tourney(df,df2,df_picks)
     else:
         st.write('tourney not started')
         st.write('Submitted teams')
-        st.write(df_picks[['Team']])
+        st.dataframe(df_picks[['Team']],hide_index=True)
         st.write('Leaderboard Tee Times')
-        st.write(df)
+        # df['implied_probability'] = df['implied_probability']*100
+        # st.dataframe(df[['PLAYER','TEE TIME','moneyline','implied_probability']],
+        #              column_config={
+        #                 "implied_probability": st.column_config.NumberColumn(
+        #                 "Implied Probability",
+        #                 # help="The sales volume in USD",
+        #                 format="%.1f%%",
+        #                 # min_value=0,
+        #                 # max_value=100,
+        #                 # width='small
+        #                 )
+        #              },
+        #              hide_index=True)
 
 
 
