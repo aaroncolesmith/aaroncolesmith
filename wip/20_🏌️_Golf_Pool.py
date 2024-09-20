@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 import os
 from st_files_connection import FilesConnection
 import json
+from datetime import datetime, timedelta
 
 
 
@@ -171,10 +172,10 @@ def tourney(df,df2,df_picks):
         df2=pd.merge(df2,df[['PLAYER','SCORE']],
                     left_on='Golfer',
                     right_on='PLAYER')
-        df2['THRU'] = 'DONE'        
-    df2['SCORE_NUM'] = pd.to_numeric(df2['SCORE'].replace('E','0').replace('CUT',20).replace('-',0))
+        df2['THRU'] = 'DONE'
+    # st.write(df2)
+    df2['SCORE_NUM'] = pd.to_numeric(df2['SCORE'].replace('E','0').replace('WD',50).replace('CUT',50).replace('-',0))
     df2=df2.sort_values(['SCORE_NUM','Pick'],ascending=[True,True])
-
     df3=df2.groupby('Team').head(4)
 
     df3=df3.groupby(['Team']).agg(
@@ -204,16 +205,24 @@ def tourney(df,df2,df_picks):
             PICKS=('Team','size'),
             PICKED_BY=('Team',lambda x: ', '.join(x.unique())),
             SCORE=('SCORE_NUM','median')).sort_values('PICKS',ascending=False).reset_index()
-        c2.dataframe(pd.merge(df,df2_agg[['Golfer','PICKED_BY']], left_on='PLAYER',right_on='Golfer', how='left')[['POS','PLAYER','SCORE','TODAY','THRU','R1','R2','R3','R4','TOT','PICKED_BY']]
-                     ,hide_index=True,
-                     column_config={
-                    "PICKED_BY": st.column_config.TextColumn(
-                     "Picked By:",
-                     width='large')
-                     }
-                     
-                     
-                     )
+        try:
+            c2.dataframe(pd.merge(df,df2_agg[['Golfer','PICKED_BY']], left_on='PLAYER',right_on='Golfer', how='left')[['POS','PLAYER','SCORE','TODAY','THRU','R1','R2','R3','R4','TOT','PICKED_BY']]
+                        ,hide_index=True,
+                        column_config={
+                        "PICKED_BY": st.column_config.TextColumn(
+                        "Picked By:",
+                        width='large')
+                        }
+                        )
+        except:
+            c2.dataframe(pd.merge(df,df2_agg[['Golfer','PICKED_BY']], left_on='PLAYER',right_on='Golfer', how='left')[['POS','PLAYER','SCORE','R1','R2','R3','R4','TOT','PICKED_BY']]
+                        ,hide_index=True,
+                        column_config={
+                        "PICKED_BY": st.column_config.TextColumn(
+                        "Picked By:",
+                        width='large')
+                        }
+                        )
     with tab3:
         team_list = df2.sort_values('Team',ascending=True).Team.unique().tolist()
         cols = st.columns(4)
@@ -235,41 +244,75 @@ def tourney(df,df2,df_picks):
 
         df_ld = df_ld[['name','cut','top5','win']]
         df_ld.columns = ['Golfer','Cut %','Top 5 %','Win %']
-        df_ld['Golfer'] = df_ld['Golfer'].str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren')
+        df_ld['Golfer'] = df_ld['Golfer'].str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Macintyre','MacIntyre')
 
         df2 = pd.merge(df2,df_ld,how='left')
 
 
-
-
         data_cols = ['Pick','Golfer','SCORE','THRU','Cut %']
-        for i,x in enumerate(cols):
-            team = team_list[i]
-            score = df3.loc[df3.Team == team, 'SCORE'].values[0]
-            score = '+' + str(score) if score > 0 else str(score)
+        # st.write(df3)
+        team_list = df3['Team'].tolist()
+        ncol = len(team_list)
+        wcol = 4  # Number of columns in each row
 
-            avg_cut = round(df2.loc[df2.Team==team_list[i]]['Cut %'].mean()*100,1)
+        # Calculate the number of rows needed
+        nrow = (ncol + wcol - 1) // wcol
 
-            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
-            x.dataframe(df2.loc[df2.Team==team_list[i]][data_cols],hide_index=True)
+        for r in range(nrow):
+            # Determine the number of columns for the current row
+            teams_left = ncol - r * wcol
+            cols = st.columns(min(teams_left, wcol))
+            
+            for i, col in enumerate(cols):
+                team_ix = r * wcol + i
+                if team_ix < ncol:
+                    team = team_list[team_ix]
+                    score = df3.loc[df3.Team == team, 'SCORE'].values[0]
+                    score = '+' + str(score) if score > 0 else str(score)
+
+                    avg_cut = round(df2.loc[df2.Team==team]['Cut %'].mean()*100,1)
+
+                    col.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+                    col.dataframe(df2.loc[df2.Team==team][data_cols],hide_index=True)
+
+
+
+        # for i,x in enumerate(cols):
+        #     team = team_list[i]
+        #     score = df3.loc[df3.Team == team, 'SCORE'].values[0]
+        #     score = '+' + str(score) if score > 0 else str(score)
+
+        #     avg_cut = round(df2.loc[df2.Team==team_list[i]]['Cut %'].mean()*100,1)
+
+        #     x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+        #     x.dataframe(df2.loc[df2.Team==team_list[i]][data_cols],hide_index=True)
         
-        cols = st.columns(4)
-        for i,x in enumerate(cols):
-            team = team_list[i+4]
-            score = df3.loc[df3.Team == team, 'SCORE'].values[0]
-            score = '+' + str(score) if score > 0 else str(score)
-            avg_cut = round(df2.loc[df2.Team==team_list[i+4]]['Cut %'].mean()*100,1)
-            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
-            x.dataframe(df2.loc[df2.Team==team_list[i+4]][data_cols],hide_index=True)
+        # cols = st.columns(4)
+        # for i,x in enumerate(cols):
+        #     team = team_list[i+4]
+        #     score = df3.loc[df3.Team == team, 'SCORE'].values[0]
+        #     score = '+' + str(score) if score > 0 else str(score)
+        #     avg_cut = round(df2.loc[df2.Team==team_list[i+4]]['Cut %'].mean()*100,1)
+        #     x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+        #     x.dataframe(df2.loc[df2.Team==team_list[i+4]][data_cols],hide_index=True)
 
-        cols = st.columns(3)
-        for i,x in enumerate(cols):
-            team = team_list[i+8]
-            score = df3.loc[df3.Team == team, 'SCORE'].values[0]
-            score = '+' + str(score) if score > 0 else str(score)
-            avg_cut = round(df2.loc[df2.Team==team_list[i+8]]['Cut %'].mean()*100,1)
-            x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
-            x.dataframe(df2.loc[df2.Team==team_list[i+8]][data_cols],hide_index=True)
+        # cols = st.columns(4)
+        # for i,x in enumerate(cols):
+        #     team = team_list[i+8]
+        #     score = df3.loc[df3.Team == team, 'SCORE'].values[0]
+        #     score = '+' + str(score) if score > 0 else str(score)
+        #     avg_cut = round(df2.loc[df2.Team==team_list[i+8]]['Cut %'].mean()*100,1)
+        #     x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+        #     x.dataframe(df2.loc[df2.Team==team_list[i+8]][data_cols],hide_index=True)
+        
+        # cols = st.columns(1)
+        # for i,x in enumerate(cols):
+        #     team = team_list[i+12]
+        #     score = df3.loc[df3.Team == team, 'SCORE'].values[0]
+        #     score = '+' + str(score) if score > 0 else str(score)
+        #     avg_cut = round(df2.loc[df2.Team==team_list[i+12]]['Cut %'].mean()*100,1)
+        #     x.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
+        #     x.dataframe(df2.loc[df2.Team==team_list[i+12]][data_cols],hide_index=True)
 
     with tab4:
         c1,c2=st.columns(2)
@@ -322,7 +365,7 @@ def get_action_network_odds():
         'Origin': 'https://www.actionnetwork.com',
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
     }
-    url='https://api.actionnetwork.com/web/v1/scoreboard/pga?period=game&bookIds=15,30,76,75,123,69,68,972,71,247,79&date=20240613'
+    url='https://api.actionnetwork.com/web/v1/scoreboard/pga?period=game&bookIds=15,30,76,75,123,69,68,972,71,247,79'
     r=requests.get(url,headers=headers)
     df_golfers = pd.json_normalize(r.json()['competitions'][0]['competitors'])
     df_odds = pd.json_normalize(r.json()['competitions'][0]['tournament_odds'][0]['competitors'])
@@ -389,11 +432,20 @@ def app():
     url='https://docs.google.com/spreadsheets/d/1DYnvfi7uzaOPVz2_gThJLyZQKI6YNID0a6jH4-yw0LY/gviz/tq?tqx=out:csv&gid=0'
     df_picks=pd.read_csv(url, on_bad_lines='skip')
     df_picks.columns=['timestamp','Team', 'Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']
+    df_picks['timestamp'] = pd.to_datetime(df_picks['timestamp'])
+    # Get the current date
+    current_date = datetime.now()
+    # Calculate the date range
+    start_date = current_date - timedelta(days=6)
+    end_date = current_date + timedelta(days=6)
+    df_picks = df_picks[(df_picks['timestamp'] >= start_date) & (df_picks['timestamp'] <= end_date)]
+
+
     for col in ['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']:
-        df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','').str.strip()
+        df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','').str.strip().str.replace(' .%','').str.replace('Mcilroy','McIlroy').str.replace('Macintyre','MacIntyre')
     
 
-    df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard')
+    df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard').str.replace('Joaquín','Joaquin')
 
     df2 = pd.melt(df_picks,
                      id_vars=['Team'],
@@ -412,6 +464,18 @@ def app():
         st.write('Submitted teams')
         st.dataframe(df_picks[['Team']],hide_index=True)
         st.write('Leaderboard Tee Times')
+        st.write(df)
+        # st.write('df2')
+        # st.write(df2)
+
+        df_merge = pd.merge(df,df2,left_on='PLAYER',right_on='Golfer',how='right').sort_values(['Team','Pick'],ascending=[True,True])
+        # st.write(df_merge)
+
+                
+        # # Get the list of teams
+
+
+
         # df['implied_probability'] = df['implied_probability']*100
         # st.dataframe(df[['PLAYER','TEE TIME','moneyline','implied_probability']],
         #              column_config={

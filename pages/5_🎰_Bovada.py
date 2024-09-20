@@ -7,6 +7,11 @@ import plotly_express as px
 import plotly.io as pio
 pio.templates.default = "simple_white"
 
+st.set_page_config(
+    page_title='aaroncolesmith.com',
+    page_icon='dog',
+    layout='wide'
+    )
 
 
 color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A','#39FF14','#FF3131']
@@ -16,7 +21,8 @@ color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E
 def load_file(date_select):
 
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
-    df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
+    # df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
+    df=pd.read_parquet('https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
     df['day']=df['date'].astype('datetime64[D]')
 
     df=df.loc[df.date.dt.date >= date_select]
@@ -24,7 +30,8 @@ def load_file(date_select):
 
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
-    df=pd.read_csv('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_scatter.csv')
+    # df=pd.read_csv('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_scatter.csv')
+    df=pd.read_csv('https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/bovada_scatter.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
@@ -68,6 +75,8 @@ def load_scatter_data():
 #     return a
 
 def line_chart(df, option, color_map):
+
+    
     g=px.line(df,
     x='Date',
     y='Price',
@@ -225,11 +234,64 @@ def recent_updates():
     return d2
 
 
+def generate_gradient(start_color, end_color, num_colors):
+    def hex_to_rgb(hex_color):
+        hex_color = hex_color.lstrip('#')
+        return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+
+    def rgb_to_hex(rgb_color):
+        return '#{0:02X}{1:02X}{2:02X}'.format(*rgb_color)
+
+    def calculate_opposite_color(color1_rgb, color2_rgb):
+        return rgb_to_hex((
+            255 - int((color1_rgb[0] + color2_rgb[0]) / 2),
+            255 - int((color1_rgb[1] + color2_rgb[1]) / 2),
+            255 - int((color1_rgb[2] + color2_rgb[2]) / 2)
+        ))
+
+    start_rgb = hex_to_rgb(start_color)
+    end_rgb = hex_to_rgb(end_color)
+
+    if num_colors <= 10:
+        color_gradient = [
+            rgb_to_hex((
+                int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
+                int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
+                int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
+            ))
+            for i in range(num_colors)
+        ]
+    else:
+        additional_color = calculate_opposite_color(start_rgb, end_rgb)
+        additional_rgb = hex_to_rgb(additional_color)
+
+        color_gradient = [
+            rgb_to_hex((
+                int(start_rgb[0] + (additional_rgb[0] - start_rgb[0]) * i / (num_colors - 1)),
+                int(start_rgb[1] + (additional_rgb[1] - start_rgb[1]) * i / (num_colors - 1)),
+                int(start_rgb[2] + (additional_rgb[2] - start_rgb[2]) * i / (num_colors - 1))
+            ))
+            for i in range(num_colors // 2)
+        ]
+        try:
+            color_gradient._append(additional_color)
+        except:
+            color_gradient.append(additional_color)
+
+        color_gradient.extend([
+            rgb_to_hex((
+                int(additional_rgb[0] + (end_rgb[0] - additional_rgb[0]) * i / (num_colors // 2 - 1)),
+                int(additional_rgb[1] + (end_rgb[1] - additional_rgb[1]) * i / (num_colors // 2 - 1)),
+                int(additional_rgb[2] + (end_rgb[2] - additional_rgb[2]) * i / (num_colors // 2 - 1))
+            ))
+            for i in range(num_colors // 2)
+        ])
+
+    return color_gradient
+
+
+
 def app():
-    st.set_page_config(
-        page_title='aaroncolesmith.com',
-        page_icon='dog'
-        )
 
     color_map = get_color_map()
 
@@ -334,6 +396,45 @@ def app():
                 f=filtered_df.groupby(['Winner']).agg({'Date':'max','Price': ['last','mean','max','min','count']}).sort_values([('Price', 'last')], ascending=True).reset_index(drop=False).head(10)
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
+
+
+            # st.write(filtered_df)
+
+            winner_list = filtered_df.Winner.unique().tolist()
+
+            # st.write(winner_list)
+
+            with st.expander('Filter options'):
+                form=st.form('Filtering out options')
+                filtered_winner_list = form.multiselect('Select options to show:',winner_list, winner_list)
+                filtered_df=filtered_df.loc[filtered_df['Winner'].isin(filtered_winner_list)]
+                submit_button = form.form_submit_button(label='Submit')
+
+            
+
+
+
+
+
+
+            # with st.expander('Make Manual assign'):
+            #     form = st.form('Manual assign')
+            #     # projecttaskobject = pd.concat([projecttaskobject_1, projecttaskobject_2]).sort_values(
+            #     #     by=['taskname']).reset_index(drop=True)
+            #     # manual_taskids = pd.Series(projecttaskobject['taskid'].unique())
+            #     # manual_taskids.sort_values(ignore_index=True, inplace=True)
+            #     form.multiselect('Select TaskIDs',
+            #                                     ['1', '2'],
+            #                                     key='taskids_multi'
+            #                                     )
+            #     form.selectbox('Select Annotator', ['A' ,'B'], key='annotator')
+                
+            #     submitted = form.form_submit_button("Submit")
+            #     if submitted:
+            #         st.write(f'Task ids selected: **{st.session_state.taskids_multi}**')
+            #         st.write(f'Annotator selected: **{st.session_state.annotator}**')
+            #         st.write('Submited')
+            #         #sql_assign_manual(form.option_annotator,form.taskids_to_assign)
 
             line_chart_probability(filtered_df,option,color_map)
             line_chart_probability_initial(filtered_df,option,color_map)

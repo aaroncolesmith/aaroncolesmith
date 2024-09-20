@@ -530,18 +530,23 @@ def app():
     st.markdown('Upcoming Games Meeting Pct Change Threshold')
     pct_chg_threshold = st.number_input('Pct Change Threshold',value=.05)
 
+
+
     d3['status_score_home'] = d3['status'] + ' - ' + d3['boxscore_total_home_points'].astype('str').str.replace('.0','') + ':' + d3['boxscore_total_away_points'].astype('str').str.replace('.0','')
     d3['status_score_away'] = d3['status'] + ' - ' + d3['boxscore_total_away_points'].astype('str').str.replace('.0','') + ':' + d3['boxscore_total_home_points'].astype('str').str.replace('.0','')
     d3['status_score_home'] = d3['status_score_home'].str.replace(' - nan:nan','')
     d3['status_score_away'] = d3['status_score_away'].str.replace(' - nan:nan','')
 
     # df_threshold_games_h = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=2)].query("status == 'scheduled' & ml_home_change > @pct_chg_threshold")[['id','game_time','home_team','away_team','ml_home_p','ml_home','ml_home_change']]
-    df_threshold_games_h = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=1)].query("ml_home_change > @pct_chg_threshold")[['start_time','id','game_time','home_team','away_team','ml_home_p','ml_home','ml_home_change','status_score_home']]
+    # df_threshold_games_h = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=1)].query("ml_home_change > @pct_chg_threshold")[['start_time','id','game_time','home_team','away_team','ml_home_p','ml_home','ml_home_change','status_score_home']]
+    # 8/30 -- removing the line above to filter out the upcoming logic
+    df_threshold_games_h = d3.query("ml_home_change > @pct_chg_threshold")[['start_time','id','game_time','home_team','away_team','ml_home_p','ml_home','ml_home_change','status_score_home']]
     df_threshold_games_h.columns=['start_time','ID','Game Time','Team','Opponent','Probability','Money Line','Probability % Change','Status']
     df_threshold_games_h['Home / Away'] = 'Home'
 
     # df_threshold_games_a = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=2)].query("status == 'scheduled' & ml_away_change > @pct_chg_threshold")[['id','game_time','away_team','home_team','ml_away_p','ml_away','ml_away_change']]
-    df_threshold_games_a = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=1)].query("ml_away_change > @pct_chg_threshold")[['start_time','id','game_time','away_team','home_team','ml_away_p','ml_away','ml_away_change','status_score_away']]
+    # df_threshold_games_a = d3.loc[pd.to_datetime(d3['start_time']).dt.date> pd.to_datetime('today') - pd.Timedelta(days=1)].query("ml_away_change > @pct_chg_threshold")[['start_time','id','game_time','away_team','home_team','ml_away_p','ml_away','ml_away_change','status_score_away']]
+    df_threshold_games_a = d3.query("ml_away_change > @pct_chg_threshold")[['start_time','id','game_time','away_team','home_team','ml_away_p','ml_away','ml_away_change','status_score_away']]
     df_threshold_games_a.columns=['start_time','ID','Game Time','Team','Opponent','Probability','Money Line','Probability % Change','Status']
     df_threshold_games_a['Home / Away'] = 'Away'
 

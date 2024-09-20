@@ -187,7 +187,10 @@ def crime_cnt_rolling_avg(df):
 
 @st.cache_data(ttl=1800)
 def pdx911_data(days):
-    d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
+    # d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
+    d=pd.read_parquet('https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/portland_crime_data.parquet', engine='pyarrow')
+    # url='https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/portland_crime_data.parquet'
+
     d=d.loc[d.DATE.dt.date >= pd.to_datetime('today') - pd.Timedelta(days=days)]
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
@@ -298,6 +301,8 @@ def app():
     if view_type == 'Last N Hours':
         with st.form(key='my_form'):
             num = st.slider('How far back?', min_value=2, max_value=336, value=12, step=1)
+
+            
             submit_button = st.form_submit_button(label='Submit')
 
 
