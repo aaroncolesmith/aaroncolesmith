@@ -14,7 +14,20 @@ st.set_page_config(
     )
 
 
-color_discrete_sequence=['#FF1493','#120052','#652EC7','#00C2BA','#82E0BF','#55E0FF','#002BFF','#FF911A','#39FF14','#FF3131']
+color_discrete_sequence=['#FF1493', # hot pink
+                         '#120052', # navy blue
+                         '#652EC7', # purple
+                         '#00C2BA', # teal
+                         '#82E0BF', # mint
+                         '#55E0FF', # light blue
+                        #  '#002BFF', # blue
+                         '#FF911A', # orange
+                         '#39FF14', # lime green
+                        #  '#FF3131' # red
+                        'darkslategray',
+                        'darkgreen',
+                        'silver'
+                         ]
 
 
 @st.cache_data(ttl=43200)
@@ -22,7 +35,7 @@ def load_file(date_select):
 
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
-    df=pd.read_parquet('https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
+    df=pd.read_parquet('https://github.com/aaroncolesmith/data_bovada/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
     df['day']=df['date'].astype('datetime64[D]')
 
     df=df.loc[df.date.dt.date >= date_select]
@@ -31,7 +44,7 @@ def load_file(date_select):
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
     # df=pd.read_csv('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_scatter.csv')
-    df=pd.read_csv('https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/bovada_scatter.csv')
+    df=pd.read_csv('https://github.com/aaroncolesmith/data_bovada/raw/refs/heads/main/data/bovada_scatter.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)
@@ -107,7 +120,7 @@ def line_chart(df, option, color_map):
     # g.update_layout({'plot_bgcolor': 'rgba(0, 0, 0, 0)','paper_bgcolor': 'rgba(0, 0, 0, 0)',})
     st.plotly_chart(g,use_container_width=True)
 
-def line_chart_probability(df,option,color_map):
+def line_chart_probability(df,option,color_map, highlight_list):
     g=px.line(df,
     x='Date',
     y='Implied_Probability',
@@ -141,7 +154,7 @@ def line_chart_probability(df,option,color_map):
                    showgrid=False,
                    # gridwidth=1,
                    # gridcolor='#D4D4D4',
-                   tickformat = ',.0%'
+                   tickformat = ',.1%'
                   )
     g.update_xaxes(title='Date',
                   showgrid=False,
@@ -149,6 +162,27 @@ def line_chart_probability(df,option,color_map):
                   # gridcolor='#D4D4D4'
                   )
     # g=color_update(g)
+    g.update_layout(hovermode="x")
+
+    g.update_layout(
+    hoverlabel=dict(
+        bgcolor="white",
+        font_size=12,
+        font_family="futura"
+    )
+    )
+    # Check if filtered_winner_list is not empty
+    if highlight_list:
+        for trace in g.data:
+            # Check if the trace's name is in the filtered_winner_list
+            if trace.name in highlight_list:
+                trace.opacity = 0.8  # Set opacity to 0.8 if the winner is in the list
+            else:
+                trace.opacity = 0.1  # Set opacity to 0.2 if the winner is not in the list
+    else:
+        # If filtered_winner_list is empty, keep the opacity as is (from the initial settings)
+        pass
+
     st.plotly_chart(g,use_container_width=True)
 
 def line_chart_probability_initial(df,option,color_map):
@@ -294,6 +328,8 @@ def generate_gradient(start_color, end_color, num_colors):
 def app():
 
     color_map = get_color_map()
+    color_map['Donald Trump Sr.'] = 'red'
+    color_map['Kamala Harris'] = 'blue'
 
     st.title('Bovada Odds Over Time')
     st.markdown('Welcome to Bovada Scrape!!! Select an option below and see how the betting odds have tracked over time!')
@@ -366,7 +402,7 @@ def app():
 
     if len(option) > 0:
             print('AARONLOG - Bovada selection ' + option)
-            o = st.radio( "Show all or favorites only?",('Show All', 'Favorites', 'Recent Favorites'))
+            o = st.radio( "Show all or favorites only?",('Show All', 'Favorites', 'Recent Favorites','Minimum Threshold'))
             try:
                 option = option.split(' |')[0]
             except:
@@ -397,6 +433,24 @@ def app():
                 f=f['Winner']
                 filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
 
+            if o == 'Minimum Threshold':
+                min_threshold = st.number_input(
+                    label= 'Minimum Threshold',
+                    min_value = 0.0,
+                    max_value = 0.99,
+                    value = 0.1,
+                    step = .01
+
+                )
+                filtered_df = df.loc[df.title == option]
+                filtered_df = filtered_df[['date','title','description','price.american','Implied_Probability']].reset_index(drop=True)
+                filtered_df.columns = ['Date','Title','Winner','Price','Implied_Probability']
+                filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
+                f=filtered_df.groupby(['Winner']).agg(max_odd=('Implied_Probability','max')).reset_index(drop=False)
+                f = f.loc[f.max_odd >= min_threshold]
+                f=f['Winner']
+                filtered_df=filtered_df.loc[filtered_df.Winner.isin(f)]
+
 
             # st.write(filtered_df)
 
@@ -408,6 +462,10 @@ def app():
                 form=st.form('Filtering out options')
                 filtered_winner_list = form.multiselect('Select options to show:',winner_list, winner_list)
                 filtered_df=filtered_df.loc[filtered_df['Winner'].isin(filtered_winner_list)]
+
+                highlight_list = form.multiselect('Select options to highlight:',winner_list)
+
+
                 submit_button = form.form_submit_button(label='Submit')
 
             
@@ -436,7 +494,7 @@ def app():
             #         st.write('Submited')
             #         #sql_assign_manual(form.option_annotator,form.taskids_to_assign)
 
-            line_chart_probability(filtered_df,option,color_map)
+            line_chart_probability(filtered_df,option,color_map,highlight_list)
             line_chart_probability_initial(filtered_df,option,color_map)
             line_chart(filtered_df,option,color_map)
             # table_output(filtered_df)

@@ -138,24 +138,29 @@ def app():
 
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
-    draft_year = st.selectbox('Draft Year?',
-        ('2024','2023','2022','2022 - Most Recent','2021'))
-    
-    if draft_year == '2024':
-        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2024.csv')
-        ## DROP A BAD MOCK DRAFT
+    draft_year = st.selectbox('Draft Year?', 
+        ('2025', '2024', '2023', '2022', '2022 - Most Recent', '2021'))
 
+    # Define a dictionary for draft year to URL mapping
+    url_mapping = {
+        '2025': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2025.csv',
+        '2024': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2024.csv',
+        '2023': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv',
+        '2022': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv',
+        '2021': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv'
+    }
+
+    # Load the appropriate data based on the selected year
+    df = pd.read_csv(url_mapping.get(draft_year, ''))
+
+    # Apply specific modifications based on the selected year
     if draft_year == '2023':
-        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv')
-        ## DROP A BAD MOCK DRAFT
-        df=df.drop(df.query("source == 'TWSN' & date == '2023-04-21'").index).reset_index(drop=True)
-    if draft_year == '2022':
-        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
+        # Drop a bad mock draft for 2023
+        df = df.drop(df.query("source == 'TWSN' & date == '2023-04-21'").index).reset_index(drop=True)
+
     if draft_year == '2022 - Most Recent':
-        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2022.csv')
+        # Load the 2022 draft and limit rows to the most recent
         df = df.head(1023)
-    if draft_year == '2021':
-        df = pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db.csv')
 
     d=pd.merge(df.iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
              df.iloc[501:1000].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
@@ -281,6 +286,8 @@ def app():
 
     # icon2 = st.checkbox('Show icons (slows it down a bit)',key='icon2')
 
+    # st.write(d.head(2))
+
     for i, r in d.iterrows():
         nt.add_node(r['player'],
                     size=r['times_picked_log'],
@@ -308,12 +315,15 @@ def app():
                     title=r['team']+' picked '+r['player']+' '+str(r['cnt'])+ '  times')
 
 
-# SHOW THE NETWORK GRAPH                       
-    nt.show('mock_draft_network.html')
+# SHOW THE NETWORK GRAPH  
+    try:                     
+        nt.show('mock_draft_network.html')
 
-    html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
-    source_code = html_file.read()
-    components.html(source_code, height=510,width=640)
+        html_file = open('./mock_draft_network.html', 'r', encoding='utf-8')
+        source_code = html_file.read()
+        components.html(source_code, height=510,width=640)
+    except:
+        pass
 
 
 # SANKEY DIAGRAM OF TOP 10 PICKS

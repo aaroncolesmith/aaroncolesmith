@@ -2,19 +2,12 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import requests
-# from bs4 import BeautifulSoup
-# from sklearn.preprocessing import LabelEncoder
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import plotly_express as px
-# import plotly.graph_objects as go
-# import functools as ft
-# from datetime import date
-# import random
-# import ast
-# import time
+import random
 from io import BytesIO
 
 
@@ -87,22 +80,53 @@ def quick_clstr(df, num_cols, str_cols, color):
     # key_vals=p.sort_values('distance_from_zero',ascending=False).head(20).field.tolist()
     key_vals=dvz.field.tolist()
 
-    df['Cluster'] = df['Cluster'].astype('str')
 
-    fig=px.scatter(df.sort_values(color,ascending=True),
+
+    df[color] = df[color].astype('str')
+
+
+
+
+
+    # Predefined list of hex colors
+    hex_colors = ['#ffd900', '#ff2a00', '#35d604', '#59ffee', '#1d19ff','#ff19fb']
+
+    # Function to generate a random hex color
+    def generate_random_hex_color():
+        return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+    # Get unique values from the color column
+    unique_values = df[color].unique()
+
+    # If there are more unique values than predefined colors, generate additional random colors
+    while len(hex_colors) < len(unique_values):
+        hex_colors.append(generate_random_hex_color())
+
+    # Create a dictionary to map unique values to colors (this is your discrete color map)
+    discrete_color_map = {value: hex_colors[i] for i, value in enumerate(unique_values)}
+
+    # Apply the color mapping to the dataframe
+    df['assigned_color'] = df[color].map(discrete_color_map)
+
+    # color_discrete_map
+
+    fig=px.scatter(df,
                    x='Cluster_x',
                    y='Cluster_y',
                    width=800,
                    height=800,
                    color=color,
+                   color_discrete_map = discrete_color_map,
+                #    color_discrete_sequence=marker_color,
                    hover_data=str_cols+key_vals,
+                   category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
                   )
-    fig.update_layout(legend_title_text=color)
-
-    # fig.update_layout({
-    #     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-    #     'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-    #     })
+    fig.update_layout(legend_title_text=color,
+            font_family='Futura',
+            height=800,
+            font_color='black',
+                      
+                      )
 
 
     dvz['x']=dvz['x'].round(1)
@@ -136,7 +160,7 @@ def quick_clstr(df, num_cols, str_cols, color):
                 )
     fig.update_traces(mode='markers',
                       opacity=.75,
-                      marker=dict(size=8,line=dict(width=1,color='DarkSlateGrey'))
+                      marker=dict(size=16,line=dict(width=2,color='DarkSlateGrey'))
                       )
     fig.update_xaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
     fig.update_yaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
@@ -146,13 +170,26 @@ def quick_clstr(df, num_cols, str_cols, color):
     for val in dvz.sort_values('distance_from_zero',ascending=False).field.tolist():
        fig=px.bar(df.sort_values(val,ascending=False),
                   x='Player',
-                  color='Team',
+                  color=color,
+                  color_discrete_map = discrete_color_map,
                   y=val,
-                #   category_orders={val:df.sort_values(val,ascending=False)[val].tolist()}
+                  category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
                   )
        fig.update_xaxes(categoryorder='total descending')
+       fig.update_traces(marker=dict(
+        #    color='lightblue',    
+           line=dict(color='navy', width=2) 
+           )
+       )
+       fig.update_layout(
+        font=dict(
+        family='Futura',  # Set font to Futura
+        size=12,          # You can adjust the font size if needed
+        color='black' 
+        ))
+    
+
        st.plotly_chart(fig,use_container_width=True)
-    st.write(dvz)
 
 
 @st.cache_data
