@@ -1,5 +1,4 @@
 import pandas as pd
-from pandas.io.json import json_normalize
 import datetime
 import streamlit as st
 import numpy as np

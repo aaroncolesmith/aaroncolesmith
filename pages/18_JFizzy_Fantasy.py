@@ -116,6 +116,13 @@ def app():
     df.loc[(df['game'] == 'Buffalo Bills at Kansas City Chiefs') & (df['player'] == 'Patrick Mahomes'), 'TWO_PT_PASS_TD'] = 1
     df.loc[(df['game'] == 'Buffalo Bills at Kansas City Chiefs') & (df['player'] == 'Justin Watson'), 'TWO_PT_REC_TD'] = 1
 
+
+    df.loc[(df['game'] == 'Kansas City Chiefs at Philadelphia Eagles') & (df['player'] == 'Patrick Mahomes'), 'TWO_PT_PASS_TD'] = 1
+    df.loc[(df['game'] == 'Kansas City Chiefs at Philadelphia Eagles') & (df['player'] == 'Justin Watson'), 'TWO_PT_REC_TD'] = 1
+
+    df.loc[(df['game'] == 'Kansas City Chiefs at Philadelphia Eagles') & (df['player'] == 'Patrick Mahomes'), 'TWO_PT_PASS_TD'] = 1
+    df.loc[(df['game'] == 'Kansas City Chiefs at Philadelphia Eagles') & (df['player'] == 'DeAndre Hopkins'), 'TWO_PT_REC_TD'] = 1
+
     # Example for calculating fantasy points
     df['fantasy_pts'] = (df['PASS_TD'].fillna(0).astype(float) * 4.0) + \
                         (df['RUSH_TD'].fillna(0).astype(float) * 6.0) + \
@@ -125,6 +132,16 @@ def app():
                         (df['TWO_PT_RUSH_TD'].fillna(0).astype(float) * 2.0) + \
                         (df['TWO_PT_REC_TD'].fillna(0).astype(float) * 3.0)
 
+    # df['fantasy_pts'] = (df['PASS_TD'].fillna(0).astype(float) * 4.0) + \
+    #                     (df['RUSH_TD'].fillna(0).astype(float) * 6.0) + \
+    #                     (df['REC_TD'].fillna(0).astype(float) * 6.0) + \
+    #                     (df['REC'].fillna(0).astype(float) * 1.0) + \
+    #                     (df['PASS_YDS'].fillna(0).astype(float) * .025) + \
+    #                     (df['RUSH_YDS'].fillna(0).astype(float) * .1) + \
+    #                     (df['REC_YDS'].fillna(0).astype(float) * .1) + \
+    #                     (df['TWO_PT_PASS_TD'].fillna(0).astype(float) * 2.0) + \
+    #                     (df['TWO_PT_RUSH_TD'].fillna(0).astype(float) * 2.0) + \
+    #                     (df['TWO_PT_REC_TD'].fillna(0).astype(float) * 3.0)
 
 
     # The input data

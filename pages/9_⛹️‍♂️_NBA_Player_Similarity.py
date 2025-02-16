@@ -297,6 +297,7 @@ def app():
     # st.write(d2.tail(10))
 
     d = pd.merge(d2.loc[d2.player!='Eddie Johnson'],d1.loc[d1.game_type == 'Regular Season']).sort_values(by=['date', 'player']).copy()
+
     d['missed_shots'] = (d['fga'].fillna(0) - d['fg'].fillna(0))+(d['fta'].fillna(0) - d['ft'].fillna(0))
     d['all_stat'] = d['pts'] + d['trb'] + d['ast']
 
