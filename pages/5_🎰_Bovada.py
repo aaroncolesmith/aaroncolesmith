@@ -35,7 +35,11 @@ def load_file(date_select):
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
     df=pd.read_parquet('https://github.com/aaroncolesmith/data_bovada/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
-    df['day']=df['date'].astype('datetime64[D]')
+    
+    try:
+        df['day']=df['date'].astype('datetime64[D]')
+    except:
+        df['day'] = df['date'].dt.floor('D')
 
     df=df.loc[df.date.dt.date >= date_select]
     return df

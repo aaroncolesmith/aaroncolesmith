@@ -191,7 +191,7 @@ def pdx911_data(days):
     d=pd.read_parquet('https://github.com/aaroncolesmith/data_pdx_911/raw/refs/heads/main/data/portland_crime_data.parquet', engine='pyarrow')
     # url='https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/portland_crime_data.parquet'
 
-    d=d.loc[d.DATE.dt.date >= pd.to_datetime('today') - pd.Timedelta(days=days)]
+    d = d.loc[d.DATE.dt.date >= (pd.to_datetime('today') - pd.Timedelta(days=days)).date()]
 
     url='https://www.portlandonline.com/scripts/911incidents.cfm'
     dtmp=pd.read_xml(url)
