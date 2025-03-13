@@ -10,7 +10,6 @@ import boto3
 import pyarrow as pa
 import pyarrow.parquet as pq
 import os
-from st_files_connection import FilesConnection
 import json
 from datetime import datetime, timedelta
 
