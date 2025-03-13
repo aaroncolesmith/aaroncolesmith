@@ -454,8 +454,6 @@ def app():
                      value_name='Golfer'
                      )
 
- 
-
 
     if 'SCORE' in df.columns:
         tourney(df,df2,df_picks)

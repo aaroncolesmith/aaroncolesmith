@@ -234,6 +234,10 @@ def quick_clstr(df, num_cols, str_cols, color, player):
       #   )
 
 
+    default_template = fig.data[0].hovertemplate  # Get the existing template
+    updated_template = default_template.replace('=', ': ')
+
+    fig.update_traces(hovertemplate=updated_template)
 
     st.plotly_chart(fig)
     fig_scatter = fig
@@ -350,7 +354,7 @@ def app():
 
     players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
     player = st.selectbox('Select a player',players)
-
+    
     with st.form(key='select_form'):
         # players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
         # player = st.selectbox('Select a player',players)
@@ -361,6 +365,13 @@ def app():
         minutes_played_half = int(minutes_played/2)
         minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {minutes_played} minutes',0,minutes_played,minutes_played_half)
         old_players_select = c3.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
+
+        # start_date = d.loc[d.player == player].date.min()
+        # end_date = d.loc[d.player == player].date.max()
+        # c1,c2 = st.columns(2)
+        # start_date_select = c1.date_input("Start date", value = start_date, min_value = start_date, max_value = end_date)
+        # end_date_select = c2.date_input("Start date", value = end_date, min_value = start_date_select, max_value = end_date)
+
         num_cols_select = st.multiselect('Which stats should be used?',num_cols,num_cols)
         giddy_up = st.form_submit_button('Giddy Up')
 
@@ -481,7 +492,11 @@ def app():
             df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)&(df_agg['Usage Rate'].notnull())].fillna(0)
         with st.expander('Raw Data'):
             st.write(df_clstr)
-        df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
+
+        if player in df_clstr['player'].unique().tolist():
+            df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
+        else:
+            st.write('Adjust your filters because you have filtered out your player')
 
 
     # c1,c2=st.columns([1,3])
