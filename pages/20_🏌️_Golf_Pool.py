@@ -419,10 +419,14 @@ def get_s3_data(filename):
 
 def app():
     st.title('Golf Pool')
+    ## This is to handle a playoff -- may need to fix this 0
     try:
-        df=pd.read_html('https://www.espn.com/golf/leaderboard')[0]
+        df=pd.read_html('https://www.espn.com/golf/leaderboard')[1]
     except:
-        st.write('tourney not started')
+        try:
+            df=pd.read_html('https://www.espn.com/golf/leaderboard')[0]
+        except:
+            st.write('tourney not started')
     try:
         del df['Unnamed: 0']
     except:
@@ -443,7 +447,6 @@ def app():
     for col in ['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']:
         df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','').str.strip().str.replace(' .%','').str.replace('Mcilroy','McIlroy').str.replace('Macintyre','MacIntyre')
     
-
     df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard').str.replace('Joaquín','Joaquin')
 
     df2 = pd.melt(df_picks,
