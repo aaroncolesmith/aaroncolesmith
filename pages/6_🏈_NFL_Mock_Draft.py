@@ -179,6 +179,36 @@ def genSankey(df,cat_cols=[],value_cols='',title='Sankey Diagram'):
   
 
 
+def add_sheets_data(df):
+    df_img=df.groupby(['team'])['team_img'].agg(pd.Series.mode).to_frame('team_img').reset_index()
+    team_img_dict = dict(zip(df_img['team'], df_img['team_img']))
+
+    df_player_details=df.groupby(['player'])['player_details'].agg(pd.Series.mode).to_frame('player_details').reset_index()
+    player_details_dict = dict(zip(df_player_details['player'], df_player_details['player_details']))
+
+    url='https://docs.google.com/spreadsheets/d/1Fq_DdIsiMKe3tTkUj4eb9X5dlzAPnrRzkHvpNpJKnpk/gviz/tq?tqx=out:csv&gid=685837892'
+    df_sheet=pd.read_csv(url, on_bad_lines='skip')
+    for col in df_sheet.columns:
+        if 'Unnamed' in col:
+            del df_sheet[col]
+    df_sheet['team_img']=df_sheet['team'].map(team_img_dict)
+    df_sheet['player_details']=df_sheet['player'].map(player_details_dict)
+    df_sheet['date'] = pd.to_datetime(df_sheet['date'])
+
+    df=pd.concat([df,df_sheet]).sort_values(['date','source'],ascending=[True,True]).reset_index(drop=True)
+
+    df['pick']=pd.to_numeric(df['pick'])
+
+    df['team_pick'] = 'Pick '+ df['pick'].astype('str').replace('\.0', '', regex=True) + ' - ' +df['team']
+    df=df.loc[~df.team_pick.str.contains('/Colleges')]
+    df=df.loc[df.source_key!='tankathon-2024?date=2024-06-12']
+
+    df['date'] = pd.to_datetime(df['date'])
+
+    return df
+
+
+
 def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
@@ -212,7 +242,7 @@ def app():
 
     # Load the appropriate data based on the selected year
     df = pd.read_csv(url_mapping.get(draft_year, ''))
-
+    df=add_sheets_data(df)
     # Apply specific modifications based on the selected year
     if draft_year == '2023':
         # Drop a bad mock draft for 2023
@@ -255,12 +285,28 @@ def app():
     with t1:
         st.markdown('### Avg Pick Over Time by Player')
 
-        d1=df.groupby(['player','date']).agg(
+        c1,c2 = st.columns(2)
+        min_date = c1.date_input("Minimum Date for Avg", 
+                                 value = df.date.min(),
+                                 min_value = df.date.min(),
+                                 max_value = df.date.max())
+        
+        top_n = c2.slider("Top n players?", 2, 50, 25)
+        top_players=df.groupby(['player']).agg(
+            avg_pick=('pick','mean'),
+            times_picked=('source_key',lambda x: x.nunique())
+            ).sort_values(['times_picked','avg_pick'],ascending=[False,True]).reset_index().head(top_n)['player'].tolist()
+        
+        df_d1 = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)]
+        df_d1 = df_d1.loc[df_d1.player.isin(top_players)]
+
+
+        d1=df_d1.groupby(['player','date']).agg(
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['date','player'],ascending=True).reset_index()
 
-        d2=df.groupby(['player','team','date']).agg(
+        d2=df_d1.groupby(['player','team','date']).agg(
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['date','player'],ascending=True).reset_index()
@@ -275,18 +321,14 @@ def app():
                     d2,
                     )
 
-        top_n = st.slider("Top n players?", 2, 50, 25)
-        top_players=df.groupby(['player']).agg(
-            avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
-            ).sort_values(['times_picked','avg_pick'],ascending=[False,True]).reset_index().head(top_n)['player'].tolist()
+
 
         start_color='#FF6600'
         end_color='#55E0FF'
         color_list = generate_gradient(start_color, end_color, top_n)
         c1,c2=st.columns(2)
         fig = px.scatter(
-            d1.loc[d1.player.isin(top_players)],
+            d1,
             x="date",
             y="avg_pick",
             hover_data=['team_picks'],
@@ -312,7 +354,7 @@ def app():
 
         c1.plotly_chart(fig,use_container_width=True)
         
-        fig = px.box(df.loc[df.player.isin(top_players)], 
+        fig = px.box(df_d1, 
                 x="player", 
                 y="pick", 
                 points="all", 
@@ -324,7 +366,7 @@ def app():
         fig.update_yaxes(title='Draft Position')
         c2.plotly_chart(fig, use_container_width=True)
 
-        d3=df.groupby(['player','team']).agg(
+        d3=df_d1.groupby(['player','team']).agg(
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values('times_picked',ascending=False).reset_index(drop=False)
@@ -335,7 +377,7 @@ def app():
             team_picks=('team_picks', lambda x: ', '.join(x))
         ).reset_index()
 
-        df_grouped = df.groupby(['player']).agg(
+        df_grouped = df_d1.groupby(['player']).agg(
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['avg_pick'],ascending=True).reset_index(drop=False)
