@@ -292,10 +292,39 @@ def app():
                                  max_value = df.date.max())
         
         top_n = c2.slider("Top n players?", 2, 50, 25)
-        top_players=df.groupby(['player']).agg(
+
+        adjustment_num = 35
+
+        df_avg_pick_all = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(
             avg_pick=('pick','mean'),
+            pick_total=('pick','sum'),
             times_picked=('source_key',lambda x: x.nunique())
-            ).sort_values(['times_picked','avg_pick'],ascending=[False,True]).reset_index().head(top_n)['player'].tolist()
+            ).sort_values(['avg_pick'],ascending=[True]).reset_index()
+        df_avg_pick_all['mocks_not_picked'] = df_avg_pick_all['times_picked'].max() - df_avg_pick_all['times_picked']
+        df_avg_pick_all['adjusted_avg_pick'] = (df_avg_pick_all['pick_total'] + (adjustment_num * df_avg_pick_all['mocks_not_picked'])) / df_avg_pick_all['times_picked'].max()
+
+        # Group by player and date to get daily stats
+        df_avg_pick_daily = df.groupby(['player', 'date']).agg(
+            avg_pick=('pick', 'mean'),
+            pick_total=('pick', 'sum'),
+            times_picked=('source_key', lambda x: x.nunique())
+        ).sort_values(['avg_pick'], ascending=[True]).reset_index()
+
+
+        df_avg_pick_daily = pd.merge(df_avg_pick_daily,
+                                     df_avg_pick_daily.groupby(['date']).agg(total_mocks_for_day=('times_picked','max')).reset_index()
+                                     )
+
+        # Calculate mocks where the player wasn't picked
+        df_avg_pick_daily['mocks_not_picked'] = df_avg_pick_daily['total_mocks_for_day'] - df_avg_pick_daily['times_picked']
+
+        # Calculate adjusted average pick based on mocks not picked
+        df_avg_pick_daily['adjusted_avg_pick'] = (df_avg_pick_daily['pick_total'] + (adjustment_num * df_avg_pick_daily['mocks_not_picked'])) / df_avg_pick_daily['total_mocks_for_day']
+
+        # Optional: Sort the dataframe by player and date for clarity
+        df_avg_pick_daily = df_avg_pick_daily.sort_values(['player', 'date'])
+
+        top_players=df_avg_pick_all.sort_values(['adjusted_avg_pick'],ascending=[True]).reset_index().head(top_n)['player'].tolist()
         
         df_d1 = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)]
         df_d1 = df_d1.loc[df_d1.player.isin(top_players)]
@@ -305,6 +334,7 @@ def app():
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['date','player'],ascending=True).reset_index()
+
 
         d2=df_d1.groupby(['player','team','date']).agg(
             avg_pick=('pick','mean'),
@@ -321,6 +351,9 @@ def app():
                     d2,
                     )
 
+        d1 = pd.merge(d1,
+                      df_avg_pick_daily[['player','date','adjusted_avg_pick','mocks_not_picked']],
+                      how='left')
 
 
         start_color='#FF6600'
@@ -330,8 +363,8 @@ def app():
         fig = px.scatter(
             d1,
             x="date",
-            y="avg_pick",
-            hover_data=['team_picks'],
+            y="adjusted_avg_pick",
+            hover_data=['team_picks','avg_pick','times_picked','mocks_not_picked'],
             color="player",
             # color_discrete_sequence=color_list,
             render_mode='svg',)
@@ -377,15 +410,16 @@ def app():
             team_picks=('team_picks', lambda x: ', '.join(x))
         ).reset_index()
 
-        df_grouped = df_d1.groupby(['player']).agg(
-            avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
-            ).sort_values(['avg_pick'],ascending=True).reset_index(drop=False)
+        df_grouped = df_avg_pick_all
         df_grouped = df_grouped.loc[df_grouped['times_picked']>=(df_grouped['times_picked'].max()*.5)].reset_index(drop=True).reset_index(drop=False)
         df_grouped = pd.merge(df_grouped,d3)
-        df_grouped.columns = ['Rank','Player','Average Pick','Times Picked','Teams Picked']
+        df_grouped.columns = ['Rank','Player','del1','del2','Times Picked','del3','Average Pick','Team Picks']
         df_grouped['Rank'] +=1
         df_grouped['Average Pick'] = df_grouped['Average Pick'].round(1)
+
+        del df_grouped['del1']
+        del df_grouped['del2']
+        del df_grouped['del3']
 
         c1,c2,c3 = st.columns([2,6,2])
         c2.dataframe(
@@ -565,10 +599,25 @@ def app():
                                  min_value = df.date.min(),
                                  max_value = df.date.max())
         
+        adjustment_num = 35
+
+        df_avg_pick_all = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(
+            avg_pick=('pick','mean'),
+            pick_total=('pick','sum'),
+            times_picked=('source_key',lambda x: x.nunique())
+            ).sort_values(['avg_pick'],ascending=[True]).reset_index()
+        df_avg_pick_all['mocks_not_picked'] = df_avg_pick_all['times_picked'].max() - df_avg_pick_all['times_picked']
+        df_avg_pick_all['adjusted_avg_pick'] = (df_avg_pick_all['pick_total'] + (adjustment_num * df_avg_pick_all['mocks_not_picked'])) / df_avg_pick_all['times_picked'].max()
+
+
+
         df_bpa = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(
             avg_pick=('pick','mean'),
             times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['avg_pick'],ascending=True).reset_index(drop=False).reset_index(drop=False)
+        
+        ## moving from df_bpa to df_avg_pick_all
+        # df_dpa = df_avg_pick_all[['player','adjusted_avg_pick','times_picked']].reset_index(drop=False)
         df_bpa.columns=['rank','player','avg_pick','times_picked']
         df_bpa['rank']+=1
         df_bpa['times_picked_pct']=df_bpa['times_picked']/df_bpa['times_picked'].max()
@@ -640,6 +689,24 @@ def app():
 
         df_player_avg = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(avg_player_rank=('pick','mean')).reset_index()
         df_consensus = pd.merge(df_consensus,df_player_avg).sort_values(['times_picked','avg_player_rank','avg_pick'],ascending=[False,True,True])
+
+        ## updating df_consense to have our new version from df_avg_pick_all
+        # del df_consensus['avg_player_rank']
+
+        # df_merge = df_avg_pick_all[['player','adjusted_avg_pick']]
+        # df_merge.columns =['player','avg_player_rank']
+        # df_consensus = pd.merge(df_consensus, df_avg_pick_all)
+
+
+
+        # st.write(df_bpa)
+        # st.write(df_consensus)
+        # st.write(df_avg_pick_all)
+
+
+
+
+
         # df_consensus = pd.merge(df_draft_order,df_consensus)
         players_picked =[]
         df_draft_order = df_draft_order.loc[df_draft_order.pick<=30]
