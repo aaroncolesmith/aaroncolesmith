@@ -8,15 +8,11 @@ networkx==2.5
 geocoder==1.38.1
 numpy==1.21.0
 lxml==4.9.2
-pystan==2.19.1.1
 holidays==0.24
-prophet==1.1.2
 yahooquery==2.2.15
 extra-streamlit-components==0.1.53
 pyarrow==14.0.1
 beautifulsoup4==4.11.1
-s3fs==2023.12.0
 st-files-connection==0.1.0
 boto3
-elosports
 xgboost
