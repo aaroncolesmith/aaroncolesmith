@@ -12,6 +12,7 @@ import plotly.io as pio
 pio.templates.default = "simple_white"
 import numpy as np
 from IPython.core.display import HTML
+import itertools
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
@@ -52,6 +53,7 @@ def update_colors(fig):
     fig.for_each_trace(lambda trace: trace.update(marker_color='#D50A0A') if trace.name == "Tampa Bay Buccaneers" else ())
     fig.for_each_trace(lambda trace: trace.update(marker_color='#4B92DB') if trace.name == "Tennessee Titans" else ())
     fig.for_each_trace(lambda trace: trace.update(marker_color='#773141') if trace.name == "Washington Football Team" else ())
+    fig.for_each_trace(lambda trace: trace.update(marker_color='#000000') if trace.name == "undrafted" else ())
 
     return fig
 
@@ -213,7 +215,7 @@ def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
 
-    st.title('NFL Mock Draft Database')
+    # st.title('NFL Mock Draft Database')
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
     # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
@@ -252,8 +254,39 @@ def app():
         # Load the 2022 draft and limit rows to the most recent
         df = df.head(1023)
 
-    d=pd.merge(df.iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
-             df.iloc[501:1000].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
+    df['source_key'] = df['source'].str.lower().replace(' ','_') + '_'+df['date'].astype('str')
+
+    unique_player_list = df['player'].unique()
+    unique_source_key_list = df['source_key'].unique()
+
+    # Generate all permutations of player and mock drafts
+    permutations = list(itertools.product(unique_player_list, unique_source_key_list))
+
+    # Convert permutations to a DataFrame
+    df_permutations = pd.DataFrame(permutations, columns=['player', 'source_key'])
+
+    # Convert permutations to a DataFrame
+    df_permutations = pd.DataFrame(permutations, columns=['player', 'source_key'])
+
+    # Merge the permutations DataFrame with the original DataFrame
+    df_full = pd.merge(df_permutations, df, on=['player', 'source_key'], how='left')
+
+    # Define the penalty for missing picks
+    penalty = 35
+
+    # Apply penalty for missing picks (i.e., where 'pick' is NaN)
+    df_full['pick'].fillna(penalty, inplace=True)
+    df_full['team'].fillna('undrafted', inplace=True)
+    df_full = pd.merge(df_full, df[['source_key','date','source']].drop_duplicates(), on='source_key', how='left',suffixes=('','_undrafted'))
+    df_full['date'].fillna(df_full['date_undrafted'], inplace=True)
+    df_full['source'].fillna(df_full['source_undrafted'], inplace=True)
+
+    df = df_full.copy()
+
+    df = df.sort_values(['date', 'source_key','pick'], ascending=[False, True,True]).reset_index(drop=True)
+
+    d=pd.merge(df.loc[df.team!='undrafted'].iloc[0:500].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
+             df.loc[df.team!='undrafted'].iloc[501:1000].groupby('player').agg({'pick':'mean','player_details':'size'}).reset_index(),
              left_on='player',
              right_on='player',
              suffixes=('_recent','_before')
@@ -279,7 +312,6 @@ def app():
 
     st.divider()
 
-    df['source_key'] = df['source'].str.lower().replace(' ','_') + '_'+df['date'].astype('str')
     t1,t2,t3,t4,t5,t6 = st.tabs(['Avg Player Rank','Times Player Mocked to Team','Filter by Team','Filter by Player','Filter by Mock Draft','Consensus Mock Draft'])
 
     with t1:
@@ -354,7 +386,7 @@ def app():
 
         c1.plotly_chart(fig,use_container_width=True)
         
-        fig = px.box(df_d1, 
+        fig = px.box(df_d1.loc[df_d1.team!='undrafted'], 
                 x="player", 
                 y="pick", 
                 points="all", 
@@ -396,7 +428,7 @@ def app():
 
     with t2:
         st.markdown('### # of Times a Player is Mocked to a Given Pick / Team')
-        d=df.groupby(['team','team_img','player']).agg({'pick':['min','mean','median','size']}).reset_index()
+        d=df.loc[df.team!='undrafted'].groupby(['team','team_img','player']).agg({'pick':['min','mean','median','size']}).reset_index()
         d.columns=['team','team_img','player','min_pick','avg_pick','median_pick','cnt']
         fig=px.scatter(d,
             x='cnt',
@@ -422,9 +454,9 @@ def app():
     with t5:
         df['source_date'] = df['source'] + ' - ' +df['date'].astype('str')
         draft = st.selectbox('Pick a draft to view:',df.sort_values(['date','source'],ascending=[False,True])['source_date'].unique())
-
         col1, col2, col3 = st.columns((2,4,2))
-        df_table=df.loc[df['source_date'] == draft].sort_values('pick',ascending=True).reset_index(drop=True)
+        df_table = df.loc[df.team!='undrafted']
+        df_table=df_table.loc[(df_table['source_date'] == draft)].sort_values('pick',ascending=True).reset_index(drop=True)
         df_table['team'] = ["<img src='" + r.team_img
         + f"""' style='display:block;margin-left:auto;margin-right:auto;width:32px;border:0;'><div style='text-align:center'>"""
         # + "<br>".join(r.team.split()) + "</div>"
@@ -439,6 +471,7 @@ def app():
         d=df.loc[df.player == player].copy()
         d=d.sort_values('date',ascending=True).reset_index(drop=True)
         d['mock_draft'] = d['date'].astype('str').str[5:]+ ' - ' + d['source']
+
         fig=px.scatter(d,
                         x='mock_draft',
                         y='pick',
@@ -451,6 +484,7 @@ def app():
                             marker=dict(size=8,
                                         line=dict(width=1,
                                                 color='DarkSlateGrey')))
+        
         fig.update_layout(height=600)
         fig = update_colors(fig)
         # fig=replace_scatter_with_logos(fig)
@@ -472,7 +506,7 @@ def app():
         fig = update_colors(fig)
         st.plotly_chart(fig, use_container_width=True)
     with t3:
-        team = st.selectbox('Pick a team to view:',df['team'].unique())
+        team = st.selectbox('Pick a team to view:',df.loc[df.team!='undrafted']['team'].unique())
 
         d=df.loc[df.team == team].copy()
         d=d.reset_index(drop=True)
