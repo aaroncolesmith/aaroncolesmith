@@ -256,6 +256,16 @@ def app():
 
     df['source_key'] = df['source'].str.lower().replace(' ','_') + '_'+df['date'].astype('str')
 
+
+    st.write(df.head(5))
+
+
+
+    valid_mocks = df.groupby(['date','source']).size().to_frame('cnt').reset_index().sort_values('date',ascending=False)
+    valid_mocks = valid_mocks.loc[valid_mocks['cnt']==32]
+    df = pd.merge(df, valid_mocks[['date','source']], on=['date','source'], how='inner')
+
+
     unique_player_list = df['player'].unique()
     unique_source_key_list = df['source_key'].unique()
 
@@ -326,7 +336,8 @@ def app():
         top_n = c2.slider("Top n players?", 2, 50, 25)
         top_players=df.groupby(['player']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['times_picked','avg_pick'],ascending=[False,True]).reset_index().head(top_n)['player'].tolist()
         
         df_d1 = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)]
@@ -335,12 +346,14 @@ def app():
 
         d1=df_d1.groupby(['player','date']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['date','player'],ascending=True).reset_index()
 
         d2=df_d1.groupby(['player','team','date']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['date','player'],ascending=True).reset_index()
 
         d2['team_picks'] = d2['team'] + ' - ' + d2['times_picked'].astype('str').replace('\.0', '', regex=True)
@@ -400,7 +413,8 @@ def app():
 
         d3=df_d1.groupby(['player','team']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values('times_picked',ascending=False).reset_index(drop=False)
         
 
@@ -411,7 +425,8 @@ def app():
 
         df_grouped = df_d1.groupby(['player']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['avg_pick'],ascending=True).reset_index(drop=False)
         df_grouped = df_grouped.loc[df_grouped['times_picked']>=(df_grouped['times_picked'].max()*.5)].reset_index(drop=True).reset_index(drop=False)
         df_grouped = pd.merge(df_grouped,d3)
@@ -601,7 +616,8 @@ def app():
         
         df_bpa = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(
             avg_pick=('pick','mean'),
-            times_picked=('source_key',lambda x: x.nunique())
+            times_picked=('team_pick','count')
+            # times_picked=('source_key',lambda x: x.nunique())
             ).sort_values(['avg_pick'],ascending=True).reset_index(drop=False).reset_index(drop=False)
         df_bpa.columns=['rank','player','avg_pick','times_picked']
         df_bpa['rank']+=1
@@ -666,7 +682,9 @@ def app():
 
         ###version 2 -- based on player, less than pick
         df_consensus = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['team','team_img','player']).agg(avg_pick=('pick','mean'),
-                                                                                                                  times_picked=('source_key','size')).sort_values(['times_picked','avg_pick'],
+                                                                                                                             times_picked=('team_pick','count')
+                                                                                                                #   times_picked=('source_key','size')
+                                                                                                                  ).sort_values(['times_picked','avg_pick'],
                                                                                                                ascending=[False,True]).reset_index()
         total_mocks = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].source_key.nunique()
         # st.write(total_mocks)
