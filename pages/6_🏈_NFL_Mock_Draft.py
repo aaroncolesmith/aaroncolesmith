@@ -339,7 +339,7 @@ def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
 
-    # st.title('NFL Mock Draft Database')
+    st.title('NFL Mock Draft Database')
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
     # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()

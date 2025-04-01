@@ -280,7 +280,7 @@ def rca_over_time(d,attr,val,y_title,y_tick):
     st.plotly_chart(fig, use_container_width=True)
 
 def app():
-    st.title = st.title('Soccer Sankey')
+    st.title('Soccer Sankey')
     st.write('This app allows you to visualize the flow of data through a Sankey diagram. You can filter the data and select the attributes you want to view. You can also view the RCA of the data over time.')
     df = load_data()
 
