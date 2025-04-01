@@ -211,6 +211,130 @@ def add_sheets_data(df):
 
 
 
+def bpa_draft(df_draft_order, df_consensus, df_bpa, players_picked):
+    for i,r in df_draft_order.iterrows():
+        st.divider()
+
+        big_board = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])&
+            (~df_consensus['player'].isin(players_picked))
+        ]
+
+        # st.write(big_board)
+        try:
+            picked_player = big_board['player'].values[0]
+        except:
+            st.write(big_board)
+
+        pick_pct = big_board['pick_pct'].values[0]
+
+        ideal_pick = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])
+        ]['player'].values[0]
+
+        ideal_pick_pct = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])
+        ]['pick_pct'].values[0]
+
+        if picked_player == ideal_pick:
+            was_ideal = ''
+        else:
+            was_ideal = f'(Ideal pick was {ideal_pick} -- picked {round(ideal_pick_pct*100,2)}% of the time)'
+
+        team_img = df_consensus.loc[
+            (df_consensus['team'] == r['team'])
+        ]['team_img'].values[0]
+
+        c0,c1,c2=st.columns([1,3,8])
+
+        c1.markdown(f"Pick {r['pick']}: {r['team']} -- {picked_player} ")
+        c1.markdown(f"Picked {round(pick_pct*100,2)}% of the time {was_ideal}")
+        c0.image(team_img,width=80)
+
+        with c2:
+            with st.expander('BPA & Big Board'):
+                c3,c4=st.columns(2)
+                c3.write('BPA')
+                c3.dataframe(df_bpa.loc[~df_bpa['player'].isin(players_picked)].head(20),
+                        hide_index=True)
+                c4.write('Big Board')
+                c4.dataframe(big_board[['team','player','avg_pick','times_picked','pick_pct','avg_player_rank']],hide_index=True)
+        players_picked.append(picked_player)
+
+
+
+def draft_simulation(df_draft_order, df_consensus, df_bpa, players_picked):
+    for i,r in df_draft_order.iterrows():
+        st.divider()
+
+        big_board = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])&
+            (~df_consensus['player'].isin(players_picked))
+        ]
+
+        del big_board['pick_pct']
+        big_board['pick_pct'] = big_board['times_picked'] / big_board['times_picked'].sum()
+        players = big_board['player'].tolist()
+        pick_pct = big_board['pick_pct'].tolist()
+
+        # Run a single simulation where the pick is weighted by pick_pct
+        picked_player = np.random.choice(players, p=pick_pct)
+        pick_pct = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+        avg_pick = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+        avg_player_rank = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+
+        if (avg_player_rank - i) > 10:
+            st.write(f'og pick {picked_player} -- had to repick')
+            picked_player = np.random.choice(players, p=pick_pct)
+            pick_pct = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+            avg_pick = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+            avg_player_rank = big_board.loc[big_board['player'] == picked_player, 'pick_pct'].values[0]
+
+
+
+
+
+
+        ideal_pick = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])
+        ]['player'].values[0]
+
+        ideal_pick_pct = df_consensus.loc[
+            # (df_consensus['pick'] == r['pick'])&
+            (df_consensus['team'] == r['team'])
+        ]['pick_pct'].values[0]
+
+        if picked_player == ideal_pick:
+            was_ideal = ''
+        else:
+            was_ideal = f'(Ideal pick was {ideal_pick} -- picked {round(ideal_pick_pct*100,2)}% of the time)'
+
+        team_img = df_consensus.loc[
+            (df_consensus['team'] == r['team'])
+        ]['team_img'].values[0]
+
+        c0,c1,c2=st.columns([1,3,8])
+
+        c1.markdown(f"Pick {r['pick']}: {r['team']} -- {picked_player} ")
+        c1.markdown(f"Picked {round(pick_pct*100,2)}% of the time {was_ideal}")
+        c0.image(team_img,width=80)
+
+        with c2:
+            with st.expander('BPA & Big Board'):
+                c3,c4=st.columns(2)
+                c3.write('BPA')
+                c3.dataframe(df_bpa.loc[~df_bpa['player'].isin(players_picked)].head(20),
+                        hide_index=True)
+                c4.write('Big Board')
+                c4.dataframe(big_board[['team','player','avg_pick','times_picked','pick_pct','avg_player_rank']],hide_index=True)
+        players_picked.append(picked_player)
+
+
 def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
@@ -255,11 +379,6 @@ def app():
         df = df.head(1023)
 
     df['source_key'] = df['source'].str.lower().replace(' ','_') + '_'+df['date'].astype('str')
-
-
-    st.write(df.head(5))
-
-
 
     valid_mocks = df.groupby(['date','source']).size().to_frame('cnt').reset_index().sort_values('date',ascending=False)
     valid_mocks = valid_mocks.loc[valid_mocks['cnt']==32]
@@ -624,62 +743,6 @@ def app():
         df_bpa['times_picked_pct']=df_bpa['times_picked']/df_bpa['times_picked'].max()
         df_bpa=df_bpa.loc[df_bpa['times_picked_pct']>.3]
         
-
-        # st.write(df_bpa)
-
-        # ###version 1 -- based on player & pick
-        # df_consensus = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['pick','team','player']).agg(times_picked=('source_key','size')).sort_values(['pick','times_picked'],
-        #                                                                                                        ascending=[True,False]).reset_index()
-        # total_mocks = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].source_key.nunique()
-        # # st.write(total_mocks)
-        # df_consensus['pick_pct'] = df_consensus['times_picked'] / total_mocks
-        # df_consensus = pd.merge(df_draft_order,df_consensus)
-        # # st.write(df_consensus)
-        # players_picked =[]
-        # for i,r in df_draft_order.iterrows():
-        #     # st.write(r['pick'])
-        #     # st.write(r['team'])
-
-        #     # st.write(df_consensus.loc[
-        #     #     (df_consensus['pick'] == r['pick'])&
-        #     #     (df_consensus['team'] == r['team'])&
-        #     #     (~df_consensus['player'].isin(players_picked))
-        #     # ])
-        #     picked_player = df_consensus.loc[
-        #         (df_consensus['pick'] == r['pick'])&
-        #         (df_consensus['team'] == r['team'])&
-        #         (~df_consensus['player'].isin(players_picked))
-        #     ]['player'].values[0]
-
-        #     pick_pct = df_consensus.loc[
-        #         (df_consensus['pick'] == r['pick'])&
-        #         (df_consensus['team'] == r['team'])&
-        #         (~df_consensus['player'].isin(players_picked))
-        #     ]['pick_pct'].values[0]
-
-        #     ideal_pick = df_consensus.loc[
-        #         (df_consensus['pick'] == r['pick'])&
-        #         (df_consensus['team'] == r['team'])
-        #     ]['player'].values[0]
-
-        #     ideal_pick_pct = df_consensus.loc[
-        #         (df_consensus['pick'] == r['pick'])&
-        #         (df_consensus['team'] == r['team'])
-        #     ]['pick_pct'].values[0]
-
-        #     if picked_player == ideal_pick:
-        #         was_ideal = ''
-        #     else:
-        #         was_ideal = f'(Ideal pick was {ideal_pick} -- picked {round(ideal_pick_pct*100,2)}% of the time)'
-
-        #     st.write(f"Pick {r['pick']} - {r['team']} -- {picked_player} -- picked {round(pick_pct*100,2)}% of the time {was_ideal}")
-        #     with st.expander('BPA'):
-        #         st.dataframe(df_bpa.loc[~df_bpa['player'].isin(players_picked)].head(20),
-        #                      hide_index=True)
-        #     # st.write(picked_player)
-        #     players_picked.append(picked_player)
-
-
         ###version 2 -- based on player, less than pick
         df_consensus = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['team','team_img','player']).agg(avg_pick=('pick','mean'),
                                                                                                                              times_picked=('team_pick','count')
@@ -692,71 +755,26 @@ def app():
 
         df_player_avg = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(avg_player_rank=('pick','mean')).reset_index()
         df_consensus = pd.merge(df_consensus,df_player_avg).sort_values(['times_picked','avg_player_rank','avg_pick'],ascending=[False,True,True])
-        # df_consensus = pd.merge(df_draft_order,df_consensus)
-        players_picked =[]
         df_draft_order = df_draft_order.loc[df_draft_order.pick<=30]
-        for i,r in df_draft_order.iterrows():
-            st.divider()
 
 
 
 
-            big_board = df_consensus.loc[
-                # (df_consensus['pick'] == r['pick'])&
-                (df_consensus['team'] == r['team'])&
-                (~df_consensus['player'].isin(players_picked))
-            ]
+        with st.form("draft_form"):
+            st.write("Select Options")
+            draft_version = st.radio("Which Version",['Best Player Available','Simulation Based on Percentages'])
 
-            # st.write(big_board)
-            try:
-                picked_player = big_board['player'].values[0]
-            except:
-                st.write(big_board)
+            # Every form must have a submit button.
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                players_picked =[]
+                if draft_version == 'Best Player Available':
+                    bpa_draft(df_draft_order, df_consensus, df_bpa, players_picked)
+                if draft_version == 'Simulation Based on Percentages':
+                    draft_simulation(df_draft_order, df_consensus, df_bpa, players_picked)
 
-            pick_pct = big_board['pick_pct'].values[0]
+        
 
-            ideal_pick = df_consensus.loc[
-                # (df_consensus['pick'] == r['pick'])&
-                (df_consensus['team'] == r['team'])
-            ]['player'].values[0]
-
-            ideal_pick_pct = df_consensus.loc[
-                # (df_consensus['pick'] == r['pick'])&
-                (df_consensus['team'] == r['team'])
-            ]['pick_pct'].values[0]
-
-            if picked_player == ideal_pick:
-                was_ideal = ''
-            else:
-                was_ideal = f'(Ideal pick was {ideal_pick} -- picked {round(ideal_pick_pct*100,2)}% of the time)'
-
-            team_img = df_consensus.loc[
-                (df_consensus['team'] == r['team'])
-            ]['team_img'].values[0]
-
-            c0,c1,c2=st.columns([1,3,8])
-
-            c1.markdown(f"Pick {r['pick']}: {r['team']} -- {picked_player} ")
-            c1.markdown(f"Picked {round(pick_pct*100,2)}% of the time {was_ideal}")
-            c0.image(team_img,width=80)
-
-            with c2:
-                with st.expander('BPA & Big Board'):
-                    c3,c4=st.columns(2)
-                    c3.write('BPA')
-                    c3.dataframe(df_bpa.loc[~df_bpa['player'].isin(players_picked)].head(20),
-                            hide_index=True)
-                    c4.write('Big Board')
-                    c4.dataframe(big_board[['team','player','avg_pick','times_picked','pick_pct','avg_player_rank']],hide_index=True)
-                    
-
-
-
-            # with st.expander('BPA'):
-            #     c2.dataframe(df_bpa.loc[~df_bpa['player'].isin(players_picked)].head(20),
-            #                  hide_index=True)
-            # st.write(picked_player)
-            players_picked.append(picked_player)
 
 
 
