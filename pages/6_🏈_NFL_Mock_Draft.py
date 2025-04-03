@@ -335,6 +335,21 @@ def draft_simulation(df_draft_order, df_consensus, df_bpa, players_picked):
         players_picked.append(picked_player)
 
 
+
+def add_line_breaks(name):
+        result = ''
+        counter = 0
+        for char in name:
+            result += char
+            if char == ',' and counter > 30:
+                result += '<br>'
+                counter=0
+            counter += 1
+        return result
+
+
+
+
 def app():
     # st.markdown("<h1 style='text-align: center; color: black;'>NFL Mock Draft Database</h1>", unsafe_allow_html=True)
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
@@ -485,19 +500,26 @@ def app():
                     d2,
                     )
 
-
-
         start_color='#FF6600'
         end_color='#55E0FF'
         color_list = generate_gradient(start_color, end_color, top_n)
         c1,c2=st.columns(2)
+
+        # # Apply the function to the 'Names' column
+        d1['team_picks'] = d1['team_picks'].apply(add_line_breaks)
+        d1['team_picks'] = d1['team_picks'].str.replace('|',', ').str.replace('  ',' ').str.replace('<br> ','<br>').str.replace(' undrafted - 0','')
+
         fig = px.scatter(
             d1,
             x="date",
             y="avg_pick",
             hover_data=['team_picks'],
             color="player",
-            # color_discrete_sequence=color_list,
+            category_orders={'player':d1.groupby(['player']).agg(avg_pick=('avg_pick','mean')).sort_values('avg_pick',ascending=True).reset_index()['player'].tolist()},
+
+
+
+            color_discrete_sequence=color_list,
             render_mode='svg',)
         fig.update_traces(
             mode="lines+markers",
