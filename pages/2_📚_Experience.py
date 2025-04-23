@@ -9,7 +9,8 @@ st.set_page_config(
 
 posthog = Posthog(
   project_api_key='phc_izEfF9RePzi6AdGbi3x0NeXPjCu1ShPQtCPkS5HJH7C',
-  host='https://us.i.posthog.com'
+  host='https://us.i.posthog.com',
+  disable_geoip=False
 )
 
 
