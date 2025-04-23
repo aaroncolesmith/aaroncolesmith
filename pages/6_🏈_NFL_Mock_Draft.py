@@ -13,12 +13,23 @@ pio.templates.default = "simple_white"
 import numpy as np
 from IPython.core.display import HTML
 import itertools
+from posthog import Posthog
+
+
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
     page_icon='dog',
     layout='wide'
     )
+
+
+
+posthog = Posthog(
+  project_api_key='phc_izEfF9RePzi6AdGbi3x0NeXPjCu1ShPQtCPkS5HJH7C',
+  host='https://us.i.posthog.com'
+)
+
 
 def update_colors(fig):
     fig.for_each_trace(lambda trace: trace.update(marker_color='#FB4F14') if trace.name == "Cincinnati Bengals" else ())
@@ -355,6 +366,7 @@ def app():
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
 
     st.title('NFL Mock Draft Database')
+    posthog.capture('test-id', 'test-event')
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
     # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
@@ -791,6 +803,7 @@ def app():
             if submitted:
                 players_picked =[]
                 if draft_version == 'Best Player Available':
+                    posthog.capture('bpa_simulation', 'bpa_simulation_event')
                     bpa_draft(df_draft_order, df_consensus, df_bpa, players_picked)
                 if draft_version == 'Simulation Based on Percentages':
                     draft_simulation(df_draft_order, df_consensus, df_bpa, players_picked)
