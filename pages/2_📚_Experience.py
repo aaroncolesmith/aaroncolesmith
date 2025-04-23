@@ -1,11 +1,21 @@
 import streamlit as st
+from posthog import Posthog
 
 st.set_page_config(
     page_title='aaroncolesmith.com',
     page_icon='dog'
     )
 
+
+posthog = Posthog(
+  project_api_key='phc_izEfF9RePzi6AdGbi3x0NeXPjCu1ShPQtCPkS5HJH7C',
+  host='https://us.i.posthog.com'
+)
+
+
 def app():
+
+    posthog.capture('test-id', 'experience_load_event')
     st.write("""
     # Work Experience
 

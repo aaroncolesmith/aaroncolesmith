@@ -6,7 +6,13 @@ pio.templates.default = 'plotly_white'
 import streamlit as st
 import requests
 import base64
+from posthog import Posthog
 
+
+posthog = Posthog(
+  project_api_key='phc_izEfF9RePzi6AdGbi3x0NeXPjCu1ShPQtCPkS5HJH7C',
+  host='https://us.i.posthog.com'
+)
 
 def display_gif(file, title,width=700):
     file_ = open(file, "rb")
@@ -26,6 +32,7 @@ def main():
     )
 
     print('AARONLOG - Main load ')
+    posthog.capture('test-id', 'aaroncolesmith_load_event')
 
     # PAGES = {
     # "About": about,

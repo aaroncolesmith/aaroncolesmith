@@ -366,7 +366,7 @@ def app():
     # st.markdown("<h4 style='text-align: center; color: black;'>Taking a look at a number of public NFL mock drafts to identify trends and relationships</h4>", unsafe_allow_html=True)
 
     st.title('NFL Mock Draft Database')
-    posthog.capture('test-id', 'test-event')
+    posthog.capture('test-id', 'load-mock-draft-db')
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
     # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
@@ -803,9 +803,10 @@ def app():
             if submitted:
                 players_picked =[]
                 if draft_version == 'Best Player Available':
-                    posthog.capture('bpa_simulation', 'bpa_simulation_event')
+                    posthog.capture('test-id', 'bpa_simulation_event')
                     bpa_draft(df_draft_order, df_consensus, df_bpa, players_picked)
                 if draft_version == 'Simulation Based on Percentages':
+                    posthog.capture('test-id', 'pct_simulation_event')
                     draft_simulation(df_draft_order, df_consensus, df_bpa, players_picked)
 
         
