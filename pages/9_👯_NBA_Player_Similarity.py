@@ -9,6 +9,15 @@ import numpy as np
 import plotly_express as px
 import random
 from io import BytesIO
+from posthog import Posthog
+
+
+posthog = Posthog(
+  project_api_key='phc_izEfF9RePzi6AdGbi3x0NeXPjCu1ShPQtCPkS5HJH7C',
+  host='https://us.i.posthog.com',
+  disable_geoip=False
+)
+
 
 
 def get_closest_players(df, player_name, n=25):
@@ -293,6 +302,8 @@ def app():
         layout='wide'
         )
     
+    posthog.capture('test-id', 'nba_player_similarity_load_event')
+
     code='1_0FAJsULjo-gz2pvy365dQNqbo1ORDMU'
     d1=load_google_file(code)
     # st.write(d1.tail(10))
@@ -376,6 +387,7 @@ def app():
         giddy_up = st.form_submit_button('Giddy Up')
 
     if giddy_up:
+        posthog.capture('test-id', f'nba_player_similarity_{player}')
         df_filtered = d.groupby('player').head(games_played_select)
         df_agg = df_filtered.groupby(['player']).agg(
             games_played=('game_id','count'),
