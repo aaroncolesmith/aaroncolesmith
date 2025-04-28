@@ -6,7 +6,7 @@ scikit-learn
 pyvis==0.1.8.2
 networkx==2.5
 geocoder==1.38.1
-numpy==1.21.0
+numpy==1.22.0
 lxml==4.9.2
 holidays==0.24
 yahooquery==2.2.15
