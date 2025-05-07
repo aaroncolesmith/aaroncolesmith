@@ -372,8 +372,8 @@ def app():
         df = pd.concat([df,dfs[i]])
     df=df.query('Score.notnull()')
 
-    df['Home'] = df['Home'].str.rsplit(' ', n=1).str[0]
-    df['Away'] = df['Away'].str.split(' ', n=1).str[1]
+    # df['Home'] = df['Home'].str.rsplit(' ', n=1).str[0]
+    # df['Away'] = df['Away'].str.split(' ', n=1).str[1]
 
     df.reset_index(drop=False,inplace=True)
     df['url'] = pd.Series(all_urls)
