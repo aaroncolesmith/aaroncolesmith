@@ -13,7 +13,206 @@ import plotly.graph_objects as go
 import functools as ft
 
 
+
+
+
 def quick_clstr(df, num_cols, str_cols, color):
+    df1=df.copy()
+    df1=df1[num_cols]
+
+    scaler = StandardScaler()
+    x_scaled = scaler.fit_transform(df1)
+
+    pca = PCA(n_components=2)
+    pca.fit(x_scaled)
+
+    x_pca = pca.transform(x_scaled)
+
+    kmeans = KMeans(n_clusters=5, random_state=2).fit_predict(x_pca)
+
+    p=pd.DataFrame(np.transpose(pca.components_[0:2, :]))
+    p=pd.merge(p,pd.DataFrame(np.transpose(num_cols)),left_index=True,right_index=True)
+    p.columns = ['x','y','field']
+
+    df['Cluster'] = kmeans.astype('str')
+    df['Cluster_x'] = x_pca[:,0]
+    df['Cluster_y'] = x_pca[:,1]
+    df['Cluster'] = pd.to_numeric(df['Cluster'])
+
+    pc=p.copy()
+    pc=pc[['x','y']]
+
+    scaler = StandardScaler()
+    x_scaled = scaler.fit_transform(pc)
+
+    pca = PCA(n_components=2)
+    pca.fit(x_scaled)
+
+    x_pca = pca.transform(x_scaled)
+
+    num_clusters=3
+    if len(num_cols) == 2:
+        num_clusters=2
+
+    kmeans = KMeans(n_clusters=num_clusters, random_state=2).fit_predict(x_pca)
+
+    p['Cluster'] = kmeans.astype('str')
+    p['Cluster_x'] = x_pca[:,0]
+    p['Cluster_y'] = x_pca[:,1]
+    p['Cluster'] = pd.to_numeric(p['Cluster'])
+
+    pviz=p.groupby(['Cluster']).agg({'field' : lambda x: ', '.join(x),'x':'mean','y':'mean'}).reset_index()
+
+    mean_x = p['x'].mean()
+    mean_y = p['y'].mean()
+
+    x_factor = (df.Cluster_x.max() / p.x.max())*.75
+    y_factor = (df.Cluster_y.max() / p.y.max())*.75
+
+    p['x'] = p['x'].round(2)
+    p['y'] = p['y'].round(2)
+
+    p['distance'] = np.sqrt((p['x'] - mean_x)**2 + (p['y'] - mean_y)**2)
+    p['distance_from_zero'] = np.sqrt((p['x'] - 0)**2 + (p['y'] - 0)**2)
+
+    dvz=pd.DataFrame()
+    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).head(5)])
+    dvz=pd.concat([dvz,p.sort_values('x',ascending=True).tail(5)])
+    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).head(5)])
+    dvz=pd.concat([dvz,p.sort_values('y',ascending=True).tail(5)])
+    dvz=dvz.drop_duplicates()
+
+    # key_vals=p.sort_values('distance_from_zero',ascending=False).head(20).field.tolist()
+    key_vals=dvz.field.tolist()
+
+
+
+    df[color] = df[color].astype('str')
+
+
+
+
+
+    # Predefined list of hex colors
+    hex_colors = ['#ffd900', '#ff2a00', '#35d604', '#59ffee', '#1d19ff','#ff19fb']
+
+    # Function to generate a random hex color
+    def generate_random_hex_color():
+        return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+    # Get unique values from the color column
+    unique_values = df[color].unique()
+
+    # If there are more unique values than predefined colors, generate additional random colors
+    while len(hex_colors) < len(unique_values):
+        hex_colors.append(generate_random_hex_color())
+
+    # Create a dictionary to map unique values to colors (this is your discrete color map)
+    discrete_color_map = {value: hex_colors[i] for i, value in enumerate(unique_values)}
+
+    # Apply the color mapping to the dataframe
+    df['assigned_color'] = df[color].map(discrete_color_map)
+
+    # color_discrete_map
+
+    fig=px.scatter(df,
+                   x='Cluster_x',
+                   y='Cluster_y',
+                   width=800,
+                   height=800,
+                   color=color,
+                   color_discrete_map = discrete_color_map,
+                #    color_discrete_sequence=marker_color,
+                   hover_data=str_cols+key_vals,
+                   category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
+                  )
+    fig.update_layout(legend_title_text=color,
+            font_family='Futura',
+            height=800,
+            font_color='black',
+                      
+                      )
+
+
+    dvz['x']=dvz['x'].round(1)
+    dvz['y']=dvz['y'].round(1)
+    # for i, r in p.sort_values('distance_from_zero',ascending=False).head(20).groupby(['x','y',]).agg(field=('field', lambda x: '<br>'.join(x))).reset_index().iterrows():
+    for i,r in dvz.groupby(['x','y',]).agg(field=('field', lambda x: '<br>'.join(x))).reset_index().iterrows():
+            x_val = r['x']*x_factor
+            y_val = r['y']*y_factor
+
+            if x_val < df.Cluster_x.min():
+                x_val = df.Cluster_x.min()
+            if x_val > df.Cluster_x.max():
+                x_val = df.Cluster_x.max()
+
+            if y_val < df.Cluster_y.min():
+                y_val = df.Cluster_y.min()
+            if y_val > df.Cluster_y.max():
+                y_val = df.Cluster_y.max()
+
+            fig.add_annotation(
+                x=x_val,
+                y=y_val,
+                text=r['field'],
+                showarrow=False,
+                # bgcolor="#F5F5F5",
+                opacity=.25,
+                font=dict(
+                    color="black",
+                    size=12
+                    )
+                )
+    fig.update_traces(mode='markers',
+                      opacity=.75,
+                      marker=dict(size=16,line=dict(width=2,color='DarkSlateGrey'))
+                      )
+    fig.update_xaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
+    fig.update_yaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
+
+    for i in range(0,len(fig.data)):
+        default_template = fig.data[i].hovertemplate
+        updated_template = default_template.replace('=', ': ')
+        fig.data[i].hovertemplate = updated_template
+
+    st.plotly_chart(fig,use_container_width=True)
+    # st.write(fig.data[0]['hovertemplate'])
+
+    for val in dvz.sort_values('distance_from_zero',ascending=False).field.tolist():
+       fig=px.bar(df.sort_values(val,ascending=False),
+                  x='Player',
+                  color=color,
+                  color_discrete_map = discrete_color_map,
+                  y=val,
+                  category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
+                  )
+       fig.update_xaxes(categoryorder='total descending')
+       fig.update_traces(marker=dict(
+        #    color='lightblue',    
+           line=dict(color='navy', width=2) 
+           )
+       )
+       fig.update_layout(
+           height=800,
+           title=val,
+        font=dict(
+        family='Futura',  # Set font to Futura
+        size=12,          # You can adjust the font size if needed
+        color='black' 
+        ))
+       
+       for i in range(0,len(fig.data)):
+        default_template = fig.data[i].hovertemplate
+        updated_template = default_template.replace('=', ': ')
+        fig.data[i].hovertemplate = updated_template
+    
+
+       st.plotly_chart(fig,use_container_width=True)
+
+
+
+
+def quick_clstr_bak(df, num_cols, str_cols, color):
     df1=df.copy()
     df1=df1[num_cols]
 
@@ -172,6 +371,10 @@ def app():
     for i in range(1, len(dfs)):
         df = pd.concat([df,dfs[i]])
     df=df.query('Score.notnull()')
+
+    df['Home'] = df['Home'].str.rsplit(' ', n=1).str[0]
+    df['Away'] = df['Away'].str.split(' ', n=1).str[1]
+
     df.reset_index(drop=False,inplace=True)
     df['url'] = pd.Series(all_urls)
     df['match_selector'] = df['Home']+' '+df['Score']+' '+df['Away']
@@ -189,6 +392,7 @@ def app():
 
     team_two = soup.select("#content > div.scorebox > div:nth-child(2) > div:nth-child(1) > strong > a")
     team_two=team_two[0].text
+
 
     dfs = [pd.read_html(r.content)[3],pd.read_html(r.content)[4],pd.read_html(r.content)[5],pd.read_html(r.content)[6],pd.read_html(r.content)[7],pd.read_html(r.content)[8]]
 
@@ -439,6 +643,7 @@ def app():
             "performance_pkcon":"pk_conceded",
             "performance_og":"own_goals",
             "performance_recov":"balls_recovered",
+            'player':'Player'
         },
              inplace=True)
 
@@ -476,18 +681,20 @@ def app():
             
     # c1,c2,c3 = st.columns(3)
         num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
-        non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['player'])
+        non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['Player'])
         list_one=['Cluster']
         list_two=d.columns.tolist()
         color_options=list_one+list_two
 
         color_select=st.selectbox('What attribute should color points on the graph?',color_options)
+
+        mp_filter=st.slider('Filter players by minimum minutes played?', min_value=0, max_value=d['min'].max(), value=0, step=1)
+        d=d.query("min > @mp_filter")
+
         submit_button = st.form_submit_button(label='Submit')
 
-    # for color in num_cols:
-    #   p=quick_clstr(d.fillna(0), num_cols, non_num_cols, color)
-
-    quick_clstr(d.fillna(0), num_cols_select, non_num_cols_select, color_select)
+    if submit_button:
+        quick_clstr(d.fillna(0), num_cols_select, non_num_cols_select, color_select)
 
 
 

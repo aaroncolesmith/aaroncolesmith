@@ -164,6 +164,11 @@ def quick_clstr(df, num_cols, str_cols, color):
                       )
     fig.update_xaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
     fig.update_yaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
+
+    default_template = fig.data[0].hovertemplate
+    updated_template = default_template.replace('=', ': ')
+    fig.update_traces(hovertemplate=updated_template)
+
     st.plotly_chart(fig,use_container_width=True)
     # st.write(fig.data[0]['hovertemplate'])
 
@@ -182,11 +187,17 @@ def quick_clstr(df, num_cols, str_cols, color):
            )
        )
        fig.update_layout(
+           height=800,
+           title=val,
         font=dict(
         family='Futura',  # Set font to Futura
         size=12,          # You can adjust the font size if needed
         color='black' 
         ))
+       
+       default_template = fig.data[0].hovertemplate
+       updated_template = default_template.replace('=', ': ')
+       fig.update_traces(hovertemplate=updated_template)
     
 
        st.plotly_chart(fig,use_container_width=True)
@@ -243,60 +254,6 @@ def app():
         df['+/-'] = pd.to_numeric(df['+/-'].astype('str').str.replace('+',''))
     except:
         pass
-    # st.write(df)
-
-    # with st.form(key='game_select_form'):
-    #     game_select = st.selectbox('Select a match: ', games)
-
-
-
-    # r = requests.get(f'https://www.basketball-reference.com/leagues/NBA_{season}_games-{month.lower()}.html')
-    # if r.status_code==200:
-    #     soup = BeautifulSoup(r.content, 'html.parser')
-    #     table = soup.find('table', attrs={'id': 'schedule'})
-    #     if table:
-    #         df = pd.read_html(str(table))[0]
-    #         # game_id = []
-    #         # game_url = []
-    #         for row in table.findAll('tr'):
-    #             try:
-    #                 if 'csk' in str(row):
-    #                     game_id.append(str(row).split('csk="')[1].split('"')[0])
-    #                     game_url.append(str(row).split('data-stat="box_score_text"><a href="')[1].split('"')[0])
-    #                     # visitor_team.append(str(row).split('data-stat="visitor_team_name"><a href="/teams/')[1].split('/')[0])
-    #                     # home_team.append(str(row).split('data-stat="home_team_name"><a href="/teams/')[1].split('/')[0])
-    #                     # visitor_score.append(str(row).split('data-stat="visitor_pts">')[1].split('<')[0])
-    #                     # home_score.append(str(row).split('data-stat="home_pts">')[1].split('<')[0])
-    #             except:
-    #                 pass
-    #         df['game_id'] = game_id
-    #         game_url_df = pd.DataFrame({'game_url':game_url})
-    #         df=pd.concat([df,game_url_df],axis=1)
-    #         df.columns=['date','time','visitor','visitor_pts','home','home_pts','del_1','del_2','attendance','arena','notes','game_id','game_url']
-    #         df = df.loc[df.home_pts>0]
-    #         df['visitor_pts']=df['visitor_pts'].astype('str').str.replace('\.0','',regex=True)
-    #         df['home_pts']=df['home_pts'].astype('str').str.replace('\.0','',regex=True)
-    #         for col in df.columns:
-    #             if 'del' in col:
-    #                 del df[col]
-    # df['game_string'] = df['visitor'] + ' ' + df['visitor_pts'].astype('str') + ' - ' + df['home'] + ' ' + df['home_pts'].astype('str')
-
-    # games=df['game_string'].tolist()
-
-    # with st.form(key='game_select_form'):
-    #     game_select = st.selectbox('Select a match: ', games)
-
-    #     submit_button = st.form_submit_button(label='Submit')
-
-    # game_id=df.query('game_string == @game_select').game_id.min()
-    # visiting_team=df.query('game_string == @game_select').visitor.min()
-    # home_team=df.query('game_string == @game_select').home.min()
-
-    # if submit_button:
-    #     d=get_box_score(game_id,visiting_team,home_team)
-
-
-    #     st.write(d.head(3))
 
     df.rename(columns={
             "3par":"3pa Rate",
@@ -343,6 +300,8 @@ def app():
             "fga":"Field Goals Attempted",
             "fg_pct":"Field Goal Pct",
             "ortg":"Off Rtg",
+            "gmsc":"Game Score",
+            "3p_pct":'3p Pct'
         },
             inplace=True)
 

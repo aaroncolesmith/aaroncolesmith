@@ -368,6 +368,12 @@ def app():
 
     st.title('NFL Mock Draft Database')
     posthog.capture('test-id', 'load-mock-draft-db')
+    # st.write(st.context)
+    # client_ip = st.context.request_ip
+    # st.write(client_ip)
+    # st.write(st.context)
+    # st.write(st.context.cookies)
+    # st.write(st.context.headers)
     
     req = requests.get('https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/last_updated.txt')
     # last_update = (datetime.datetime.utcnow() - pd.to_datetime(req.text)).total_seconds()
