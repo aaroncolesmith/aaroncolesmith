@@ -158,7 +158,7 @@ def app():
             'win',
             'no bet'
         ],
-        default='loss'
+        default='default_value'
     )
 
     todays_games['predicted_spread_home'] = todays_games['away_score_pred'] - todays_games['home_score_pred']
@@ -188,7 +188,7 @@ def app():
             'win',
             'no bet'
         ],
-        # default='loss'
+        default='default_value'
     )
 
     st.dataframe(todays_games[['start_time_pt','status','home_team','away_team','spread_home','predicted_spread_home','odds_adjusted_spread_home',
