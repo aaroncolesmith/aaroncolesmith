@@ -145,18 +145,20 @@ def app():
         )
     )
 
-    todays_games['total_result'] = np.where(
-        (todays_games['total_bet'] == 'bet the over') & (todays_games['total_score'] > todays_games['total']),
-        'win',
-        np.where(
+    todays_games['total_result'] = np.select(
+        [
+            todays_games['status'] != 'complete',
+            (todays_games['total_bet'] == 'bet the over') & (todays_games['total_score'] > todays_games['total']),
             (todays_games['total_bet'] == 'bet the under') & (todays_games['total_score'] < todays_games['total']),
+            todays_games['total_bet'] == 'no bet'
+        ],
+        [
+            'game not complete',
             'win',
-            np.where(
-                (todays_games['total_bet'] == 'no bet'),
-                'no bet',
-                'loss'
-            )
-        )
+            'win',
+            'no bet'
+        ],
+        default='loss'
     )
 
     todays_games['predicted_spread_home'] = todays_games['away_score_pred'] - todays_games['home_score_pred']
@@ -173,19 +175,22 @@ def app():
         )
     )
 
-    todays_games['spread_home_result'] = np.where(
-        (todays_games['spread_home_diff'] > 0) & (todays_games['home_score'] > todays_games['away_score']),
-        'win',
-        np.where(
+    todays_games['spread_home_result'] = np.select(
+        [
+            todays_games['status'] != 'complete',
+            (todays_games['spread_home_diff'] > 0) & (todays_games['home_score'] > todays_games['away_score']),
             (todays_games['spread_home_diff'] < 0) & (todays_games['home_score'] < todays_games['away_score']),
+            todays_games['spread_home_diff'] == 0
+        ],
+        [
+            'game not complete',
             'win',
-            np.where(
-                (todays_games['spread_home_diff'] == 0),
-                'no bet',
-                'loss'
-            )
-        )
+            'win',
+            'no bet'
+        ],
+        # default='loss'
     )
+
     st.dataframe(todays_games[['start_time_pt','status','home_team','away_team','spread_home','predicted_spread_home','odds_adjusted_spread_home',
                           
                           
