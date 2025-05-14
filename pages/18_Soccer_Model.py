@@ -228,31 +228,12 @@ def app():
                           ]
     )
 
-
-    fig = px.bar(todays_games.sort_values('predicted_spread_home_diff', ascending=False),
-      y='predicted_spread_home_diff',
-      x='match_title',
-      color='spread_home_bet',
-      hover_name='match_title',
-      hover_data=['predicted_score','odds_adjusted_score','actual_score'],
-    template = 'simple_white',
-    color_discrete_sequence=['lightblue','gray','coral'],
-        text_auto=True,
-        orientation = 'v')
-    # fig.update_xaxes(tickformat = ',.1%')
-    fig.update_traces(marker=dict(
-        # color=['lightblue','red','gray'],        # Fill color of the bars
-        line=dict(color='navy', width=2)  # Outline color and thickness
-    ),texttemplate = "%{value:.2f}"
-    )
-    fig.update_layout(
-            font=dict(
-            family='Futura',  # Set font to Futura
-            size=12,          # You can adjust the font size if needed
-            color='black'     # Font color
-        ),
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(todays_games[selected_columns],
+                use_container_width=True,
+                hide_index=True,
+                )
+    
+    
 
 
 
