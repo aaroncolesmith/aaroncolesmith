@@ -41,13 +41,32 @@ def dog_payout(ml):
   return ml/100
 
 
+def load_model(model):
+    if model == 'first_model':
+        loaded_model = pickle.load(open('models/xgboost_model.pkl', 'rb'))
+        loaded_feat_list = pickle.load(open('models/feat_list.pkl', 'rb'))
+        loaded_preprocessor = pickle.load(open('models/score_preprocessor.pkl', 'rb'))
+    elif model == 'logistic':
+        loaded_model = pickle.load(open('models/logistic_model.pkl', 'rb'))
+        loaded_feat_list = pickle.load(open('models/feat_list_logistic.pkl', 'rb'))
+        loaded_preprocessor = pickle.load(open('models/score_preprocessor_logistic.pkl', 'rb'))
+    return loaded_model, loaded_feat_list, loaded_preprocessor
+
+
+
+
 def app():
     st.title('Soccer Model')
     df = load_data()
+    c1,c2=st.columns([1,3])
+    model = c1.selectbox(
+        'Select a model to use',
+        options=['first_model'],
+        index=0
+    )
+    loaded_model, loaded_feat_list, loaded_preprocessor = load_model(model)
 
-    loaded_model = pickle.load(open('models/xgboost_model.pkl', 'rb'))
-    loaded_feat_list = pickle.load(open('models/feat_list.pkl', 'rb'))
-    loaded_preprocessor = pickle.load(open('models/score_preprocessor.pkl', 'rb'))
+
 
     
     df_clean = df[loaded_feat_list]
@@ -66,53 +85,55 @@ def app():
     df['away_score_pred_correct'] = np.where(df['away_score_pred_rounded']==df['away_score'],1,0)
     df['both_score_pred_correct'] = np.where((df['home_score_pred_rounded']==df['home_score']) & (df['away_score_pred_rounded']==df['away_score']),1,0)
     df['predicted_total'] = df['home_score_pred']+df['away_score_pred']
+    df['predicted_total_diff'] = df['predicted_total'] - df['odds_adjusted_total']
     upper_band = (df['predicted_total'] - df['total']).quantile(.75)
     lower_band = (df['predicted_total'] - df['total']).quantile(.25)
     if lower_band > 0:
         lower_band = -.35
     df['model_bet_over'] = np.where(
-        (df['predicted_total'] - df['total']) > upper_band,
+        (df['predicted_total_diff']) > upper_band,
         1,
         np.nan
     )
     df['model_bet_under'] = np.where(
-        (df['predicted_total'] - df['total']) < lower_band,
+        (df['predicted_total_diff']) < lower_band,
         1,
         np.nan
     )
     df['model_bet_over_payout'] = np.where(
-        (df['predicted_total'] - df['total']) > upper_band,
+        (df['predicted_total_diff']) > upper_band,
         df['over_payout'],
         np.nan
     )
     df['model_bet_under_payout'] = np.where(
-        (df['predicted_total'] - df['total']) < lower_band,
+        (df['predicted_total_diff']) < lower_band,
         df['under_payout'],
         np.nan
     )
     df['spread_home_pred'] = df['away_score_pred'] - df['home_score_pred']
     df['odds_adjusted_spread_home'] = df['spread_home']*((1-df['spread_home_line'].apply(get_prob))+.5)
-    df['spread_home_diff'] = df['odds_adjusted_spread_home'] - df['spread_home_pred']
-    upper_band = df['spread_home_diff'].quantile(.75)
-    lower_band = df['spread_home_diff'].quantile(.25)
+    df['predicted_spread_home_diff'] = df['odds_adjusted_spread_home'] - df['spread_home_pred']
+    df['match_title'] = df['away_team'] + ' @ ' + df['home_team']
+    upper_band = df['predicted_spread_home_diff'].quantile(.75)
+    lower_band = df['predicted_spread_home_diff'].quantile(.25)
 
     df['model_bet_home_cover'] = np.where(
-        df['spread_home_diff'] > upper_band,
+        df['predicted_spread_home_diff'] > upper_band,
         1,
         np.nan
     )
     df['model_bet_away_cover'] = np.where(
-        df['spread_home_diff'] < lower_band,
+        df['predicted_spread_home_diff'] < lower_band,
         1,
         np.nan
     )
     df['model_bet_home_payout'] = np.where(
-        df['spread_home_diff'] > upper_band,
+        df['predicted_spread_home_diff'] > upper_band,
         df['spread_home_payout'],
         np.nan
     )
     df['model_bet_away_payout'] = np.where(
-        df['spread_home_diff'] < lower_band,
+        df['predicted_spread_home_diff'] < lower_band,
         df['spread_away_payout'],
         np.nan
     )
@@ -162,14 +183,15 @@ def app():
     )
 
     todays_games['predicted_spread_home'] = todays_games['away_score_pred'] - todays_games['home_score_pred']
-    todays_games['odds_adjusted_spread_home'] = todays_games['spread_home']*((1-todays_games['spread_home_line'].apply(get_prob))+.5)
-    todays_games['spread_home_diff'] = todays_games['odds_adjusted_spread_home'] - todays_games['predicted_spread_home']
+    todays_games['odds_adjusted_score_home'] = (todays_games['odds_adjusted_total'] / 2) - (todays_games['odds_adjusted_spread_home'] / 2)
+    todays_games['odds_adjusted_score_away'] = (todays_games['odds_adjusted_total'] / 2) + (todays_games['odds_adjusted_spread_home'] / 2)
+    todays_games['odds_adjusted_score'] = todays_games['odds_adjusted_score_home'].round(2).astype(str) + ' - ' + todays_games['odds_adjusted_score_away'].round(2).astype(str)
 
     todays_games['spread_home_bet'] = np.where(
-        (todays_games['spread_home_diff'] > .25),
+        (todays_games['predicted_spread_home_diff'] > .25),
         'bet the home team',
         np.where(
-            (todays_games['spread_home_diff'] < -.25),
+            (todays_games['predicted_spread_home_diff'] < -.25),
             'bet the away team',
             'no bet'
         )
@@ -178,9 +200,9 @@ def app():
     todays_games['spread_home_result'] = np.select(
         [
             todays_games['status'] != 'complete',
-            (todays_games['spread_home_diff'] > 0) & (todays_games['home_score'] > todays_games['away_score']),
-            (todays_games['spread_home_diff'] < 0) & (todays_games['home_score'] < todays_games['away_score']),
-            todays_games['spread_home_diff'] == 0
+            (todays_games['predicted_spread_home_diff'] > 0) & (todays_games['home_score'] > todays_games['away_score']),
+            (todays_games['predicted_spread_home_diff'] < 0) & (todays_games['home_score'] < todays_games['away_score']),
+            todays_games['predicted_spread_home_diff'] == 0
         ],
         [
             'game not complete',
@@ -191,50 +213,74 @@ def app():
         default='default_value'
     )
 
-    st.dataframe(todays_games[['start_time_pt','status','home_team','away_team','spread_home','predicted_spread_home','odds_adjusted_spread_home',
-                          
-                          
-                          'spread_home_diff',
-                          'spread_home_bet','spread_home_result',
-                          'predicted_score','actual_score']],
-                use_container_width=True,
-                hide_index=True,)
 
-    st.dataframe(todays_games[['start_time_pt','status','home_team','away_team','home_score','home_score_pred','away_score','away_score_pred',
-                'total','predicted_total',
-                'model_bet_over','model_bet_under','model_bet_home_cover','model_bet_away_cover',
-                'home_win_last_10','away_win_last_10'
-                ]],
-                use_container_width=True,
-                hide_index=True,
-                )
-    
-    fig = px.scatter(todays_games,
-                x='odds_adjusted_total',
-                y='predicted_total',
-                color='total_bet',
-                hover_name='home_team',
-                hover_data=['total','home_score','away_score','total_result'],
-                title=f"Predicted Score for {date_selector}",
-                )
-    fig.update_traces(marker=dict(size=12,
-                                line=dict(width=2,
-                                          color='DarkSlateGrey')),
-                      selector=dict(mode='markers'))
+
+
+
+
+    ## select which columns to show in a dataframe
+    selected_columns = st.multiselect(
+        "Select columns to display",
+        options=todays_games.columns.tolist(),
+        default=['start_time_pt','status','match_title','spread_home','predicted_spread_home',
+                 'odds_adjusted_spread_home','predicted_spread_home_diff','predicted_total','odds_adjusted_total',
+                 'predicted_total_diff','spread_home_bet','spread_home_result','predicted_score','actual_score','odds_adjusted_score'
+                          ]
+    )
+
+
+    fig = px.bar(todays_games.sort_values('predicted_spread_home_diff', ascending=False),
+      y='predicted_spread_home_diff',
+      x='match_title',
+      color='spread_home_bet',
+      hover_name='match_title',
+      hover_data=['predicted_score','odds_adjusted_score','actual_score'],
+    template = 'simple_white',
+    color_discrete_sequence=['lightblue','gray','coral'],
+        text_auto=True,
+        orientation = 'v')
+    # fig.update_xaxes(tickformat = ',.1%')
+    fig.update_traces(marker=dict(
+        # color=['lightblue','red','gray'],        # Fill color of the bars
+        line=dict(color='navy', width=2)  # Outline color and thickness
+    ),texttemplate = "%{value:.2f}"
+    )
     fig.update_layout(
-        height=800,
-        width=800,
-        legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ))
-    fig.update_yaxes(title_text='Total Score Predicted')
-    fig.update_xaxes(title_text='Odds Adjusted Total')
-    st.plotly_chart(fig, use_container_width=False)
+            font=dict(
+            family='Futura',  # Set font to Futura
+            size=12,          # You can adjust the font size if needed
+            color='black'     # Font color
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
+
+
+    ## do the same thing as above but for the total score
+    fig = px.bar(todays_games.sort_values('predicted_total_diff', ascending=False),
+      y='predicted_total_diff',
+      x='match_title',
+      color='total_bet',
+      hover_name='match_title',
+      hover_data=['predicted_score','odds_adjusted_score','actual_score'],
+    template = 'simple_white',
+    color_discrete_sequence=['lightblue','gray','coral'],
+        text_auto=True,
+        orientation = 'v')
+    # fig.update_xaxes(tickformat = ',.1%')
+    fig.update_traces(marker=dict(
+        # color=['lightblue','red','gray'],        # Fill color of the bars
+        line=dict(color='navy', width=2)  # Outline color and thickness
+    ),texttemplate = "%{value:.2f}"
+    )
+    fig.update_layout(
+            font=dict(
+            family='Futura',  # Set font to Futura
+            size=12,          # You can adjust the font size if needed
+            color='black'     # Font color
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
     with st.expander("Show all data", expanded=False):
