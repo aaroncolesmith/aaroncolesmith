@@ -165,9 +165,10 @@ def quick_clstr(df, num_cols, str_cols, color):
     fig.update_xaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
     fig.update_yaxes(visible=True, zeroline=True, showgrid=True, showticklabels=False, title='')
 
-    default_template = fig.data[0].hovertemplate
-    updated_template = default_template.replace('=', ': ')
-    fig.update_traces(hovertemplate=updated_template)
+    for i in range(0,len(fig.data)):
+        default_template = fig.data[i].hovertemplate
+        updated_template = default_template.replace('=', ': ')
+        fig.data[i].hovertemplate = updated_template
 
     st.plotly_chart(fig,use_container_width=True)
     # st.write(fig.data[0]['hovertemplate'])
@@ -195,9 +196,10 @@ def quick_clstr(df, num_cols, str_cols, color):
         color='black' 
         ))
        
-       default_template = fig.data[0].hovertemplate
-       updated_template = default_template.replace('=', ': ')
-       fig.update_traces(hovertemplate=updated_template)
+       for i in range(0,len(fig.data)):
+        default_template = fig.data[i].hovertemplate
+        updated_template = default_template.replace('=', ': ')
+        fig.data[i].hovertemplate = updated_template
     
 
        st.plotly_chart(fig,use_container_width=True)
@@ -222,38 +224,112 @@ def app():
         page_icon='dog',
         layout='wide'
         )
-    
+    st.title('NBA Game Viz')
     code='1_0FAJsULjo-gz2pvy365dQNqbo1ORDMU'
     d1=load_google_file(code)
-    # st.write(d1.tail(10))
     code='1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk'
     d2=load_google_file(code)
-    # st.write(d2.tail(10))
 
-    c1,c2=st.columns([1,3])
-    date = c1.date_input(
-        "Select a date / month for games",
-        value=pd.to_datetime(d1.date.max()),
-        min_value=pd.to_datetime('1966-02-19'),
-        max_value=pd.to_datetime(d1.date.max())
-        )
+    version_selector = st.selectbox(
+        'Select a version of the data',
+        options=['Single Game','Date Range'],
+        index=0)
 
-    # date='2023-08-14'
-    date=pd.to_datetime(date)
 
-    # st.write(d1.loc[d1.date == date])
-    d1['game_str'] = d1['date'].dt.strftime('%Y-%m-%d') + ' - ' + d1['visitor_team'] + ' ' + d1['visitor_score'].astype('str')+'-'+d1['home_score'].astype('str')+' ' +d1['home_team']
-    games=d1.loc[d1.date == date]['game_str'].tolist()
-    game_select = c2.selectbox('Select a game: ', games)
+    if version_selector == 'Single Game':
+        c1,c2=st.columns([1,3])
+        date = c1.date_input(
+            "Select a date / month for games",
+            value=pd.to_datetime(d1.date.max()),
+            min_value=pd.to_datetime('1966-02-19'),
+            max_value=pd.to_datetime(d1.date.max())
+            )
 
-    game_id = d1.loc[d1.game_str == game_select].game_id.min()
-    # st.write(game_id)
+        # date='2023-08-14'
+        date=pd.to_datetime(date)
 
-    df = d2.loc[d2.game_id==game_id]
-    try:
-        df['+/-'] = pd.to_numeric(df['+/-'].astype('str').str.replace('+',''))
-    except:
-        pass
+        # st.write(d1.loc[d1.date == date])
+        d1['game_str'] = d1['date'].dt.strftime('%Y-%m-%d') + ' - ' + d1['visitor_team'] + ' ' + d1['visitor_score'].astype('str')+'-'+d1['home_score'].astype('str')+' ' +d1['home_team']
+        games=d1.loc[d1.date == date]['game_str'].tolist()
+        game_select = c2.selectbox('Select a game: ', games)
+
+        game_id = d1.loc[d1.game_str == game_select].game_id.min()
+        # st.write(game_id)
+
+        df = d2.loc[d2.game_id==game_id]
+        try:
+            df['+/-'] = pd.to_numeric(df['+/-'].astype('str').str.replace('+',''))
+        except:
+            pass
+
+    elif version_selector == 'Date Range':
+        c1,c2,c3=st.columns([1,1,2])
+        start_date = c1.date_input(
+            "Select a start date",
+            value=pd.to_datetime(d1.date.max())-pd.DateOffset(months=1),
+            min_value=pd.to_datetime('1966-02-19'),
+            max_value=pd.to_datetime(d1.date.max())
+            )
+        end_date = c2.date_input(
+            "Select an end date",
+            value=pd.to_datetime(d1.date.max()),
+            min_value=pd.to_datetime('1966-02-19'),
+            max_value=pd.to_datetime(d1.date.max())
+            )
+        start_date=pd.to_datetime(start_date)
+        end_date=pd.to_datetime(end_date)
+        df = d2.loc[(d2.date >= start_date) & (d2.date <= end_date)]
+        df = df.loc[df['mp'] > 0]
+        try:
+            df['+/-'] = pd.to_numeric(df['+/-'].astype('str').str.replace('+',''))
+
+        except:
+            pass
+
+        df['gmsc'] = pd.to_numeric(df['gmsc'])
+        df['bpm'] = pd.to_numeric(df['bpm'])
+        df['ortg'] = pd.to_numeric(df['ortg'])
+        df['drtg'] = pd.to_numeric(df['drtg'])
+        # st.write(df.loc[df.player == 'Lamar Stevens'])
+        df = df.groupby(['player']).agg(
+                                        team=('team',lambda x: ', '.join(set(x))),
+                                        mp=('mp','sum'),
+                                        gp=('game_id','nunique'),
+                                        fg=('fg','sum'),
+                                        fga=('fga','sum'),
+                                        threep=('3p','sum'),
+                                        threepa=('3pa','sum'),
+                                        ft=('ft','sum'),
+                                        fta=('fta','sum'),
+                                        pts=('pts','sum'),
+                                        ast=('ast','sum'),
+                                        trb=('trb','sum'),
+                                        stl=('stl','sum'),
+                                        blk=('blk','sum'),
+                                        orb=('orb','sum'),
+                                        drb=('drb','sum'),
+                                        bpm=('bpm','sum'),
+                                        tov=('tov','sum'),
+                                        gmsc=('gmsc','mean'),
+                                        orgt=('ortg','mean'),
+                                        drtg=('drtg','mean'),
+        ).reset_index()
+        df['fg_pct'] = df['fg'] / df['fga']
+        df['3p_pct'] = df['threep'] / df['threepa']
+        df['ft_pct'] = df['ft'] / df['fta']
+        df['ppg']   = df['pts'] / df['gp']
+        df['apg']   = df['ast'] / df['gp']
+        df['rpg']   = df['trb'] / df['gp']
+        df['spg']   = df['stl'] / df['gp']
+        df['bpg']   = df['blk'] / df['gp']
+        df['ppm']   = df['pts'] / df['mp']
+        df['apm']   = df['ast'] / df['mp']
+        df['rpm']   = df['trb'] / df['mp']
+        df['spm']   = df['stl'] / df['mp']
+
+        # st.write(df.head(10))
+
+
 
     df.rename(columns={
             "3par":"3pa Rate",
@@ -305,10 +381,6 @@ def app():
         },
             inplace=True)
 
-
-        # for x in d.columns:
-        #     if 'del_' in x:
-        #         del d[x]
 
     num_cols=[]
     non_num_cols=[]
