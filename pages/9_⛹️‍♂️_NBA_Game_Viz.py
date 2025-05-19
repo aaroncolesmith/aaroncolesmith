@@ -205,13 +205,13 @@ def quick_clstr(df, num_cols, str_cols, color):
        st.plotly_chart(fig,use_container_width=True)
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_data():
    df=pd.read_parquet('https://drive.google.com/file/d/1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk/view?usp=sharing', engine='pyarrow')
    return df
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_google_file(code):
     url = f"https://drive.google.com/uc?export=download&id={code}"
     file = requests.get(url)
