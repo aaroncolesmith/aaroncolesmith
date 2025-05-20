@@ -22,8 +22,7 @@ posthog = Posthog(
 
 def get_closest_players(df, player_name, n=25):
     # Get the Cluster_x and Cluster_y values for the given player
-    # st.write(player_name)
-    # st.write(df.head(3))
+
     player_data = df[df['player'] == player_name][['Cluster_x', 'Cluster_y']].values
     if len(player_data) == 0:
         return f"Player '{player_name}' not found in the dataframe."
@@ -248,9 +247,9 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
     fig.update_traces(hovertemplate=updated_template)
 
-    st.write('**5 Closest Players**')
-    for i,r in closest_players.head(5).iterrows():
-        st.write(f"{r['player']}: {round(r['distance'],2)}")
+    # st.write('**5 Closest Players**')
+    # for i,r in closest_players.head(5).iterrows():
+    #     st.write(f"{r['player']}: {round(r['distance'],2)}")
     st.plotly_chart(fig)
     fig_scatter = fig
 
@@ -337,10 +336,8 @@ def app():
 
     code='1_0FAJsULjo-gz2pvy365dQNqbo1ORDMU'
     d1=load_google_file(code)
-    # st.write(d1.tail(10))
     code='1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk'
     d2=load_google_file(code)
-    # st.write(d2.tail(10))
 
     d = pd.merge(d2.loc[d2.player!='Eddie Johnson'],d1.loc[d1.game_type == 'Regular Season']).sort_values(by=['date', 'player']).copy()
 
@@ -539,7 +536,7 @@ def app():
         if player in df_clstr['player'].unique().tolist():
             df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
 
-            st.write(df_results)
+
         else:
             st.write('Adjust your filters because you have filtered out your player')
 
