@@ -254,7 +254,13 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     fig_scatter = fig
 
 
-    df_closest = df.sort_values('distance',ascending=True).head(10)
+    closest_player_select = st.multiselect('Closest Players',
+                                           df.sort_values('distance',ascending=True).head(100)['player'].tolist(),
+                                           df.sort_values('distance',ascending=True).head(10)['player'].tolist()
+                                           )
+
+
+    df_closest = df.loc[df['player'].isin(closest_player_select)].sort_values('distance',ascending=True).copy()
     # df_closest[key_vals] = scaler.fit_transform(df_closest[key_vals])
 
 
@@ -373,6 +379,7 @@ def app():
         'Off Rtg',
         'Def Rtg',
         'Missed Shots',
+        'Missed Shots Per Game',
         'Pts + Reb + Ast',
         'Points Per Game',
         'Field Goal Pct',
@@ -414,131 +421,133 @@ def app():
         num_cols_select = st.multiselect('Which stats should be used?',num_cols,num_cols)
         giddy_up = st.form_submit_button('Giddy Up')
 
-    if giddy_up:
-        posthog.capture('test-id', f'nba_player_similarity_{player}')
-        df_filtered = d.groupby('player').head(games_played_select)
-        df_agg = df_filtered.groupby(['player']).agg(
-            games_played=('game_id','count'),
-            mp=('mp','sum'),
-            fg=('fg','sum'),
-            fga=('fga','sum'),
-            fg3=('3p','sum'),
-            fg3a=('3pa','sum'),
-            ft=('ft','sum'),
-            fta=('fta','sum'),
-            orb=('orb','sum'),
-            drb=('drb','sum'),
-            trb=('trb','sum'),
-            ast=('ast','sum'),
-            stl=('stl','sum'),
-            blk=('blk','sum'),
-            tov=('tov','sum'),
-            pf=('pf','sum'),
-            pts=('pts','sum'),
-            plus_minus=('+/-','sum'),
-            box_plus_minus=('bpm','sum'),
-            ts_pct=('ts_pct','mean'),
-            efg_pct=('efg_pct','mean'),
-            three_par = ('3par','mean'),
-            orb_pct = ('orb_pct','mean'),
-            drb_pct = ('drb_pct','mean'),
-            trb_pct = ('trb_pct','mean'),
-            ast_pct = ('ast_pct','mean'),
-            stl_pct = ('stl_pct','mean'),
-            blk_pct = ('blk_pct','mean'),
-            tov_pct = ('tov_pct','mean'),
-            usg_pct = ('usg_pct','mean'),
-            ortg = ('ortg','mean'),
-            drtg = ('drtg','mean'),
-            missed_shots=('missed_shots','sum'),
-            all_stat=('all_stat','sum'),
-        ).reset_index()
+    # if giddy_up:
+    posthog.capture('test-id', f'nba_player_similarity_{player}')
+    df_filtered = d.groupby('player').head(games_played_select)
+    df_agg = df_filtered.groupby(['player']).agg(
+        games_played=('game_id','count'),
+        mp=('mp','sum'),
+        fg=('fg','sum'),
+        fga=('fga','sum'),
+        fg3=('3p','sum'),
+        fg3a=('3pa','sum'),
+        ft=('ft','sum'),
+        fta=('fta','sum'),
+        orb=('orb','sum'),
+        drb=('drb','sum'),
+        trb=('trb','sum'),
+        ast=('ast','sum'),
+        stl=('stl','sum'),
+        blk=('blk','sum'),
+        tov=('tov','sum'),
+        pf=('pf','sum'),
+        pts=('pts','sum'),
+        plus_minus=('+/-','sum'),
+        box_plus_minus=('bpm','sum'),
+        ts_pct=('ts_pct','mean'),
+        efg_pct=('efg_pct','mean'),
+        three_par = ('3par','mean'),
+        orb_pct = ('orb_pct','mean'),
+        drb_pct = ('drb_pct','mean'),
+        trb_pct = ('trb_pct','mean'),
+        ast_pct = ('ast_pct','mean'),
+        stl_pct = ('stl_pct','mean'),
+        blk_pct = ('blk_pct','mean'),
+        tov_pct = ('tov_pct','mean'),
+        usg_pct = ('usg_pct','mean'),
+        ortg = ('ortg','mean'),
+        drtg = ('drtg','mean'),
+        missed_shots=('missed_shots','sum'),
+        all_stat=('all_stat','sum'),
+    ).reset_index()
 
-        df_agg['ppg'] = df_agg['pts']/df_agg['games_played']
-        df_agg['fg_pct'] = df_agg['fg']/df_agg['fga']
-        df_agg['3p_pct'] = df_agg['fg3']/df_agg['fg3a']
-        df_agg['ft_pct'] = df_agg['ft']/df_agg['fta']
-        df_agg['rpg'] = df_agg['trb']/df_agg['games_played']
-        df_agg['apg'] = df_agg['ast']/df_agg['games_played']
-        df_agg['spg'] = df_agg['stl']/df_agg['games_played']
-        df_agg['bpg'] = df_agg['blk']/df_agg['games_played']
-        df_agg['tovpg'] = df_agg['tov']/df_agg['games_played']
+    df_agg['ppg'] = df_agg['pts']/df_agg['games_played']
+    df_agg['fg_pct'] = df_agg['fg']/df_agg['fga']
+    df_agg['3p_pct'] = df_agg['fg3']/df_agg['fg3a']
+    df_agg['ft_pct'] = df_agg['ft']/df_agg['fta']
+    df_agg['rpg'] = df_agg['trb']/df_agg['games_played']
+    df_agg['apg'] = df_agg['ast']/df_agg['games_played']
+    df_agg['spg'] = df_agg['stl']/df_agg['games_played']
+    df_agg['bpg'] = df_agg['blk']/df_agg['games_played']
+    df_agg['tovpg'] = df_agg['tov']/df_agg['games_played']
 
-        df_agg['ppm'] = 36*(df_agg['pts']/df_agg['mp'])
-        df_agg['rpm'] = 36*(df_agg['trb']/df_agg['mp'])
-        df_agg['apm'] = 36*(df_agg['ast']/df_agg['mp'])
-        df_agg['spm'] = 36*(df_agg['stl']/df_agg['mp'])
-        df_agg['bpm'] = 36*(df_agg['blk']/df_agg['mp'])
-        df_agg['tovpm'] = 36*(df_agg['tov']/df_agg['mp'])
+    df_agg['ppm'] = 36*(df_agg['pts']/df_agg['mp'])
+    df_agg['rpm'] = 36*(df_agg['trb']/df_agg['mp'])
+    df_agg['apm'] = 36*(df_agg['ast']/df_agg['mp'])
+    df_agg['spm'] = 36*(df_agg['stl']/df_agg['mp'])
+    df_agg['bpm'] = 36*(df_agg['blk']/df_agg['mp'])
+    df_agg['tovpm'] = 36*(df_agg['tov']/df_agg['mp'])
+    df_agg['missed_shots_per_game'] = df_agg['missed_shots']/df_agg['games_played']
 
-        df_agg.rename(columns=dict(sorted({
-                "3par": "3pa Rate",
-                "ts_pct": "True Shot Pct",
-                "pts": "Points",
-                "ast": "Assists",
-                "efg_pct": "Eff FG Pct",
-                "drtg": "Def Rtg",
-                "ortg": "Off Rtg",
-                "ft": "Free Throws",
-                "fta": "Free Throws Attempted",
-                "stl_pct": "Steal Pct",
-                "team": "Team",
-                "mp": "Minutes",
-                "fg": "Field Goals",
-                "fga": "Field Goals Attempted",
-                "fg_pct": "Field Goal Pct",
-                "ftp_pct": "Free Throw Pct",
-                "trb_pct": "Total Rebound Pct",
-                "trb": "Rebounds",
-                "stl": "Steals",
-                "box_plus_minus": "Box +/-",
-                "drb": "Def Reb",
-                "orb": "Off Reb",
-                "pf": "Fouls",
-                "tov": "Turnovers",
-                "ftr": "FT Rate",
-                "games_played": "Games",
-                "fg3": "3P Made",
-                "fg3a": "3P Attempted",
-                "blk": "Blocks",
-                "orb_pct": "Off Rebound Pct",
-                "drb_pct": "Def Rebound Pct",
-                "ast_pct": "Assist %",
-                "blk_pct": "Block %",
-                "tov_pct": "TOV %",
-                "usg_pct": "Usage Rate",
-                "all_stat": "Pts + Reb + Ast",
-                "ppg": "Points Per Game",
-                "rpg": "Rebounds Per Game",
-                "apg": "Assists Per Game",
-                "3p_pct": "3p %",
-                "ft_pct": "FT %",
-                "spg": "Steals Per Game",
-                "bpg": "Blocks Per Game",
-                "tovpg": "TOV Per Game",
-                "ppm": "Points Per 36",
-                "rpm": "Rebounds Per 36",
-                "apm": "Assists Per 36",
-                "spm": "Steals Per 36",
-                "tovpm": "TOV Per 36",
-                "bpm": "Blocks Per 36",
-                "missed_shots": "Missed Shots",
-                "plus_minus": '+/-'
-            }.items())), inplace=True)
-        non_num_cols = ['player']
-        if old_players_select:
-            df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
-        else:
-            df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)&(df_agg['Usage Rate'].notnull())].fillna(0)
-        with st.expander('Raw Data'):
-            st.write(df_clstr)
+    df_agg.rename(columns=dict(sorted({
+            "3par": "3pa Rate",
+            "ts_pct": "True Shot Pct",
+            "pts": "Points",
+            "ast": "Assists",
+            "efg_pct": "Eff FG Pct",
+            "drtg": "Def Rtg",
+            "ortg": "Off Rtg",
+            "ft": "Free Throws",
+            "fta": "Free Throws Attempted",
+            "stl_pct": "Steal Pct",
+            "team": "Team",
+            "mp": "Minutes",
+            "fg": "Field Goals",
+            "fga": "Field Goals Attempted",
+            "fg_pct": "Field Goal Pct",
+            "ftp_pct": "Free Throw Pct",
+            "trb_pct": "Total Rebound Pct",
+            "trb": "Rebounds",
+            "stl": "Steals",
+            "box_plus_minus": "Box +/-",
+            "drb": "Def Reb",
+            "orb": "Off Reb",
+            "pf": "Fouls",
+            "tov": "Turnovers",
+            "ftr": "FT Rate",
+            "games_played": "Games",
+            "fg3": "3P Made",
+            "fg3a": "3P Attempted",
+            "blk": "Blocks",
+            "orb_pct": "Off Rebound Pct",
+            "drb_pct": "Def Rebound Pct",
+            "ast_pct": "Assist %",
+            "blk_pct": "Block %",
+            "tov_pct": "TOV %",
+            "usg_pct": "Usage Rate",
+            "all_stat": "Pts + Reb + Ast",
+            "ppg": "Points Per Game",
+            "rpg": "Rebounds Per Game",
+            "apg": "Assists Per Game",
+            "3p_pct": "3p %",
+            "ft_pct": "FT %",
+            "spg": "Steals Per Game",
+            "bpg": "Blocks Per Game",
+            "tovpg": "TOV Per Game",
+            "ppm": "Points Per 36",
+            "rpm": "Rebounds Per 36",
+            "apm": "Assists Per 36",
+            "spm": "Steals Per 36",
+            "tovpm": "TOV Per 36",
+            "bpm": "Blocks Per 36",
+            "missed_shots": "Missed Shots",
+            "missed_shots_per_game": "Missed Shots Per Game",
+            "plus_minus": '+/-'
+        }.items())), inplace=True)
+    non_num_cols = ['player']
+    if old_players_select:
+        df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
+    else:
+        df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)&(df_agg['Usage Rate'].notnull())].fillna(0)
+    with st.expander('Raw Data'):
+        st.write(df_clstr)
 
-        if player in df_clstr['player'].unique().tolist():
-            df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
+    if player in df_clstr['player'].unique().tolist():
+        df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
 
 
-        else:
-            st.write('Adjust your filters because you have filtered out your player')
+    else:
+        st.write('Adjust your filters because you have filtered out your player')
 
 
    
