@@ -248,33 +248,64 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
     fig.update_traces(hovertemplate=updated_template)
 
+    st.write('**5 Closest Players**')
+    for i,r in closest_players.head(5).iterrows():
+        st.write(f"{r['player']}: {round(r['distance'],2)}")
     st.plotly_chart(fig)
     fig_scatter = fig
-    # st.write(fig.data[0]['hovertemplate'])
-
-    # for val in dvz.sort_values('distance_from_zero',ascending=False).field.tolist():
-    #    fig=px.bar(df.sort_values(val,ascending=False),
-    #               x='player',
-    #               color=color,
-    #               color_discrete_map = discrete_color_map,
-    #               y=val,
-    #               category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
-    #               )
-    #    fig.update_xaxes(categoryorder='total descending')
-    #    fig.update_traces(marker=dict(
-    #     #    color='lightblue',
-    #        line=dict(color='navy', width=2)
-    #        )
-    #    )
-    #    fig.update_layout(
-    #     font=dict(
-    #     family='Futura',  # Set font to Futura
-    #     size=12,          # You can adjust the font size if needed
-    #     color='black'
-    #     ))
 
 
-    #    fig.show()
+    df_closest = df.sort_values('distance',ascending=True).head(10)
+    # df_closest[key_vals] = scaler.fit_transform(df_closest[key_vals])
+
+
+    scaler = StandardScaler()
+    polar_scaled = scaler.fit_transform(df_closest[key_vals])
+    scaled_cols = [f'{col}_scaled' for col in key_vals]
+    df_closest[scaled_cols] = polar_scaled
+
+    df_melted = pd.melt(df_closest,
+                    id_vars=['player'],
+                    value_vars=scaled_cols,
+                    var_name='Statistic',
+                    value_name='Value')
+    
+    df_melted_unscaled = pd.melt(df_closest,
+                    id_vars=['player'],
+                    value_vars=key_vals,
+                    var_name='Statistic',
+                    value_name='Value')
+    
+    df_melted_unscaled.columns = ['player','Statistic','Value_Unscaled']
+    df_melted_unscaled['Statistic'] = df_melted_unscaled['Statistic'].str.replace('_scaled','')
+    df_melted['Statistic'] = df_melted['Statistic'].str.replace('_scaled','')
+    df_melted = pd.merge(df_melted,df_melted_unscaled,left_on=['player','Statistic'],right_on=['player','Statistic'],how='left')
+
+    ## create a radial diagram of the closest 10 players to the selected player
+    fig = px.line_polar(df_melted,
+                     r='Value',
+                     theta='Statistic',
+                     color='player',
+                     line_close=True,
+                     template='simple_white',
+                     hover_data=['Value_Unscaled'],
+                     color_discrete_sequence=px.colors.qualitative.Plotly)
+    fig.update_traces(fill='toself')
+    fig.update_layout(
+        title=f"Closest Players to {player}",
+        font_family='Futura',
+        height=800,
+        font_color='black',
+        showlegend=True
+    )
+
+    fig.update_traces(mode='markers',
+                      # opacity=.75,
+                      marker=dict(size=12,line=dict(width=2,color='DarkSlateGrey'))
+                      )
+    st.plotly_chart(fig)
+
+
     return df, fig_scatter
 
 
@@ -507,188 +538,10 @@ def app():
 
         if player in df_clstr['player'].unique().tolist():
             df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
+
+            st.write(df_results)
         else:
             st.write('Adjust your filters because you have filtered out your player')
-
-
-    # c1,c2=st.columns([1,3])
-    # date = c1.date_input(
-    #     "Select a date / month for games",
-    #     value=pd.to_datetime(d1.date.max()),
-    #     min_value=pd.to_datetime('1966-02-19'),
-    #     max_value=pd.to_datetime(d1.date.max())
-    #     )
-
-    # # date='2023-08-14'
-    # date=pd.to_datetime(date)
-
-    # # st.write(d1.loc[d1.date == date])
-    # d1['game_str'] = d1['date'].dt.strftime('%Y-%m-%d') + ' - ' + d1['visitor_team'] + ' ' + d1['visitor_score'].astype('str')+'-'+d1['home_score'].astype('str')+' ' +d1['home_team']
-    # games=d1.loc[d1.date == date]['game_str'].tolist()
-    # game_select = c2.selectbox('Select a game: ', games)
-
-    # game_id = d1.loc[d1.game_str == game_select].game_id.min()
-    # # st.write(game_id)
-
-    # df = d2.loc[d2.game_id==game_id]
-    # try:
-    #     df['+/-'] = pd.to_numeric(df['+/-'].astype('str').str.replace('+',''))
-    # except:
-    #     pass
-    # # st.write(df)
-
-    # # with st.form(key='game_select_form'):
-    # #     game_select = st.selectbox('Select a match: ', games)
-
-
-
-    # # r = requests.get(f'https://www.basketball-reference.com/leagues/NBA_{season}_games-{month.lower()}.html')
-    # # if r.status_code==200:
-    # #     soup = BeautifulSoup(r.content, 'html.parser')
-    # #     table = soup.find('table', attrs={'id': 'schedule'})
-    # #     if table:
-    # #         df = pd.read_html(str(table))[0]
-    # #         # game_id = []
-    # #         # game_url = []
-    # #         for row in table.findAll('tr'):
-    # #             try:
-    # #                 if 'csk' in str(row):
-    # #                     game_id.append(str(row).split('csk="')[1].split('"')[0])
-    # #                     game_url.append(str(row).split('data-stat="box_score_text"><a href="')[1].split('"')[0])
-    # #                     # visitor_team.append(str(row).split('data-stat="visitor_team_name"><a href="/teams/')[1].split('/')[0])
-    # #                     # home_team.append(str(row).split('data-stat="home_team_name"><a href="/teams/')[1].split('/')[0])
-    # #                     # visitor_score.append(str(row).split('data-stat="visitor_pts">')[1].split('<')[0])
-    # #                     # home_score.append(str(row).split('data-stat="home_pts">')[1].split('<')[0])
-    # #             except:
-    # #                 pass
-    # #         df['game_id'] = game_id
-    # #         game_url_df = pd.DataFrame({'game_url':game_url})
-    # #         df=pd.concat([df,game_url_df],axis=1)
-    # #         df.columns=['date','time','visitor','visitor_pts','home','home_pts','del_1','del_2','attendance','arena','notes','game_id','game_url']
-    # #         df = df.loc[df.home_pts>0]
-    # #         df['visitor_pts']=df['visitor_pts'].astype('str').str.replace('\.0','',regex=True)
-    # #         df['home_pts']=df['home_pts'].astype('str').str.replace('\.0','',regex=True)
-    # #         for col in df.columns:
-    # #             if 'del' in col:
-    # #                 del df[col]
-    # # df['game_string'] = df['visitor'] + ' ' + df['visitor_pts'].astype('str') + ' - ' + df['home'] + ' ' + df['home_pts'].astype('str')
-
-    # # games=df['game_string'].tolist()
-
-    # # with st.form(key='game_select_form'):
-    # #     game_select = st.selectbox('Select a match: ', games)
-
-    # #     submit_button = st.form_submit_button(label='Submit')
-
-    # # game_id=df.query('game_string == @game_select').game_id.min()
-    # # visiting_team=df.query('game_string == @game_select').visitor.min()
-    # # home_team=df.query('game_string == @game_select').home.min()
-
-    # # if submit_button:
-    # #     d=get_box_score(game_id,visiting_team,home_team)
-
-
-    # #     st.write(d.head(3))
-
-    # df.rename(columns={
-    #         "3par":"3pa Rate",
-    #         "ts_pct":"True Shot Pct",
-    #         "pts":"Points",
-    #         "ast":"Assists",
-    #         "efg_pct":"Eff FG Pct",
-    #         "drtg":"Def Rtg",
-    #         "ortg":"Off Rtg",
-    #         "ast":"Assists",
-    #         "efg_pct":"Eff FG Pct",
-    #         "drtg":"Def Rtg",
-    #         "ortg":"Off Rtg",
-    #         "3par":"3pa Rate",
-    #         "ft":"Free Throws",
-    #         "fta":"Free Throws Attempted",
-    #         "stl_pct":"Steal Pct",
-    #         "player":"Player",
-    #         "team":"Team",
-    #         "mp":"Minutes",
-    #         "fg":"Field Goals",
-    #         "fga":"Field Goals Attempted",
-    #         "fg_pct":"Field Goal Pct",
-    #         "ftp_pct":"Free Throw Pct",
-    #         "trb_pct":"Total Rebound Pct",
-    #         "trb":"Rebounds",
-    #         "stl":"Steals",
-    #         "bpm":"Box +/-",
-    #         "drb":"Def Reb",
-    #         "orb":"Off Reb",
-    #         "pf":"Fouls",
-    #         "tov":"Turnovers",
-    #         "ftr":"FT Rate",
-    #         # "drtg":"Def Rtg",
-    #         "ortg":"Off Rtg",
-    #         "3par":"3pa Rate",
-    #         "ft":"Free Throws",
-    #         "fta":"Free Throws Attempted",
-    #         "stl_pct":"Steal Pct",
-    #         "player":"Player",
-    #         "team":"Team",
-    #         "mp":"Minutes",
-    #         "fg":"Field Goals",
-    #         "fga":"Field Goals Attempted",
-    #         "fg_pct":"Field Goal Pct",
-    #         "ortg":"Off Rtg",
-    #     },
-    #         inplace=True)
-
-
-    #     # for x in d.columns:
-    #     #     if 'del_' in x:
-    #     #         del d[x]
-
-    # num_cols=[]
-    # non_num_cols=[]
-    # for col in df.columns:
-    #     if col in ['date','last_game']:
-    #         try:
-    #             df[col]=pd.to_datetime(df[col])
-    #         except:
-    #             pass
-    #     else:
-    #         try:
-    #             df[col] = pd.to_numeric(df[col])
-    #             num_cols.append(col)
-    #         except:
-    #             # print(f'{col} failed')
-    #             non_num_cols.append(col)
-        
-
-        
-
-    #     # non_num_cols=['player']
-    # color='team'
-    # with st.form(key='clstr_form'):
-    #     num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
-    #     non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['Player'])
-    #     list_one=['Cluster']
-    #     list_two=df.columns.tolist()
-    #     color_options=list_one+list_two
-
-    #     color_select=st.selectbox('What attribute should color points on the graph?',color_options)
-    #     mp_filter=st.slider('Filter players by minimum minutes played?', min_value=0.0, max_value=df.Minutes.max(), value=0.0, step=1.0)
-    #     df=df.query("Minutes > @mp_filter")
-    #     submit_button = st.form_submit_button(label='Submit')
-
-
-        
-
-    #     # # for color in num_cols:
-    #     # #   p=quick_clstr(d.fillna(0), num_cols, non_num_cols, color)
-
-    # if submit_button:
-    #     quick_clstr(df.fillna(0), num_cols_select, non_num_cols_select, color_select)
-
-
-
-
-
 
 
    
