@@ -318,18 +318,32 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
 
 
-@st.cache_data
-def load_data():
-   df=pd.read_parquet('https://drive.google.com/file/d/1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk/view?usp=sharing', engine='pyarrow')
-   return df
+# @st.cache_data
+# def load_data():
+#    df=pd.read_parquet('https://drive.google.com/file/d/1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk/view?usp=sharing', engine='pyarrow')
+#    return df
 
 
-@st.cache_data
-def load_google_file(code):
-    url = f"https://drive.google.com/uc?export=download&id={code}"
-    file = requests.get(url)
-    bytesio = BytesIO(file.content)
-    return pd.read_parquet(bytesio)
+# @st.cache_data
+# def load_google_file(code):
+#     url = f"https://drive.google.com/uc?export=download&id={code}"
+#     file = requests.get(url)
+#     bytesio = BytesIO(file.content)
+#     return pd.read_parquet(bytesio)
+
+
+
+@st.cache_data(ttl=3600)
+def load_nba_games():
+    df = pd.read_parquet('https://github.com/aaroncolesmith/bbref/raw/refs/heads/main/data/nba_games.parquet', engine='pyarrow')
+    return df
+
+@st.cache_data(ttl=3600)
+def load_nba_box_scores():
+    df = pd.read_parquet('https://github.com/aaroncolesmith/bbref/raw/refs/heads/main/data/nba_box_scores.parquet', engine='pyarrow')
+    return df
+
+
 
 def app():
     st.set_page_config(
@@ -340,10 +354,8 @@ def app():
     
     posthog.capture('test-id', 'nba_player_similarity_load_event')
 
-    code='1_0FAJsULjo-gz2pvy365dQNqbo1ORDMU'
-    d1=load_google_file(code)
-    code='1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk'
-    d2=load_google_file(code)
+    d1 = load_nba_games()
+    d2 = load_nba_box_scores()
 
     d = pd.merge(d2.loc[d2.player!='Eddie Johnson'],d1).sort_values(by=['date', 'player']).copy()
 
