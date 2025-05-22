@@ -383,24 +383,6 @@ def app():
             )
         df['start_time_pt'] = pd.to_datetime(df['start_time_pt'])
         date_range_games = df.loc[(df['start_time_pt'].dt.date >= start_date) & (df['start_time_pt'].dt.date <= end_date)].reset_index(drop=True)
-
-        ## select which columns to show in a dataframe
-        # selected_columns_date_range = st.multiselect(
-        #     "Select columns to display",
-        #     options=date_range_games.columns.tolist(),
-        #     default=['start_time_pt','status','match_title','spread_home','predicted_spread_home',
-        #             'odds_adjusted_spread_home','predicted_spread_home_diff',
-        #             'predicted_total_diff','predicted_score','actual_score','odds_adjusted_score',
-        #             'predicted_total_pct_diff','predicted_total','odds_adjusted_total','total_bet','total_result',
-        #             'model_bet_home_cover','model_bet_away_cover','model_bet_home_payout','model_bet_away_payout','spread_home_bet','spread_home_result'
-        #                     ],
-        #                     key='date_range_select'
-        # )
-
-        # st.dataframe(date_range_games[selected_columns_date_range],
-        #             use_container_width=True,
-        #             hide_index=True,
-        #             )
         
         date_range_games['date'] = date_range_games['start_time_pt'].dt.date
         df_date_range_payout = date_range_games.groupby(['date']).agg(
@@ -412,11 +394,18 @@ def app():
             total_bet=('total_bet', 'count'),).reset_index()
 
         df_date_range_payout['total_payout_cumsum'] = df_date_range_payout['total_payout'].cumsum()
+        df_date_range_payout['bet_over_payout_cumsum'] = df_date_range_payout['bet_over_payout'].cumsum()
+        df_date_range_payout['bet_under_payout_cumsum'] = df_date_range_payout['bet_under_payout'].cumsum()
+        df_date_range_payout['bet_home_cover_payout_cumsum'] = df_date_range_payout['bet_home_cover_payout'].cumsum()
+        df_date_range_payout['bet_away_cover_payout_cumsum'] = df_date_range_payout['bet_away_cover_payout'].cumsum()
 
         fig = px.scatter(
             df_date_range_payout,
             x='date',
-            y=["total_payout","total_payout_cumsum","bet_over_payout","bet_under_payout","bet_home_cover_payout","bet_away_cover_payout"],
+            y=["total_payout","total_payout_cumsum","bet_over_payout",'bet_over_payout_cumsum',
+               "bet_under_payout",'bet_under_payout_cumsum',
+               "bet_home_cover_payout","bet_home_cover_payout_cumsum",
+               "bet_away_cover_payout","bet_away_cover_payout_cumsum"],
             # color='team',
             template = 'simple_white',
             render_mode='svg',
@@ -444,6 +433,30 @@ def app():
             font_color='black',
         )
         st.plotly_chart(fig, use_container_width=True)
+
+
+
+        st.write(date_range_games)
+        date_range_games['total_bet_total_result'] = date_range_games['total_bet'] + ' - ' + date_range_games['total_result']
+        fig = px.scatter(date_range_games.sort_values('predicted_total_pct_diff', ascending=False).reset_index(drop=True),
+        y='predicted_total_pct_diff',
+        # x='match_title',
+        # color='total_bet_total_result',
+        color='over_hit',
+        hover_data=['match_title','predicted_score','odds_adjusted_score',
+                    'actual_score','total_result','predicted_total','odds_adjusted_total'],
+                         )
+        fig.update_traces(
+            mode='markers',
+                marker=dict(size=12, 
+                            opacity=.75, 
+                            line=dict(width=2, 
+                                    color="DarkSlateGrey"
+                                    )
+                        ),
+            )
+        st.plotly_chart(fig, use_container_width=True)
+
 
 
 

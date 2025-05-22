@@ -345,10 +345,30 @@ def app():
     code='1S2N4a3lhohq_EtuY3aMW_d9nIsE4Bruk'
     d2=load_google_file(code)
 
-    d = pd.merge(d2.loc[d2.player!='Eddie Johnson'],d1.loc[d1.game_type == 'Regular Season']).sort_values(by=['date', 'player']).copy()
+    d = pd.merge(d2.loc[d2.player!='Eddie Johnson'],d1).sort_values(by=['date', 'player']).copy()
 
     d['missed_shots'] = (d['fga'].fillna(0) - d['fg'].fillna(0))+(d['fta'].fillna(0) - d['ft'].fillna(0))
     d['all_stat'] = d['pts'] + d['trb'] + d['ast']
+    d['playoff_game'] = np.where(d['game_type'] == 'Playoffs', 1, 0)
+    d['win'] = np.select(
+        [
+            (d['team'] == d['home_team']) & (d['home_score'] > d['visitor_score']),
+            (d['team'] == d['home_team']) & (d['home_score'] < d['visitor_score']),
+            (d['team'] != d['home_team']) & (d['home_score'] < d['visitor_score']),
+            (d['team'] != d['home_team']) & (d['home_score'] > d['visitor_score'])
+        ],
+        [
+            1,  
+            0,  
+            1,  
+            0   
+        ],
+    )
+    d['loss'] = np.where(d['win'] == 0, 1, 0)
+    d['playoff_win'] = np.where(d['playoff_game'] == 1, d['win'], 0)
+    d['playoff_loss'] = np.where(d['playoff_game'] == 1, 1-d['win'], 0)
+
+
 
     num_cols=['Minutes',
         'Field Goals',
@@ -396,7 +416,17 @@ def app():
         'Steals Per 36',
         'Blocks Per 36',
         '+/-',
-        'TOV Per 36']
+        'TOV Per 36',
+        'Games Played',
+        'Wins',
+        'Losses',
+        'Playoff Wins',
+        'Playoff Losses',
+        'Win %',
+        'Playoff Win %',
+        'Playoff Games',
+        
+        ]
 
     players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
     player = st.selectbox('Select a player',players)
@@ -459,6 +489,11 @@ def app():
         drtg = ('drtg','mean'),
         missed_shots=('missed_shots','sum'),
         all_stat=('all_stat','sum'),
+        wins=('win','sum'),
+        losses=('loss','sum'),
+        playoff_games=('playoff_game','sum'),
+        playoff_wins=('playoff_win','sum'),
+        playoff_losses=('playoff_loss','sum'),
     ).reset_index()
 
     df_agg['ppg'] = df_agg['pts']/df_agg['games_played']
@@ -478,6 +513,9 @@ def app():
     df_agg['bpm'] = 36*(df_agg['blk']/df_agg['mp'])
     df_agg['tovpm'] = 36*(df_agg['tov']/df_agg['mp'])
     df_agg['missed_shots_per_game'] = df_agg['missed_shots']/df_agg['games_played']
+
+    df_agg['win_pct'] = df_agg['wins']/df_agg['games_played']
+    df_agg['playoff_win_pct'] = df_agg['playoff_wins']/df_agg['playoff_games']
 
     df_agg.rename(columns=dict(sorted({
             "3par": "3pa Rate",
@@ -532,7 +570,15 @@ def app():
             "bpm": "Blocks Per 36",
             "missed_shots": "Missed Shots",
             "missed_shots_per_game": "Missed Shots Per Game",
-            "plus_minus": '+/-'
+            "plus_minus": '+/-',
+            "games_played": "Games Played",
+            "wins": "Wins",
+            "losses": "Losses",
+            "playoff_wins": "Playoff Wins",
+            "playoff_losses": "Playoff Losses",
+            "playoff_win_pct": "Playoff Win %",
+            "playoff_games": "Playoff Games",
+            "win_pct": "Win %",
         }.items())), inplace=True)
     non_num_cols = ['player']
     if old_players_select:
