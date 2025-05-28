@@ -380,6 +380,21 @@ def app():
     d['playoff_win'] = np.where(d['playoff_game'] == 1, d['win'], 0)
     d['playoff_loss'] = np.where(d['playoff_game'] == 1, 1-d['win'], 0)
 
+    # st.write(d.loc[d.player == 'Shai Gilgeous-Alexander'])
+
+    # st.write(d.loc[d.player == 'Shai Gilgeous-Alexander'].groupby(['player','game_id']).agg(
+    #     Minutes=('mp','sum'),
+    #     Count=('game_url','count')
+    # ).reset_index().sort_values('Count',ascending=False).head(10)
+    # )
+
+    # st.write(d.loc[d.player == 'Shai Gilgeous-Alexander'].groupby(['player','season']).agg(
+    #     Minutes=('mp','sum'),
+    #     Count=('game_url','count'),
+    #     Playoff_Count=('playoff_game','sum'),
+    # ).reset_index().sort_values('Count',ascending=False)
+    # )
+
 
 
     num_cols=['Minutes',
@@ -427,6 +442,7 @@ def app():
         'Assists Per 36',
         'Steals Per 36',
         'Blocks Per 36',
+        'FTA Per 36',
         '+/-',
         'TOV Per 36',
         'Games Played',
@@ -524,6 +540,8 @@ def app():
     df_agg['spm'] = 36*(df_agg['stl']/df_agg['mp'])
     df_agg['bpm'] = 36*(df_agg['blk']/df_agg['mp'])
     df_agg['tovpm'] = 36*(df_agg['tov']/df_agg['mp'])
+    df_agg['ftapm'] = 36*(df_agg['fta']/df_agg['mp'])
+
     df_agg['missed_shots_per_game'] = df_agg['missed_shots']/df_agg['games_played']
 
     df_agg['win_pct'] = df_agg['wins']/df_agg['games_played']
@@ -580,6 +598,7 @@ def app():
             "spm": "Steals Per 36",
             "tovpm": "TOV Per 36",
             "bpm": "Blocks Per 36",
+            "ftapm": "FTA Per 36",
             "missed_shots": "Missed Shots",
             "missed_shots_per_game": "Missed Shots Per Game",
             "plus_minus": '+/-',

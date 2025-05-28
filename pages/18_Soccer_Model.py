@@ -16,7 +16,7 @@ st.set_page_config(
     )
 
 
-@st.cache_resource
+st.cache_data(ttl=3600)
 def load_data():
     df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network/raw/refs/heads/main/data/soccer_model.parquet', engine='pyarrow')
     return df
@@ -183,8 +183,9 @@ def app():
     # df['predicted_home_score_diff'] = df['home_score_pred'] - df['odds_adjusted_score_home']
     # df['predicted_home_score_pct_diff'] = df['predicted_home_score_diff'] / df['odds_adjusted_score_home']
 
-    df['predicted_home_spread_diff'] = df['spread_home_pred'] - df['odds_adjusted_spread_home']
-    df['predicted_home_spread_pct_diff'] = df['predicted_home_spread_diff'] / df['odds_adjusted_spread_home']
+    # df['predicted_home_spread_diff'] = df['spread_home_pred'] - df['odds_adjusted_spread_home']
+    df['predicted_home_spread_diff'] = df['odds_adjusted_spread_home'] - df['spread_home_pred']
+    df['predicted_home_spread_pct_diff'] = df['predicted_home_spread_diff'] / abs(df['odds_adjusted_spread_home'])
 
 
 
