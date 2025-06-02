@@ -337,6 +337,51 @@ def quick_clstr_bak(df, num_cols, str_cols, color):
 
 
 
+
+
+@st.cache_data
+def get_match_data(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.content, 'html.parser')
+
+    team_one = soup.select("#content > div.scorebox > div:nth-child(1) > div:nth-child(1) > strong > a")
+    team_one=team_one[0].text
+
+    team_two = soup.select("#content > div.scorebox > div:nth-child(2) > div:nth-child(1) > strong > a")
+    team_two=team_two[0].text
+
+    table_num = len(pd.read_html(r.content))
+    if table_num == 20:
+        dfs = [pd.read_html(r.content)[3],pd.read_html(r.content)[4],pd.read_html(r.content)[5],pd.read_html(r.content)[6],pd.read_html(r.content)[7],pd.read_html(r.content)[8]]
+    if table_num == 7:
+        dfs = [pd.read_html(r.content)[3]]
+
+    d1 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
+    d1.columns=d1.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
+    for i in range(0,50):
+        d1.columns=d1.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
+    d1=d1.loc[d1.pos.notnull()]
+    d1['team'] = team_one
+
+    if table_num == 20:
+        dfs = [pd.read_html(r.content)[10],pd.read_html(r.content)[11],pd.read_html(r.content)[12],pd.read_html(r.content)[13],pd.read_html(r.content)[14],pd.read_html(r.content)[15]]
+    if table_num == 7:
+        dfs = [pd.read_html(r.content)[5]]
+
+    d2 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
+    d2.columns=d2.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
+    for i in range(0,50):
+        d2.columns=d2.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
+    d2=d2.loc[d2.pos.notnull()]
+    d2['team'] = team_two
+
+    d=pd.concat([d1,d2])
+
+    return d
+
+
+
+
 def app():
     st.set_page_config(
         page_title='aaroncolesmith.com',
@@ -384,157 +429,43 @@ def app():
 
     match_url=df.query('match_selector == @match_select').url.min()
 
-    r = requests.get(match_url)
-    soup = BeautifulSoup(r.content, 'html.parser')
+    d = get_match_data(match_url)
 
-    team_one = soup.select("#content > div.scorebox > div:nth-child(1) > div:nth-child(1) > strong > a")
-    team_one=team_one[0].text
+    # r = requests.get(match_url)
+    # soup = BeautifulSoup(r.content, 'html.parser')
 
-    team_two = soup.select("#content > div.scorebox > div:nth-child(2) > div:nth-child(1) > strong > a")
-    team_two=team_two[0].text
+    # team_one = soup.select("#content > div.scorebox > div:nth-child(1) > div:nth-child(1) > strong > a")
+    # team_one=team_one[0].text
 
+    # team_two = soup.select("#content > div.scorebox > div:nth-child(2) > div:nth-child(1) > strong > a")
+    # team_two=team_two[0].text
 
-    dfs = [pd.read_html(r.content)[3],pd.read_html(r.content)[4],pd.read_html(r.content)[5],pd.read_html(r.content)[6],pd.read_html(r.content)[7],pd.read_html(r.content)[8]]
+    # table_num = len(pd.read_html(r.content))
+    # if table_num == 20:
+    #     dfs = [pd.read_html(r.content)[3],pd.read_html(r.content)[4],pd.read_html(r.content)[5],pd.read_html(r.content)[6],pd.read_html(r.content)[7],pd.read_html(r.content)[8]]
+    # if table_num == 7:
+    #     dfs = [pd.read_html(r.content)[3]]
 
-    d1 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
-    d1.columns=d1.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
-    for i in range(0,50):
-        d1.columns=d1.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
-    d1=d1.loc[d1.pos.notnull()]
-    d1['team'] = team_one
+    # d1 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
+    # d1.columns=d1.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
+    # for i in range(0,50):
+    #     d1.columns=d1.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
+    # d1=d1.loc[d1.pos.notnull()]
+    # d1['team'] = team_one
 
-    dfs = [pd.read_html(r.content)[10],pd.read_html(r.content)[11],pd.read_html(r.content)[12],pd.read_html(r.content)[13],pd.read_html(r.content)[14],pd.read_html(r.content)[15]]
+    # if table_num == 20:
+    #     dfs = [pd.read_html(r.content)[10],pd.read_html(r.content)[11],pd.read_html(r.content)[12],pd.read_html(r.content)[13],pd.read_html(r.content)[14],pd.read_html(r.content)[15]]
+    # if table_num == 7:
+    #     dfs = [pd.read_html(r.content)[5]]
 
-    d2 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
-    d2.columns=d2.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
-    for i in range(0,50):
-        d2.columns=d2.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
-    d2=d2.loc[d2.pos.notnull()]
-    d2['team'] = team_two
+    # d2 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
+    # d2.columns=d2.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
+    # for i in range(0,50):
+    #     d2.columns=d2.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
+    # d2=d2.loc[d2.pos.notnull()]
+    # d2['team'] = team_two
 
-    d=pd.concat([d1,d2])
-    # try:
-    #     d.columns = [
-    #         "player",
-    #         "number",
-    #         "nation",
-    #         "pos",
-    #         "age",
-    #         "min",
-    #         "goals",
-    #         "assists",
-    #         "pks",
-    #         "pk_att",
-    #         "shots",
-    #         "shots_on_goal",
-    #         "yellow_card",
-    #         "red_card",
-    #         "touches",
-    #         "tackles",
-    #         "ints",
-    #         "blocks",
-    #         "xg",
-    #         "npxg",
-    #         "xag",
-    #         "sca",
-    #         "gca",
-    #         "passes_cmp",
-    #         "passes_att",
-    #         "passes_cmp_pct",
-    #         "progressive_passes",
-    #         "carries",
-    #         "progressive_carries",
-    #         "take_ons_attempted",
-    #         "take_ons_successful",
-    #         "del_asd",
-    #         "del_dd",
-    #         "del_cmp",
-    #         "passing_distance",
-    #         "progressive_passing_distance",
-    #         "short_passes_cmp",
-    #         "short_passes_att",
-    #         "short_passes_cmp_pct",
-    #         "med_passes_cmp",
-    #         "med_passes_att",
-    #         "med_passes_cmp_pct",
-    #         "long_passes_cmp",
-    #         "long_passes_att",
-    #         "long_passes_cmp_pct",
-    #         "del_ast",
-    #         "del_xag",
-    #         "xa",
-    #         "key_passes",
-    #         "final_third_passes",
-    #         "passes_penalty_area",
-    #         "crosses_penalty_area",
-    #         "del_prgp",
-    #         "del_att",
-    #         "live_ball_passes",
-    #         "dead_ball_passes",
-    #         "fk_passes",
-    #         "through_balls",
-    #         "switches",
-    #         "crosses",
-    #         "throw_ins",
-    #         "corners",
-    #         "corners_inswing",
-    #         "corners_outswing",
-    #         "corners_straight",
-    #         "del_pass_com",
-    #         "offside_passes",
-    #         "blocked_passes",
-    #         "del_tackles_tkl",
-    #         "tackles_won",
-    #         "tackles_def_3rd",
-    #         "tackles_mid_3rd",
-    #         "tackles_att_3rd",
-    #         "dribblers_tackled",
-    #         "dribblers_challenged",
-    #         "tackle_pct",
-    #         "challenges_lost",
-    #         "del_blocks_blocks",
-    #         "block_shot",
-    #         "block_pass",
-    #         "del_int",
-    #         "tkl+int",
-    #         "clearances",
-    #         "errors",
-    #         "del_touches_touches",
-    #         "touches_def_pen",
-    #         "touches_def_3rd",
-    #         "touches_mid_3rd",
-    #         "touches_att_3rd",
-    #         "touches_att_pen",
-    #         "touches_live_ball",
-    #         "take_ons_succ_pct",
-    #         "take_ons_tackled",
-    #         "take_ons_tkld_pct",
-    #         "carries_total_distance",
-    #         "carries_progressive_distance",
-    #         "carries_1/3",
-    #         "carries_into_penalty_area",
-    #         "carries_mis",
-    #         "carries_dis",
-    #         "passes_received",
-    #         "progressive_passes_received",
-    #         "del_performance_2crdy",
-    #         "fouls_committed",
-    #         "fouls_drawn",
-    #         "offsides",
-    #         "del_performance_crs",
-    #         "del_performance_tklw",
-    #         "pk_won",
-    #         "pk_conceded",
-    #         "own_goals",
-    #         "balls_recovered",
-    #         "aerial_duels_won",
-    #         "aerial_duels_lost",
-    #         "aerial_duels_won_pct",
-    #         "team",
-    #     ]
-    # except:
-    #     pass
-
+    # d=pd.concat([d1,d2])
 
     d.rename(columns={
             "performance_gls":"goals",
