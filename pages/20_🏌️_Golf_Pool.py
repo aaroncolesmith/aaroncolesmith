@@ -243,7 +243,7 @@ def tourney(df,df2,df_picks):
 
         df_ld = df_ld[['name','cut','top5','win']]
         df_ld.columns = ['Golfer','Cut %','Top 5 %','Win %']
-        df_ld['Golfer'] = df_ld['Golfer'].str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Macintyre','MacIntyre').str.replace('Cam Davis','Cameron Davis')
+        df_ld['Golfer'] = df_ld['Golfer'].str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Macintyre','MacIntyre')
 
         df2 = pd.merge(df2,df_ld,how='left')
 
