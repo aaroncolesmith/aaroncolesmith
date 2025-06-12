@@ -22,6 +22,20 @@ st.set_page_config(
     )
 
 
+def color_cut_percentage(value):
+    """
+    Applies background color based on the percentage value using mellowed shades.
+    """
+    if value >= 90:
+        return 'background-color: #C8E6C9'  # Pale green (example hex code)
+    elif 30 <= value < 60:
+        return 'background-color: #FFF9C4'  # Pale yellow (example hex code)
+    elif value < 30:
+        return 'background-color: #FFCDD2'  # Pale red (example hex code)
+    else:
+        return ''  # No formatting for other values (e.g., 60% to 89%)
+
+
 def quick_clstr(df, num_cols, str_cols, color):
     df1=df.copy()
     df1=df1[num_cols]
@@ -277,19 +291,19 @@ def tourney(df,df2,df_picks):
                     df2_display = df2.loc[df2.Team==team][data_cols].copy()
 
                     # Multiply the "Cut %" column by 100
-                    df2_display["Cut %"] = df2_display["Cut %"] * 100
+                    df2_display["Cut %"] = (df2_display["Cut %"] * 100).round(1)
 
-                    # Create the dataframe, configuring the "Cut %" column
-                    col.dataframe(
-                        df2_display,
-                        hide_index=True,
+                    # Apply the style with conditional formatting
+                    styled_df = df2_display.style.applymap(color_cut_percentage, subset=['Cut %'])
+
+                    # Use st.dataframe to display the styled DataFrame
+                    col.dataframe(styled_df, hide_index=True,
                         column_config={
                             "Cut %": st.column_config.NumberColumn(
                                 "Cut %",  # Column title displayed
                                 format="%.1f %%",  # Format as a percentage with 2 decimal places
                             )
-                        }
-                    )
+                        })
                     
                     # col.dataframe(df2.loc[df2.Team==team][data_cols],hide_index=True)
 
