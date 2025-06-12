@@ -272,7 +272,26 @@ def tourney(df,df2,df_picks):
                     avg_cut = round(df2.loc[df2.Team==team]['Cut %'].mean()*100,1)
 
                     col.write(f'{team} ({score}) - Avg Cut: {avg_cut}%')
-                    col.dataframe(df2.loc[df2.Team==team][data_cols],hide_index=True)
+
+                    # Create a copy to avoid modifying the original DataFrame if needed elsewhere
+                    df2_display = df2.loc[df2.Team==team][data_cols].copy()
+
+                    # Multiply the "Cut %" column by 100
+                    df2_display["Cut %"] = df2_display["Cut %"] * 100
+
+                    # Create the dataframe, configuring the "Cut %" column
+                    col.dataframe(
+                        df2_display,
+                        hide_index=True,
+                        column_config={
+                            "Cut %": st.column_config.NumberColumn(
+                                "Cut %",  # Column title displayed
+                                format="%.1f %%",  # Format as a percentage with 2 decimal places
+                            )
+                        }
+                    )
+                    
+                    # col.dataframe(df2.loc[df2.Team==team][data_cols],hide_index=True)
 
 
 
