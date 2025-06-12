@@ -443,6 +443,9 @@ def app():
         'Steals Per 36',
         'Blocks Per 36',
         'FTA Per 36',
+        '3P Made Per 36',
+        'Missed Shots Per 36',
+        '+/- Per 36',
         '+/-',
         'TOV Per 36',
         'Games Played',
@@ -541,6 +544,9 @@ def app():
     df_agg['bpm'] = 36*(df_agg['blk']/df_agg['mp'])
     df_agg['tovpm'] = 36*(df_agg['tov']/df_agg['mp'])
     df_agg['ftapm'] = 36*(df_agg['fta']/df_agg['mp'])
+    df_agg['fg3pm'] = 36*(df_agg['fg3']/df_agg['mp'])
+    df_agg['missed_shots_pm'] = 36*(df_agg['missed_shots']/df_agg['mp'])
+    df_agg['plus_minus_pm'] = 36*(df_agg['plus_minus']/df_agg['mp'])
 
     df_agg['missed_shots_per_game'] = df_agg['missed_shots']/df_agg['games_played']
 
@@ -599,6 +605,9 @@ def app():
             "tovpm": "TOV Per 36",
             "bpm": "Blocks Per 36",
             "ftapm": "FTA Per 36",
+            "fg3pm": "3P Made Per 36",
+            "missed_shots_pm": "Missed Shots Per 36",
+            "plus_minus_pm": "+/- Per 36",
             "missed_shots": "Missed Shots",
             "missed_shots_per_game": "Missed Shots Per Game",
             "plus_minus": '+/-',
@@ -612,6 +621,7 @@ def app():
             "win_pct": "Win %",
         }.items())), inplace=True)
     non_num_cols = ['player']
+
     if old_players_select:
         df_clstr = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
     else:
