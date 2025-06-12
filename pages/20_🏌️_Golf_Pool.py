@@ -447,7 +447,7 @@ def app():
     for col in ['Pick1', 'Pick2', 'Pick3', 'Pick4', 'Pick5', 'Pick6']:
         df_picks[col] = df_picks[col].str.replace('\d+', '',regex=True).str.replace(' `/','').str.replace(' /','').str.replace(' >','').str.strip().str.replace(' .%','').str.replace('Mcilroy','McIlroy').str.replace('Macintyre','MacIntyre').str.replace(' $,','').str.replace('$','').str.replace(',','').str.strip()
     
-    df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard').str.replace('Joaquín','Joaquin').str.replace('Cam Davis','Cameron Davis')
+    df['PLAYER'] = df['PLAYER'].str.replace('Ludvig Åberg','Ludvig Aberg').str.replace(' \(a\)','',regex=True).str.replace('Brandon Robinson Thompson','Brandon Robinson-Thompson').str.replace('Byeong Hun An','Byeong-Hun An').str.replace('Alex Noren','Alexander Noren').str.replace('Nicolai Højgaard','Nicolai Hojgaard').str.replace('Joaquín','Joaquin').str.replace('Cam Davis','Cameron Davis').str.replace('Emilio González R.','Emilio Gonzalez')
     
 
     df2 = pd.melt(df_picks,
