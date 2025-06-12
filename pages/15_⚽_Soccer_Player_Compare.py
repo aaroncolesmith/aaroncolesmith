@@ -445,6 +445,23 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     df_melted['Statistic'] = df_melted['Statistic'].str.replace('_scaled','')
     df_melted = pd.merge(df_melted,df_melted_unscaled,left_on=['player','Statistic'],right_on=['player','Statistic'],how='left')
 
+    ## add a checkbox to remove the fill
+    fill_checkbox = st.checkbox('Include a fill on the visualization (note, some points will be covered)',value=True)
+
+    st.write(df_melted)
+
+    ## add a button to download the data
+    csv = df_melted.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Data as CSV",
+        data=csv,
+        file_name=f"{player}_closest_players.csv",
+        mime="text/csv",
+        key='download-csv'
+    )
+
+
+
     ## create a radial diagram of the closest 10 players to the selected player
     fig = px.line_polar(df_melted,
                      r='Value',
@@ -454,7 +471,8 @@ def quick_clstr(df, num_cols, str_cols, color, player):
                      template='simple_white',
                      hover_data=['Value_Unscaled'],
                      color_discrete_sequence=px.colors.qualitative.Plotly)
-    fig.update_traces(fill='toself')
+    if fill_checkbox:
+        fig.update_traces(fill='toself')
     fig.update_layout(
         title=f"Closest Players to {player}",
         font_family='Futura',
@@ -463,10 +481,11 @@ def quick_clstr(df, num_cols, str_cols, color, player):
         showlegend=True
     )
 
-    fig.update_traces(mode='markers',
-                      # opacity=.75,
-                      marker=dict(size=12,line=dict(width=2,color='DarkSlateGrey'))
-                      )
+    fig.update_traces(
+        mode='lines+markers',
+          marker=dict(size=12, line=dict(width=2, color='DarkSlateGrey')),
+          line=dict(width=4, dash='dash')
+          )
     st.plotly_chart(fig)
 
 
@@ -513,6 +532,16 @@ def app():
 
     d = get_data()
 
+    per_90_stat_list = ['goals','assists','ints','xg','xag','xa',
+                     'passes_cmp','carries','carries_total_distance',
+                     'progressive_passes','progressive_carries','take_ons_attempted','take_ons_successful',
+                     'crosses','tackles_won',
+                     'through_balls','key_passes'
+                     ]
+    appended_per_90_stat_list = [f'{stat}_per_90' for stat in per_90_stat_list]
+
+
+
     num_cols_base = ['games_played', 'min', 'goals', 'assists', 'pks', 'pk_att', 'shots', 'shots_on_goal', 
                      'yellow_card', 'red_card', 'touches', 'tackles', 'ints', 'blocks', 'xg', 'xa', 
                      'npxg', 'xag', 'sca', 'gca', 'passes_cmp', 'passes_att', 'passes_cmp_pct', 'progressive_passes', 
@@ -522,9 +551,12 @@ def app():
                      'throw_ins', 'offside_passes', 'blocked_passes', 'tackles_won', 'dribblers_tackled', 'dribblers_challenged', 'tackle_pct', 'carries', 
                      'progressive_carries', 'carries_progressive_distance', 'carries_total_distance', 'take_ons_attempted', 
                      'take_ons_successful', 'take_ons_succ_pct', 'take_ons_tackled', 'take_ons_tkld_pct',
-            'goals_per_90', 'assists_per_90', 'ints_per_90', 'xg_per_90', 'xag_per_90', 'passes_cmp_per_90', 'carries_per_90', 
-            'progressive_passes_per_90', 'progressive_carries_per_90', 'take_ons_attempted_per_90', 'take_ons_successful_per_90'
+
+                     'xg_conversion_rate_per_90'
             ]
+    
+    ## add per 90 stats to num_cols_base
+    num_cols_base = num_cols_base + appended_per_90_stat_list
 
 
     with st.expander('data example',expanded=False):
@@ -662,10 +694,12 @@ def app():
         take_ons_tkld_pct=('take_ons_tkld_pct','mean'),
     ).reset_index()
 
-    for stat_col in ['goals','assists','ints','xg','xag','passes_cmp','carries','progressive_passes','progressive_carries','take_ons_attempted','take_ons_successful']:
+
+
+    for stat_col in per_90_stat_list:
         df_agg[f'{stat_col}_per_90'] = (df_agg[stat_col] / df_agg['min']) * 90
 
-        
+    df_agg['xg_conversion_rate_per_90'] = (df_agg['goals_per_90'] / df_agg['xg_per_90']).replace([np.inf, -np.inf], 0).fillna(0)
 
 
     non_num_cols = ['player','team','league','pos']
