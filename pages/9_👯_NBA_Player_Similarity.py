@@ -527,6 +527,10 @@ def app():
         playoff_losses=('playoff_loss','sum'),
     ).reset_index()
 
+
+    ## filter out players that have not played at least 75% of the games
+    df_agg = df_agg.loc[df_agg['games_played'] >= (games_played_select * .75)].copy()
+
     df_agg['ppg'] = df_agg['pts']/df_agg['games_played']
     df_agg['fg_pct'] = df_agg['fg']/df_agg['fga']
     df_agg['3p_pct'] = df_agg['fg3']/df_agg['fg3a']
