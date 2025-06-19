@@ -302,7 +302,7 @@ def app():
         df['bpm'] = pd.to_numeric(df['bpm'])
         df['ortg'] = pd.to_numeric(df['ortg'])
         df['drtg'] = pd.to_numeric(df['drtg'])
-        # st.write(df.loc[df.player == 'Lamar Stevens'])
+
         df = df.groupby(['player']).agg(
                                         team=('team',lambda x: ', '.join(set(x))),
                                         mp=('mp','sum'),
@@ -339,7 +339,6 @@ def app():
         df['rpm']   = df['trb'] / df['mp']
         df['spm']   = df['stl'] / df['mp']
 
-        # st.write(df.head(10))
 
 
 

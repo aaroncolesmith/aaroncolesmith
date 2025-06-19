@@ -262,7 +262,12 @@ def app():
     today_viz, date_range_viz = st.tabs(['Today\'s Games', 'Date Range'])
     with today_viz:
 
+
+
         today = pd.to_datetime('today').date()
+
+        if today > pd.to_datetime(df.date.max()).date():
+            today = pd.to_datetime(df.date.max()).date()
 
 
         c1,c2=st.columns([1,3])

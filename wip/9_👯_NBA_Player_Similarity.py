@@ -216,30 +216,7 @@ def quick_clstr(df, num_cols, str_cols, color, player):
         font=dict(
                 size=12,
                 color="#ffffff"))
-    #   elif r['distance'] < 1:
-    #     fig.add_annotation(
-    #     x=r['Cluster_x'],
-    #     y=r['Cluster_y']+.015,
-    #     text=r['player'],
-    #     bgcolor="gray",
-    #     opacity=.85,
-    #     showarrow=False,
-    #     font=dict(
-    #             size=8,
-    #             color="#ffffff"))
-      # else:
-      #   fig.add_annotation(
-      #   x=r['Cluster_x'],
-      #   y=r['Cluster_y']+.5,
-      #   text=r['Player'],
-      #   bgcolor="gray",
-      #   opacity=.5,
-      #   showarrow=False,
-      #   font=dict(
-      #           size=8,
-      #           color="#ffffff"
-      #           )
-      #   )
+  
 
 
     default_template = fig.data[0].hovertemplate  # Get the existing template
@@ -247,9 +224,6 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
     fig.update_traces(hovertemplate=updated_template)
 
-    # st.write('**5 Closest Players**')
-    # for i,r in closest_players.head(5).iterrows():
-    #     st.write(f"{r['player']}: {round(r['distance'],2)}")
     st.plotly_chart(fig)
     fig_scatter = fig
 
@@ -261,8 +235,6 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
 
     df_closest = df.loc[df['player'].isin(closest_player_select)].sort_values('distance',ascending=True).copy()
-    # df_closest[key_vals] = scaler.fit_transform(df_closest[key_vals])
-
 
     scaler = StandardScaler()
     polar_scaled = scaler.fit_transform(df_closest[key_vals])

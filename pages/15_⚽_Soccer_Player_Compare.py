@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import functools as ft
 import random
 import re
+from datetime import datetime, timedelta
 
 
 def extract_league_from_url(url):
@@ -448,8 +449,6 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     ## add a checkbox to remove the fill
     fill_checkbox = st.checkbox('Include a fill on the visualization (note, some points will be covered)',value=True)
 
-    st.write(df_melted)
-
     ## add a button to download the data
     csv = df_melted.to_csv(index=False).encode('utf-8')
     st.download_button(
@@ -493,8 +492,6 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
 
 
-
-
 @st.cache_data
 def get_data():
     df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network/raw/refs/heads/main/data/fb_ref_data.parquet', engine='pyarrow')
@@ -515,6 +512,21 @@ def get_data():
     ## if league is 'Serie-A' and the team is in brazil_league_teams, then rename league to 'Serie-A-Brazil'
     brazil_league_teams = d.loc[d['player']== 'Breno']['Home'].unique().tolist()
     d.loc[(d['league'] == 'Serie-A') & (d['team'].isin(brazil_league_teams)), 'league'] = 'Serie-A-Brazil'
+
+    # d['birthdate'] = d.apply(lambda row: calculate_birthdate(str(row['date']), row['age']), axis=1)
+
+
+    ## fill in an age (55-001) for players that don't have an age
+    d['age'] = d['age'].fillna('55-001')
+
+    d['age_year'] = d['age'].fillna(0).str.split('-').str[0].astype(int)
+    d['age_day_of_year'] = d['age'].fillna(0).str.split('-').str[1].astype(int)
+    d['age_total_days'] = d['age_year'] * 365 + d['age_day_of_year']
+    d['age_year'] = d['age_year'].astype(int)
+    d['birthdate'] = pd.to_datetime(d['date']) - pd.to_timedelta(d['age_total_days'], unit='D')
+
+    ## if a player's name is 'Antony' and his birthdate is in the month of september 2001, change his name to 'Antony Alves Santos'
+    d.loc[(d['player'] == 'Antony') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'Antony Alves Santos'
 
     return d
 
