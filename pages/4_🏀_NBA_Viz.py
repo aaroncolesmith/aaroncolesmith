@@ -719,6 +719,14 @@ def get_num_cols(df):
 
 
 def app():
+
+    st.set_page_config(
+        page_title='aaroncolesmith.com',
+        page_icon='dog',
+        layout='wide'
+        )
+    
+
     st.title("NBA Player Stats Visualization")
 
     d1 = load_nba_games()
