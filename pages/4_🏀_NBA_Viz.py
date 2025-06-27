@@ -25,6 +25,7 @@ def get_closest_players(df, player_name, n=25):
     return closest_players[['Player', 'distance']]
 
 
+@st.fragment
 def quick_clstr(df, num_cols, str_cols, color, player=None):
     df1=df.copy()
     df1=df1[num_cols]
@@ -250,6 +251,8 @@ def quick_clstr(df, num_cols, str_cols, color, player=None):
         df_melted['Statistic'] = df_melted['Statistic'].str.replace('_scaled','')
         df_melted = pd.merge(df_melted,df_melted_unscaled,left_on=['Player','Statistic'],right_on=['Player','Statistic'],how='left')
 
+        fill_checkbox = st.checkbox('Include a fill on the visualization (note, some points will be covered)',value=True)
+
         ## create a radial diagram of the closest 10 players to the selected player
         fig = px.line_polar(df_melted,
                         r='Value',
@@ -259,7 +262,8 @@ def quick_clstr(df, num_cols, str_cols, color, player=None):
                         template='simple_white',
                         hover_data=['Value_Unscaled'],
                         color_discrete_sequence=px.colors.qualitative.Plotly)
-        fig.update_traces(fill='toself')
+        if fill_checkbox:
+            fig.update_traces(fill='toself')
         fig.update_layout(
             title=f"Closest Players to {player}",
             font_family='Futura',
@@ -268,10 +272,11 @@ def quick_clstr(df, num_cols, str_cols, color, player=None):
             showlegend=True
         )
 
-        fig.update_traces(mode='markers',
-                        # opacity=.75,
-                        marker=dict(size=12,line=dict(width=2,color='DarkSlateGrey'))
-                        )
+        fig.update_traces(
+            mode='lines+markers',
+            marker=dict(size=12, line=dict(width=2, color='DarkSlateGrey')),
+            line=dict(width=4, dash='dash')
+            )
         st.plotly_chart(fig)
 
 
@@ -332,6 +337,18 @@ def load_nba_box_scores():
     df['missed_shots'] = (df['fga'].fillna(0) - df['fg'].fillna(0))+(df['fta'].fillna(0) - df['ft'].fillna(0))
     df['all_stat'] = df['pts'] + df['trb'] + df['ast']
 
+    df["darko_lite"] = (
+    0.25 * df["bpm"] +
+    0.20 * (df["ortg"] - df["drtg"]) +
+    0.15 * df["usg_pct"] +
+    0.15 * df["ts_pct"].fillna(0) +  # Fill missing TS% with 0 to avoid NaNs
+    0.10 * df["ast_pct"] +
+    0.10 * df["trb_pct"] +
+    0.05 * df["stl_pct"] +
+    0.05 * df["blk_pct"] -
+    0.05 * df["tov_pct"].fillna(0)
+    )
+
     return df
 
 
@@ -369,6 +386,7 @@ def aggregate_box_scores(df):
                         playoff_games=('playoff_game','sum'),
                         playoff_wins=('playoff_win','sum'),
                         playoff_losses=('playoff_loss','sum'),
+                        darko_lite=('darko_lite','mean'),
                             ).reset_index()
     
     df['fg_pct'] = df['fg'] / df['fga']
@@ -461,6 +479,7 @@ def rename_columns(df):
             'drtg':'Defensive Rating',
             'ft_pct':'Free Throw Pct',
             "usg_pct": "Usage Rate",
+            'darko_lite':'Darko Lite'
         },
             inplace=True)
     
@@ -618,7 +637,21 @@ def date_range_viz(d1, d2):
 
 
 
+def analyze_null_percentages(df: pd.DataFrame, threshold: float = 0.50) -> dict:
 
+    null_percentages = df.isnull().sum() / len(df) * 100
+    null_percentages = null_percentages.reset_index()
+    null_percentages.columns = ['column', 'null_percentage']
+
+    columns_below_threshold = null_percentages.loc[null_percentages['null_percentage'] < (threshold * 100), 'column'].tolist()
+
+    return columns_below_threshold
+
+
+    # return {
+    #     'null_percentages': null_percentages,
+    #     'columns_above_threshold': columns_above_threshold
+    # }
 
 
 def player_comparison_viz(d1, d2):
@@ -647,30 +680,36 @@ def player_comparison_viz(d1, d2):
 
     players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
     player = st.selectbox('Select a player',players)
-    games_played = d.loc[d.player == player].game_id.nunique()
-
-    c1,c2,c3=st.columns(3)
-    games_played_select = c1.slider('Through his first number of games played',10,games_played,games_played)
-    minutes_played = int(d.loc[d.player == player].mp.sum())
-    minutes_played_half = int(minutes_played/2)
-    minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {minutes_played} minutes',0,minutes_played,minutes_played_half)
-    old_players_select = c3.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
-    df_filtered = d.groupby('player').head(games_played_select)
-    df_agg = aggregate_box_scores(df_filtered)
-    ## filter out players that have not played at least 75% of the games
-    df_agg = df_agg.loc[df_agg['gp'] >= (games_played_select * .75)].copy()
-    df_agg = rename_columns(df_agg)
-    df_agg=df_agg.query("Minutes > @minutes_played_select")
-
-    if old_players_select:
-        df_agg = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
-    else:
-        df_agg = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)&(df_agg['Usage Rate'].notnull())].fillna(0)
-
-    num_cols, non_num_cols = get_num_cols(df_agg)
 
     color='team'
     with st.form(key='clstr_form'):
+        
+
+        st.write(f'Player selected: {player}')
+        games_played = d.loc[d.player == player].game_id.nunique()
+
+        c1,c2,c3=st.columns(3)
+        games_played_select = c1.slider('Through his first number of games played',10,games_played,games_played)
+
+        minutes_played = int(d.loc[d.player == player].head(games_played_select).mp.sum())
+        minutes_played_half = int(minutes_played/2)
+        minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {minutes_played} minutes',0,minutes_played,minutes_played_half)
+        old_players_select = c3.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
+        df_filtered = d.groupby('player').head(games_played_select)
+        df_agg = aggregate_box_scores(df_filtered)
+        ## filter out players that have not played at least 75% of the games
+        df_agg = df_agg.loc[df_agg['gp'] >= (games_played_select * .75)].copy()
+        df_agg = rename_columns(df_agg)
+        df_agg=df_agg.query("Minutes > @minutes_played_select")
+
+        if old_players_select:
+            df_agg = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
+        else:
+            df_agg = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)&(df_agg['Usage Rate'].notnull())].fillna(0)
+
+        num_cols, non_num_cols = get_num_cols(df_agg)
+        
+
         num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
         non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['Player'])
         list_one=['Cluster']

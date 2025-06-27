@@ -349,10 +349,6 @@ def app():
 
     df = load_file(date_select)
 
-    ga('bovada','get_data',str(df.index.size))
-
-
-
     # a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
     # a.columns = ['title','date','count','unique']
     # a['date_sort'] = a['date'].astype('datetime64[D]')

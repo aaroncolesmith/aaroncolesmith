@@ -197,7 +197,7 @@ def get_closest_players(df, player_name, n=25):
     return closest_players[['player', 'distance']]
 
 
-
+@st.fragment()
 def quick_clstr(df, num_cols, str_cols, color, player):
     df1=df.copy()
     df1=df1[num_cols]
@@ -589,6 +589,10 @@ def app():
         )
     d = d.loc[d['league'].isin(league_selector)].copy()
 
+    c1,c2,c3=st.columns(3)
+    players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
+    player = c1.selectbox('Select a player',players)
+
 
     with st.form(key='select_form'):
         # players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
@@ -614,8 +618,7 @@ def app():
         
 
 
-        players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
-        player = c1.selectbox('Select a player',players)
+
 
 
         minutes_played = int(d.loc[
@@ -637,93 +640,91 @@ def app():
         giddy_up = st.form_submit_button('Giddy Up')
 
 
-    # df_filtered = d.groupby('player').tail(games_played_select)
-    df_filtered = d.loc[(d['date'] >= start_date) & (d['date'] <= end_date)].copy()
+    if giddy_up:
+        df_filtered = d.loc[(d['date'] >= start_date) & (d['date'] <= end_date)].copy()
+
+        df_agg = df_filtered.groupby(['player']).agg(
+            team=('team',lambda x: ', '.join(x.unique())),
+            league=('league',lambda x: ', '.join(x.unique())),
+            pos=('pos',lambda x: x.value_counts().index[0]),
+            games_played=('match_url','nunique'),
+            min=('min','sum'),
+            goals=('goals','sum'),
+            assists=('assists','sum'),
+            pks=('pks','sum'),
+            pk_att=('pk_att','sum'),
+            shots=('shots','sum'),
+            shots_on_goal=('shots_on_goal','sum'),
+            yellow_card=('yellow_card','sum'),
+            red_card=('red_card','sum'),
+            touches=('touches','sum'),
+            tackles=('tackles','sum'),
+            ints=('ints','sum'),
+            blocks=('blocks','sum'),
+            xg=('xg','sum'),
+            xa=('xa','sum'),
+            npxg=('npxg','sum'),
+            xag=('xag','sum'),
+            sca=('sca','sum'),
+            gca=('gca','sum'),
+            passes_cmp=('passes_cmp','sum'),
+            passes_att=('passes_att','sum'),
+            passes_cmp_pct=('passes_cmp_pct','mean'),
+            progressive_passes=('progressive_passes','sum'),
+            passing_distance=('passing_distance','sum'),
+            progressive_passing_distance=('progressive_passing_distance','sum'),
+            short_passes_cmp=('short_passes_cmp','sum'),
+            short_passes_att=('short_passes_att','sum'),
+            short_passes_cmp_pct=('short_passes_cmp_pct','mean'),
+            med_passes_cmp=('med_passes_cmp','sum'),
+            med_passes_att=('med_passes_att','sum'),
+            med_passes_cmp_pct=('med_passes_cmp_pct','mean'),
+            long_passes_cmp=('long_passes_cmp','sum'),
+            long_passes_att=('long_passes_att','sum'),
+            long_passes_cmp_pct=('long_passes_cmp_pct','mean'),
+            key_passes=('key_passes','sum'),
+            final_third_passes=('final_third_passes','sum'),
+            passes_penalty_area=('passes_penalty_area','sum'),
+            crosses_penalty_area=('crosses_penalty_area','sum'),
+            through_balls=('through_balls','sum'),
+            switches=('switches','sum'),
+            crosses=('crosses','sum'),
+            throw_ins=('throw_ins','sum'),
+            offside_passes=('offside_passes','sum'),
+            blocked_passes=('blocked_passes','sum'),
+            tackles_won=('tackles_won','sum'),
+            dribblers_tackled=('dribblers_tackled','sum'),
+            dribblers_challenged=('dribblers_challenged','sum'),
+            tackle_pct=('tackle_pct','mean'),
+            carries=('carries','sum'),
+            progressive_carries=('progressive_carries','sum'),
+            carries_progressive_distance=('carries_progressive_distance','sum'),
+            carries_total_distance=('carries_total_distance','sum'),
+            take_ons_attempted=('take_ons_attempted','sum'),
+            take_ons_successful=('take_ons_successful','sum'),
+            take_ons_succ_pct=('take_ons_succ_pct','mean'),
+            take_ons_tackled=('take_ons_tackled','sum'),
+            take_ons_tkld_pct=('take_ons_tkld_pct','mean'),
+        ).reset_index()
 
 
 
-    df_agg = df_filtered.groupby(['player']).agg(
-        team=('team',lambda x: ', '.join(x.unique())),
-        league=('league',lambda x: ', '.join(x.unique())),
-        pos=('pos',lambda x: x.value_counts().index[0]),
-        games_played=('match_url','nunique'),
-        min=('min','sum'),
-        goals=('goals','sum'),
-        assists=('assists','sum'),
-        pks=('pks','sum'),
-        pk_att=('pk_att','sum'),
-        shots=('shots','sum'),
-        shots_on_goal=('shots_on_goal','sum'),
-        yellow_card=('yellow_card','sum'),
-        red_card=('red_card','sum'),
-        touches=('touches','sum'),
-        tackles=('tackles','sum'),
-        ints=('ints','sum'),
-        blocks=('blocks','sum'),
-        xg=('xg','sum'),
-        xa=('xa','sum'),
-        npxg=('npxg','sum'),
-        xag=('xag','sum'),
-        sca=('sca','sum'),
-        gca=('gca','sum'),
-        passes_cmp=('passes_cmp','sum'),
-        passes_att=('passes_att','sum'),
-        passes_cmp_pct=('passes_cmp_pct','mean'),
-        progressive_passes=('progressive_passes','sum'),
-        passing_distance=('passing_distance','sum'),
-        progressive_passing_distance=('progressive_passing_distance','sum'),
-        short_passes_cmp=('short_passes_cmp','sum'),
-        short_passes_att=('short_passes_att','sum'),
-        short_passes_cmp_pct=('short_passes_cmp_pct','mean'),
-        med_passes_cmp=('med_passes_cmp','sum'),
-        med_passes_att=('med_passes_att','sum'),
-        med_passes_cmp_pct=('med_passes_cmp_pct','mean'),
-        long_passes_cmp=('long_passes_cmp','sum'),
-        long_passes_att=('long_passes_att','sum'),
-        long_passes_cmp_pct=('long_passes_cmp_pct','mean'),
-        key_passes=('key_passes','sum'),
-        final_third_passes=('final_third_passes','sum'),
-        passes_penalty_area=('passes_penalty_area','sum'),
-        crosses_penalty_area=('crosses_penalty_area','sum'),
-        through_balls=('through_balls','sum'),
-        switches=('switches','sum'),
-        crosses=('crosses','sum'),
-        throw_ins=('throw_ins','sum'),
-        offside_passes=('offside_passes','sum'),
-        blocked_passes=('blocked_passes','sum'),
-        tackles_won=('tackles_won','sum'),
-        dribblers_tackled=('dribblers_tackled','sum'),
-        dribblers_challenged=('dribblers_challenged','sum'),
-        tackle_pct=('tackle_pct','mean'),
-        carries=('carries','sum'),
-        progressive_carries=('progressive_carries','sum'),
-        carries_progressive_distance=('carries_progressive_distance','sum'),
-        carries_total_distance=('carries_total_distance','sum'),
-        take_ons_attempted=('take_ons_attempted','sum'),
-        take_ons_successful=('take_ons_successful','sum'),
-        take_ons_succ_pct=('take_ons_succ_pct','mean'),
-        take_ons_tackled=('take_ons_tackled','sum'),
-        take_ons_tkld_pct=('take_ons_tkld_pct','mean'),
-    ).reset_index()
+        for stat_col in per_90_stat_list:
+            df_agg[f'{stat_col}_per_90'] = (df_agg[stat_col] / df_agg['min']) * 90
+
+        df_agg['xg_conversion_rate_per_90'] = (df_agg['goals_per_90'] / df_agg['xg_per_90']).replace([np.inf, -np.inf], 0).fillna(0)
 
 
+        non_num_cols = ['player','team','league','pos']
 
-    for stat_col in per_90_stat_list:
-        df_agg[f'{stat_col}_per_90'] = (df_agg[stat_col] / df_agg['min']) * 90
+        df_clstr = df_agg.loc[(df_agg['min'] >= minutes_played_select)].fillna(0)
+        # df_clstr = df_agg.fillna(0)
 
-    df_agg['xg_conversion_rate_per_90'] = (df_agg['goals_per_90'] / df_agg['xg_per_90']).replace([np.inf, -np.inf], 0).fillna(0)
+        if player in df_clstr['player'].unique().tolist():
+            df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
 
-
-    non_num_cols = ['player','team','league','pos']
-
-    df_clstr = df_agg.loc[(df_agg['min'] >= minutes_played_select)].fillna(0)
-    # df_clstr = df_agg.fillna(0)
-
-    if player in df_clstr['player'].unique().tolist():
-        df_results, fig_scatter = quick_clstr(df_clstr, num_cols_select, non_num_cols, 'Cluster',player)
-
-    else:
-        st.write('Adjust your filters because you have filtered out your player')
+        else:
+            st.write('Adjust your filters because you have filtered out your player')
 
 
 
