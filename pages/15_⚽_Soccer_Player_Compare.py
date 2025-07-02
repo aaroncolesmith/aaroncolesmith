@@ -430,21 +430,21 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     df_closest[scaled_cols] = polar_scaled
 
     df_melted = pd.melt(df_closest,
-                    id_vars=['player'],
+                    id_vars=['player','team'],
                     value_vars=scaled_cols,
                     var_name='Statistic',
                     value_name='Value')
     
     df_melted_unscaled = pd.melt(df_closest,
-                    id_vars=['player'],
+                    id_vars=['player','team'],
                     value_vars=key_vals,
                     var_name='Statistic',
                     value_name='Value')
     
-    df_melted_unscaled.columns = ['player','Statistic','Value_Unscaled']
+    df_melted_unscaled.columns = ['player','team','Statistic','Value_Unscaled']
     df_melted_unscaled['Statistic'] = df_melted_unscaled['Statistic'].str.replace('_scaled','')
     df_melted['Statistic'] = df_melted['Statistic'].str.replace('_scaled','')
-    df_melted = pd.merge(df_melted,df_melted_unscaled,left_on=['player','Statistic'],right_on=['player','Statistic'],how='left')
+    df_melted = pd.merge(df_melted,df_melted_unscaled,left_on=['player','Statistic'],right_on=['player','Statistic'],how='left',suffixes=('','_y'))
 
     ## add a checkbox to remove the fill
     fill_checkbox = st.checkbox('Include a fill on the visualization (note, some points will be covered)',value=True)
@@ -460,7 +460,6 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     )
 
 
-
     ## create a radial diagram of the closest 10 players to the selected player
     fig = px.line_polar(df_melted,
                      r='Value',
@@ -468,7 +467,7 @@ def quick_clstr(df, num_cols, str_cols, color, player):
                      color='player',
                      line_close=True,
                      template='simple_white',
-                     hover_data=['Value_Unscaled'],
+                     hover_data=['player','team','Value_Unscaled'],
                      color_discrete_sequence=px.colors.qualitative.Plotly)
     if fill_checkbox:
         fig.update_traces(fill='toself')
@@ -483,8 +482,14 @@ def quick_clstr(df, num_cols, str_cols, color, player):
     fig.update_traces(
         mode='lines+markers',
           marker=dict(size=12, line=dict(width=2, color='DarkSlateGrey')),
-          line=dict(width=4, dash='dash')
+          line=dict(width=4, dash='dash'),
+          hovertemplate=(
+       # Player (now from customdata[0]) and Team (from customdata[1])
+        "<b>%{customdata[0]} - %{customdata[1]}</b><br>"
+        # Statistic (from theta) and Unscaled Value (from customdata[2]), formatted
+        "%{theta}: %{customdata[2]:.2f}<extra></extra>"
           )
+    )
     st.plotly_chart(fig)
 
 
@@ -525,8 +530,28 @@ def get_data():
     d['age_year'] = d['age_year'].astype(int)
     d['birthdate'] = pd.to_datetime(d['date']) - pd.to_timedelta(d['age_total_days'], unit='D')
 
+
+
     ## if a player's name is 'Antony' and his birthdate is in the month of september 2001, change his name to 'Antony Alves Santos'
     d.loc[(d['player'] == 'Antony') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'Antony Alves Santos'
+
+    d.loc[(d['player'] == 'Marquinhos') & (d['birthdate'].dt.month == 4) & (d['birthdate'].dt.year == 2003), 'player'] = 'Marquinhos - Marcus Vinícius Oliveira Alencar'
+
+    d.loc[(d['player'] == 'Marquinhos') & (d['birthdate'].dt.month == 1) & (d['birthdate'].dt.year == 1997), 'player'] = 'Marquinhos - Marcos Vinícius Sousa Natividade'
+    d.loc[(d['player'] == 'Marquinhos') & (d['birthdate'].dt.month == 2) & (d['birthdate'].dt.year == 1997), 'player'] = 'Marquinhos - Marcos Vinícius Sousa Natividade'
+
+    d.loc[(d['player'] == 'Marquinhos') & (d['birthdate'].dt.month == 10) & (d['birthdate'].dt.year == 1999), 'player'] = 'Marquinhos - José Marcos Costa Martins'
+
+    d.loc[(d['player'] == 'Rodri') & (d['birthdate'].dt.month == 2) & (d['birthdate'].dt.year == 1989), 'player'] = 'Rodri - Alberto Rodríguez Expósito'
+    d.loc[(d['player'] == 'Rodri') & (d['birthdate'].dt.month == 3) & (d['birthdate'].dt.year == 1989), 'player'] = 'Rodri - Alberto Rodríguez Expósito'
+
+    d.loc[(d['player'] == 'Rodri') & (d['birthdate'].dt.month == 6) & (d['birthdate'].dt.year == 1990), 'player'] = 'Rodri - Rodrigo Ríos Lozano'
+
+    d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
+    d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 10) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
+    
+    
+    st.write(d.loc[d['player']=='João Pedro'].tail(50))
 
     return d
 
@@ -563,7 +588,6 @@ def app():
                      'throw_ins', 'offside_passes', 'blocked_passes', 'tackles_won', 'dribblers_tackled', 'dribblers_challenged', 'tackle_pct', 'carries', 
                      'progressive_carries', 'carries_progressive_distance', 'carries_total_distance', 'take_ons_attempted', 
                      'take_ons_successful', 'take_ons_succ_pct', 'take_ons_tackled', 'take_ons_tkld_pct',
-
                      'xg_conversion_rate_per_90'
             ]
     
@@ -593,6 +617,11 @@ def app():
     players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
     player = c1.selectbox('Select a player',players)
 
+    # st.write(d.sample(100))
+
+    player_min_date = d.loc[d['player']==player]['date'].min()
+    player_max_date = d.loc[d['player']==player]['date'].max()
+
 
     with st.form(key='select_form'):
         # players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
@@ -603,13 +632,15 @@ def app():
 
         start_date = c1.date_input(
             "Select a start date",
-            value=pd.to_datetime(d.date.max())-pd.DateOffset(months=3),
+            # value=pd.to_datetime(d.date.max())-pd.DateOffset(months=3),
+            value=pd.to_datetime(player_min_date),
             min_value=pd.to_datetime('1966-02-19'),
             max_value=pd.to_datetime(d.date.max())
             )
         end_date = c2.date_input(
             "Select an end date",
-            value=pd.to_datetime(d.date.max()),
+            # value=pd.to_datetime(d.date.max()),
+            value=pd.to_datetime(player_max_date),
             min_value=pd.to_datetime('1966-02-19'),
             max_value=pd.to_datetime(d.date.max())
             )
@@ -627,7 +658,7 @@ def app():
             (d['date'] <= end_date)
             ]['min'].sum())
         minutes_played_half = int(minutes_played/2)
-        minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes',0,minutes_played,100)
+        minutes_played_select = c1.slider(f'Filter players that played less than x amount of minutes',0,minutes_played,100)
         
 
         # start_date = d.loc[d.player == player].date.min()

@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import random
+from utils.utils import test_util, quick_clstr_util
 
 
 def get_closest_players(df, player_name, n=25):
@@ -533,6 +534,7 @@ def single_game_viz(d1, d2):
                 non_num_cols.append(col)
     color='team'
     with st.form(key='clstr_form'):
+        c1,c2=st.columns(2)
         num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
         non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['Player'])
         list_one=['Cluster']
@@ -544,7 +546,7 @@ def single_game_viz(d1, d2):
         df=df.query("Minutes > @mp_filter")
         submit_button = st.form_submit_button(label='Submit')
     if submit_button:
-        quick_clstr(df.fillna(0), num_cols_select, non_num_cols_select, color_select)
+        quick_clstr_util(df.fillna(0), num_cols_select, non_num_cols_select, color_select)
 
 
 
@@ -615,9 +617,6 @@ def date_range_viz(d1, d2):
                 non_num_cols.append(col)
         
 
-        
-
-        # non_num_cols=['player']
     color='team'
     with st.form(key='clstr_form'):
         num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
@@ -626,6 +625,8 @@ def date_range_viz(d1, d2):
         list_two=df.columns.tolist()
         color_options=list_one+list_two
 
+        show_player_select = st.multiselect('Select players to show on the graph',df['Player'].unique().tolist())
+
         color_select=st.selectbox('What attribute should color points on the graph?',color_options)
         mp_filter=st.slider('Filter players by minimum minutes played?', min_value=0.0, max_value=df.Minutes.max(), value=0.0, step=1.0)
         df=df.query("Minutes > @mp_filter")
@@ -633,7 +634,7 @@ def date_range_viz(d1, d2):
     
     
     if submit_button:
-        quick_clstr(df.fillna(0), num_cols_select, non_num_cols_select, color_select)
+        quick_clstr_util(df.fillna(0), num_cols_select, non_num_cols_select, color_select, player=None, player_list=show_player_select)
 
 
 
@@ -720,7 +721,12 @@ def player_comparison_viz(d1, d2):
         submit_button = st.form_submit_button(label='Submit')
 
     if submit_button:
-        quick_clstr(df_agg.fillna(0), num_cols_select, non_num_cols_select, 'Cluster', player)
+        quick_clstr_util(df_agg.fillna(0), 
+                         num_cols_select, 
+                         non_num_cols_select, 
+                         'Cluster', 
+                         player
+                         )
 
 
 
