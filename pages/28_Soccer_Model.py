@@ -18,7 +18,7 @@ st.set_page_config(
 
 st.cache_data(ttl=3600)
 def load_data():
-    df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network/raw/refs/heads/main/data/soccer_model.parquet', engine='pyarrow')
+    df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network_clean/raw/refs/heads/main/data/soccer_model.parquet', engine='pyarrow')
     return df
 
 

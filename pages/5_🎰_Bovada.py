@@ -221,9 +221,15 @@ def line_chart_probability_initial(df,option,color_map):
     st.plotly_chart(g,use_container_width=True)
 
 def get_color_map():
-  df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/color_map.csv')
-  trans_df = df[['team','primary_color']].set_index('team').T
-  color_map=trans_df.to_dict('index')['primary_color']
+  try:
+    df=pd.read_csv('https://raw.githubusercontent.com/aaroncolesmith/bovada/master/color_map.csv')
+    trans_df = df[['team','primary_color']].set_index('team').T
+    color_map=trans_df.to_dict('index')['primary_color']
+
+  except:
+      color_map = {
+            "Chelsea FC": "#034694"  # Entry for Chelsea with its hexadecimal color code
+        }
 
   # word_freq.update({'before': 23})
   return color_map

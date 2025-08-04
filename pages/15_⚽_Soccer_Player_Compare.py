@@ -550,8 +550,6 @@ def get_data():
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 10) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     
-    
-    st.write(d.loc[d['player']=='João Pedro'].tail(50))
 
     return d
 
