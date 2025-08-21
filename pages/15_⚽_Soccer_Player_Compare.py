@@ -499,7 +499,7 @@ def quick_clstr(df, num_cols, str_cols, color, player):
 
 @st.cache_data
 def get_data():
-    df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network/raw/refs/heads/main/data/fb_ref_data.parquet', engine='pyarrow')
+    df = pd.read_parquet('https://github.com/aaroncolesmith/data_action_network_clean/raw/refs/heads/main/data/fb_ref_data.parquet', engine='pyarrow')
     d = pd.read_parquet('https://github.com/aaroncolesmith/soccer_data/raw/refs/heads/main/data/fb_ref_data_box_scores.parquet', engine='pyarrow')
     d = pd.merge(d,df,left_on=['match_url'],right_on=['url'],how='left')
     d['date'] = pd.to_datetime(d['date'])
