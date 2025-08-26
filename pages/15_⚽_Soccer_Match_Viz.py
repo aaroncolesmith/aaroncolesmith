@@ -14,7 +14,14 @@ import functools as ft
 import random
 
 
-
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://fbref.com/',
+    'Set-Cookie': 'bscookie=; Domain=.fbref.com; Expires=Wed, 01-Jan-2025 00:00:00 GMT; Path=/; Secure; SameSite=None',
+    'DNT': '1'  # Do Not Track request header
+}
 
 
 def quick_clstr(df, num_cols, str_cols, color):
@@ -342,7 +349,7 @@ def quick_clstr_bak(df, num_cols, str_cols, color):
 
 @st.cache_data
 def get_match_data(url):
-    r = requests.get(url)
+    r = requests.get(url, headers=headers)
     soup = BeautifulSoup(r.content, 'html.parser')
 
     team_one = soup.select("#content > div.scorebox > div:nth-child(1) > div:nth-child(1) > strong > a")
@@ -398,9 +405,8 @@ def app():
         max_value=pd.to_datetime('today')- pd.Timedelta(days=1)
         )
 
-    # date='2023-08-14'
     url=f'https://fbref.com/en/matches/{date}'
-    r=requests.get(url)
+    r=requests.get(url, headers=headers)
 
 
     soup = BeautifulSoup(r.content, "html.parser")
@@ -418,9 +424,6 @@ def app():
         df = pd.concat([df,dfs[i]])
     df=df.query('Score.notnull()')
 
-    # df['Home'] = df['Home'].str.rsplit(' ', n=1).str[0]
-    # df['Away'] = df['Away'].str.split(' ', n=1).str[1]
-
     df.reset_index(drop=False,inplace=True)
     df['url'] = pd.Series(all_urls)
     df['match_selector'] = df['Home']+' '+df['Score']+' '+df['Away']
@@ -431,42 +434,6 @@ def app():
     match_url=df.query('match_selector == @match_select').url.min()
 
     d = get_match_data(match_url)
-
-    # r = requests.get(match_url)
-    # soup = BeautifulSoup(r.content, 'html.parser')
-
-    # team_one = soup.select("#content > div.scorebox > div:nth-child(1) > div:nth-child(1) > strong > a")
-    # team_one=team_one[0].text
-
-    # team_two = soup.select("#content > div.scorebox > div:nth-child(2) > div:nth-child(1) > strong > a")
-    # team_two=team_two[0].text
-
-    # table_num = len(pd.read_html(r.content))
-    # if table_num == 20:
-    #     dfs = [pd.read_html(r.content)[3],pd.read_html(r.content)[4],pd.read_html(r.content)[5],pd.read_html(r.content)[6],pd.read_html(r.content)[7],pd.read_html(r.content)[8]]
-    # if table_num == 7:
-    #     dfs = [pd.read_html(r.content)[3]]
-
-    # d1 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
-    # d1.columns=d1.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
-    # for i in range(0,50):
-    #     d1.columns=d1.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
-    # d1=d1.loc[d1.pos.notnull()]
-    # d1['team'] = team_one
-
-    # if table_num == 20:
-    #     dfs = [pd.read_html(r.content)[10],pd.read_html(r.content)[11],pd.read_html(r.content)[12],pd.read_html(r.content)[13],pd.read_html(r.content)[14],pd.read_html(r.content)[15]]
-    # if table_num == 7:
-    #     dfs = [pd.read_html(r.content)[5]]
-
-    # d2 = ft.reduce(lambda left, right: pd.merge(left, right), dfs)
-    # d2.columns=d2.columns.map('_'.join).str.strip().str.lower().str.replace('%','_pct').str.replace(' ','_')
-    # for i in range(0,50):
-    #     d2.columns=d2.columns.str.replace('unnamed:_'+str(i)+'_level_0_','')
-    # d2=d2.loc[d2.pos.notnull()]
-    # d2['team'] = team_two
-
-    # d=pd.concat([d1,d2])
 
     d.rename(columns={
             "performance_gls":"goals",

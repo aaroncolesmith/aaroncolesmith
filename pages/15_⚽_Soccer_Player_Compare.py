@@ -550,7 +550,7 @@ def get_data():
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 10) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     
-
+    st.write(d.tail(10))
     return d
 
 
@@ -605,20 +605,20 @@ def app():
 
 
 
-    league_selector = st.multiselect('Select a league',
-        d.league.unique().tolist(),
-        d.league.unique().tolist()
-        )
-    d = d.loc[d['league'].isin(league_selector)].copy()
+    # league_selector = st.multiselect('Select a league',
+    #     d.league.unique().tolist(),
+    #     d.league.unique().tolist()
+    #     )
+    # d = d.loc[d['league'].isin(league_selector)].copy()
 
-    c1,c2,c3=st.columns(3)
-    players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
-    player = c1.selectbox('Select a player',players)
+    # c1,c2,c3=st.columns(3)
+    # players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
+    # player = c1.selectbox('Select a player',players)
 
-    # st.write(d.sample(100))
+    # # st.write(d.sample(100))
 
-    player_min_date = d.loc[d['player']==player]['date'].min()
-    player_max_date = d.loc[d['player']==player]['date'].max()
+    # player_min_date = d.loc[d['player']==player]['date'].min()
+    # player_max_date = d.loc[d['player']==player]['date'].max()
 
 
     with st.form(key='select_form'):
@@ -627,6 +627,24 @@ def app():
         # games_played = d.loc[d.player == player].match_url.nunique()
         c1,c2,c3=st.columns(3)
         # games_played_select = c1.slider('How many recent games?',10,games_played,games_played)
+
+        league_selector = st.multiselect('Select a league',
+            d.league.unique().tolist(),
+            d.league.unique().tolist()
+            )
+        d = d.loc[d['league'].isin(league_selector)].copy()
+
+        c1,c2,c3=st.columns(3)
+        players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
+        player = c1.selectbox('Select a player',players)
+
+        # st.write(d.sample(100))
+
+        player_min_date = d.loc[d['player']==player]['date'].min()
+        player_max_date = d.loc[d['player']==player]['date'].max()
+
+
+
 
         start_date = c1.date_input(
             "Select a start date",

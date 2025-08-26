@@ -12,6 +12,24 @@ def test_util():
     st.write('Test Util')
 
 
+def get_closest_players(df, player_name, n=25):
+    # Get the Cluster_x and Cluster_y values for the given player
+
+    player_data = df[df['Player'] == player_name][['Cluster_x', 'Cluster_y']].values
+    if len(player_data) == 0:
+        return f"Player '{player_name}' not found in the dataframe."
+
+    # Calculate the Euclidean distance from the given player to all other players
+    df['distance'] = np.sqrt((df['Cluster_x'] - player_data[0][0])**2 + (df['Cluster_y'] - player_data[0][1])**2)
+
+    # Sort by distance and exclude the player itself
+    closest_players = df[df['Player'] != player_name].sort_values('distance').head(n)
+
+    # Return the player names of the closest players
+    return closest_players[['Player', 'distance']]
+
+
+
 
 @st.fragment
 def quick_clstr_util(df, num_cols, str_cols, color, player=None, player_list=None):
