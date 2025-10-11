@@ -660,7 +660,7 @@ def app():
         )
     
 
-    st.title("NBA Player Stats Visualization")
+    st.title("Soccer Stats Visualization")
 
     df = get_data()
 
