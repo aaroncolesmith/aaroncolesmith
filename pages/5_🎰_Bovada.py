@@ -34,7 +34,7 @@ def load_file(date_select):
 
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data/blob/master/bovada_data.parquet?raw=true', engine='pyarrow')
     # df=pd.read_parquet('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_data.parquet', engine='pyarrow')
-    df=pd.read_parquet('https://github.com/aaroncolesmith/data_bovada/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
+    df=pd.read_parquet('https://github.com/aaroncolesmith/bovada_data_1001/raw/refs/heads/main/data/bovada_data.parquet',engine='pyarrow')
     
     try:
         df['day']=df['date'].astype('datetime64[D]')
@@ -47,7 +47,7 @@ def load_file(date_select):
 # @st.cache(suppress_st_warning=True)
 def load_scatter_data():
     # df=pd.read_csv('https://github.com/aaroncolesmith/bet_model/raw/main/bovada_scatter.csv')
-    df=pd.read_csv('https://github.com/aaroncolesmith/data_bovada/raw/refs/heads/main/data/bovada_scatter.csv')
+    df=pd.read_csv('https://github.com/aaroncolesmith/bovada_data_1001/raw/refs/heads/main/data/bovada_scatter.csv')
     df['date'] = pd.to_datetime(df['date'])
     df['seconds_ago']=(pd.to_numeric(datetime.datetime.utcnow().strftime("%s")) - pd.to_numeric(df['date'].apply(lambda x: x.strftime('%s'))))
     df['minutes_ago'] = round(df['seconds_ago']/60,2)

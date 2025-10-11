@@ -189,6 +189,7 @@ def crime_cnt_rolling_avg(df):
 def pdx911_data(days):
     # d=pd.read_parquet('https://raw.githubusercontent.com/aaroncolesmith/portland_crime_data/main/portland_crime_data.parquet', engine='pyarrow')
     d=pd.read_parquet('https://github.com/aaroncolesmith/data_pdx_911/raw/refs/heads/main/data/portland_crime_data.parquet', engine='pyarrow')
+    # st.write(d)
     # url='https://github.com/aaroncolesmith/data_load/raw/refs/heads/main/data/portland_crime_data.parquet'
 
     d = d.loc[d.DATE.dt.date >= (pd.to_datetime('today') - pd.Timedelta(days=days)).date()]

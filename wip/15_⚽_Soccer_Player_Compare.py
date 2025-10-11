@@ -550,7 +550,6 @@ def get_data():
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 9) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     d.loc[(d['player'] == 'João Pedro') & (d['birthdate'].dt.month == 10) & (d['birthdate'].dt.year == 2001), 'player'] = 'João Pedro Junqueira de Jesus'
     
-    st.write(d.tail(10))
     return d
 
 
@@ -604,21 +603,6 @@ def app():
         st.write('Columns:',d.columns.tolist())
 
 
-
-    # league_selector = st.multiselect('Select a league',
-    #     d.league.unique().tolist(),
-    #     d.league.unique().tolist()
-    #     )
-    # d = d.loc[d['league'].isin(league_selector)].copy()
-
-    # c1,c2,c3=st.columns(3)
-    # players = d.groupby('player').agg(xg=('xg','sum')).sort_values('xg',ascending=False).reset_index()['player'].tolist()
-    # player = c1.selectbox('Select a player',players)
-
-    # # st.write(d.sample(100))
-
-    # player_min_date = d.loc[d['player']==player]['date'].min()
-    # player_max_date = d.loc[d['player']==player]['date'].max()
 
 
     with st.form(key='select_form'):
