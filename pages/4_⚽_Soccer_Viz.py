@@ -72,6 +72,29 @@ def get_data():
     d['game_id'] = d['match_url'].str.split('/').str[-1].str.replace('.html','')
     d['Minutes'] = pd.to_numeric(d['min'], errors='coerce')
 
+
+    d['mp'] = pd.to_numeric(d['min'], errors='coerce')
+
+    d['win'] = np.select(
+        [
+            (d['team'] == d['home_team']) & (d['home_score'] > d['visitor_score']),
+            (d['team'] == d['home_team']) & (d['home_score'] < d['visitor_score']),
+            (d['team'] != d['home_team']) & (d['home_score'] < d['visitor_score']),
+            (d['team'] != d['home_team']) & (d['home_score'] > d['visitor_score'])
+        ],
+        [
+            1,  
+            0,  
+            1,  
+            0   
+        ],
+    )
+
+    d['tie'] = np.where(d['home_score'] == d['visitor_score'], 1, 0)
+
+    d['loss'] = np.where((d['win'] == 0) & (d['tie']==0), 1, 0)
+
+
     return d
 
 
@@ -385,26 +408,7 @@ def player_comparison_viz(df):
 
     ## rename min to mp
     # d.rename(columns={'min':'mp'}, inplace=True)
-    d['mp'] = pd.to_numeric(d['min'], errors='coerce')
 
-    d['win'] = np.select(
-        [
-            (d['team'] == d['home_team']) & (d['home_score'] > d['visitor_score']),
-            (d['team'] == d['home_team']) & (d['home_score'] < d['visitor_score']),
-            (d['team'] != d['home_team']) & (d['home_score'] < d['visitor_score']),
-            (d['team'] != d['home_team']) & (d['home_score'] > d['visitor_score'])
-        ],
-        [
-            1,  
-            0,  
-            1,  
-            0   
-        ],
-    )
-
-    d['tie'] = np.where(d['home_score'] == d['visitor_score'], 1, 0)
-
-    d['loss'] = np.where((d['win'] == 0) & (d['tie']==0), 1, 0)
 
     per_90_stat_list = ['goals','assists','ints','xg','xag','xa',
                      'passes_cmp','carries','carries_total_distance',
@@ -449,6 +453,7 @@ def player_comparison_viz(df):
 
         color='team'
         
+        c1,c2,c3=st.columns(3)
         start_date = c1.date_input(
             "Select a start date",
             # value=pd.to_datetime(d.date.max())-pd.DateOffset(months=3),
@@ -570,7 +575,7 @@ def player_comparison_viz(df):
         # color_options=list_one+list_two
         df_clstr = df_agg.loc[(df_agg['min'] >= minutes_played_select)].fillna(0)
 
-        if player in df_clstr['player'].unique().tolist():
+        if player in df_clstr['Player'].unique().tolist():
             non_num_cols = ['Player','Team','league','pos']
             quick_clstr_util(df_agg.fillna(0), 
                             num_cols_select, 

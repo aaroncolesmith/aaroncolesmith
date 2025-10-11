@@ -36,6 +36,10 @@ def quick_clstr_util(df, num_cols, str_cols, color, player=None, player_list=Non
     df1=df.copy()
     df1=df1[num_cols]
 
+    df1 = df1.replace([np.inf, -np.inf], np.nan)
+    df1 = df1.fillna(0)
+    df1 = df1.clip(lower=-1e10, upper=1e10)
+    
     scaler = StandardScaler()
     x_scaled = scaler.fit_transform(df1)
 
