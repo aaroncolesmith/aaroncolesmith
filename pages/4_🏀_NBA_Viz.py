@@ -680,28 +680,74 @@ def player_comparison_viz(d1, d2):
     d['playoff_loss'] = np.where(d['playoff_game'] == 1, 1-d['win'], 0)
 
     players = d.groupby('player').agg(all_stat=('all_stat','mean')).sort_values('all_stat',ascending=False).reset_index()['player'].tolist()
-    player = st.selectbox('Select a player',players)
+    c1,c2 = st.columns([2,2])
+    player = c1.selectbox('Select a player',players)
+    select_toggle = c2.selectbox('Analysis based on first games played or date range?',
+                                 ['Games Played','Date Range'])
 
     color='team'
     with st.form(key='clstr_form'):
         
 
         st.write(f'Player selected: {player}')
-        games_played = d.loc[d.player == player].game_id.nunique()
+        if select_toggle == 'Games Played':
 
-        c1,c2,c3=st.columns(3)
-        games_played_select = c1.slider('Through his first number of games played',10,games_played,games_played)
+            games_played = d.loc[d.player == player].game_id.nunique()
 
-        minutes_played = int(d.loc[d.player == player].head(games_played_select).mp.sum())
-        minutes_played_half = int(minutes_played/2)
-        minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {minutes_played} minutes',0,minutes_played,minutes_played_half)
-        old_players_select = c3.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
-        df_filtered = d.groupby('player').head(games_played_select)
+            c1,c2,c3=st.columns(3)
+            games_played_select = c1.slider('Through his first number of games played',10,games_played,games_played)
+
+            minutes_played = int(d.loc[d.player == player].head(games_played_select).mp.sum())
+            minutes_played_half = int(minutes_played/2)
+            minutes_played_select = c2.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {minutes_played} minutes',0,minutes_played,minutes_played_half)
+            old_players_select = c3.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
+            df_filtered = d.groupby('player').head(games_played_select)
+
+        if select_toggle == 'Date Range':
+            c1,c2=st.columns(2)
+            start_date = c1.date_input(
+                    "Select a start date",
+                    value=pd.to_datetime(d.loc[d['player']==player].date.max())-pd.DateOffset(months=1),
+                    min_value=pd.to_datetime('1966-02-19'),
+                    max_value=pd.to_datetime(d.loc[d['player']==player].date.max())
+                    )
+            end_date = c2.date_input(
+                    "Select an end date",
+                    value=pd.to_datetime(d.loc[d['player']==player].date.max()),
+                    min_value=pd.to_datetime('1966-02-19'),
+                    max_value=pd.to_datetime(d.loc[d['player']==player].date.max())
+                    )
+            start_date=pd.to_datetime(start_date)
+            end_date=pd.to_datetime(end_date)
+            df_filtered = d.loc[(d.date >= start_date) & (d.date <= end_date)]
+
+            player_mp = int(df_filtered.loc[df_filtered.player == player].mp.sum())
+            player_mp_half = int(player_mp/2)
+            player_mp_max = int(df_filtered.groupby(['player']).mp.sum().max())
+            player_gp = int(df_filtered.loc[df_filtered.player == player].game_id.nunique())
+            player_gp_half = int(player_gp/2)
+
+            # st.write(df_filtered)
+
+
+
+            # minutes_played = int(df_filtered.loc[df_filtered.player == player].mp.sum())
+            # minutes_played_half = 10
+            c1,c2=st.columns(2)
+            minutes_played_select = c1.slider(f'Filter players that played less than x amount of minutes -- for reference, {player} played {player_mp} minutes',0,player_mp,player_mp_half)
+            games_played_select = c2.slider(f'Filter players that played less than x amount of games -- for reference, {player} played {player_gp} games',0,player_gp,player_gp_half)
+            # minutes_played_select = 10
+            old_players_select = True
+            # old_players_select = st.checkbox('Include older players (they don\'t have advanced stats like Usage Rate)',value=True)
+
         df_agg = aggregate_box_scores(df_filtered)
+        # st.write(df_agg)
         ## filter out players that have not played at least 75% of the games
         df_agg = df_agg.loc[df_agg['gp'] >= (games_played_select * .75)].copy()
         df_agg = rename_columns(df_agg)
-        df_agg=df_agg.query("Minutes > @minutes_played_select")
+        # st.write(df_agg)
+        if minutes_played_select:
+            df_agg=df_agg.query("Minutes > @minutes_played_select")
 
         if old_players_select:
             df_agg = df_agg.loc[(df_agg['Minutes'] >= minutes_played_select)].fillna(0)
@@ -710,7 +756,7 @@ def player_comparison_viz(d1, d2):
 
         num_cols, non_num_cols = get_num_cols(df_agg)
         
-
+        # st.write(df_agg)
         num_cols_select = st.multiselect('Select statistics to be used for analysis', num_cols, num_cols)
         non_num_cols_select=st.multiselect('Select non numeric columns for hover data',non_num_cols,['Player'])
         list_one=['Cluster']
