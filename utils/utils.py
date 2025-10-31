@@ -313,12 +313,21 @@ def quick_clstr_util(df, num_cols, str_cols, color, player=None, player_list=Non
     for i, tab in enumerate(st.tabs(top_attributes)):
         with tab:
             val = top_attributes[i]
+
+            possible_hover_fields = ['team', 'Team', 'Position','position','pos']
+
+            # include only the ones that exist in the DataFrame
+            hover_fields = [col for col in possible_hover_fields if col in df.columns]
+            hover_data = {col: True for col in hover_fields}
+
             fig=px.bar(df.sort_values(val,ascending=False),
                   x='Player',
-                  color=color,
+                #   color=color,
                   color_discrete_map = discrete_color_map,
                   y=val,
-                  category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()}
+                hover_data=hover_data,
+                  category_orders={color:df.sort_values(color,ascending=True)[color].unique().tolist()},
+                #   barmode='relative'
                   )
             fig.update_xaxes(categoryorder='total descending')
             fig.update_traces(marker=dict(

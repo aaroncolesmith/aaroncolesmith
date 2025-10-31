@@ -141,7 +141,7 @@ def rename_columns(df):
             "stl_pct":"Steal Pct",
             "player":"Player",
             "team":"Team",
-            "mp":"Minutes",
+            "mp":"Minutes_Dupe",
             "fg":"Field Goals",
             "fga":"Field Goals Attempted",
             "fg_pct":"Field Goal Pct",
@@ -168,7 +168,10 @@ def rename_columns(df):
             'darko_lite':'Darko Lite'
         },
             inplace=True)
-    
+    try:
+        df.drop(columns=['Minutes_Dupe'], inplace=True)
+    except:
+        pass
     return df
 
 
@@ -227,7 +230,7 @@ def single_game_viz(df):
     num_cols_remove = ['#','min','age_year','Attendance','Notes','count_of_null','age_day_of_year','age_total_days','Wk','birthdate','home_xg','away_xg','home_score','visitor_score']
     num_cols = [col for col in num_cols if col not in num_cols_remove]
 
-
+    # st.write(df)
 
     with st.form(key='clstr_form'):
         c1,c2=st.columns(2)
@@ -452,7 +455,7 @@ def player_comparison_viz(df):
         player_max_date = d.loc[d['player']==player]['date'].max()
 
         color='team'
-        
+
         c1,c2,c3=st.columns(3)
         start_date = c1.date_input(
             "Select a start date",
