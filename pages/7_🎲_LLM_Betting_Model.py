@@ -78,6 +78,31 @@ def load_upcoming_bets(sport):
     else:
         return pd.DataFrame()
 
+@st.cache_data(ttl=3600)
+def load_prompt(sport, model):
+    """Load prompt text file for a specific sport and model"""
+    
+    # Map sport names to prompt file prefixes
+    sport_prefix = 'nba' if sport == 'NBA' else 'ncaab'
+    
+    # Construct the URL
+    url = f'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/prompts/{sport_prefix}_prompt_{model}.txt'
+    
+    try:
+        import requests
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        return f"Error loading prompt: {e}"
+
+def get_available_models(sport):
+    """Get list of available models for a sport"""
+    if sport == 'NBA':
+        return ['gemini', 'v2', 'v2_perp']
+    else:  # NCAAB
+        return ['claude', 'gemini', 'perp']
+
 
 
 
@@ -225,12 +250,13 @@ def main():
     st.markdown('---')
     
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         '🔮 Upcoming Bets',
         '📈 Model Performance Over Time',
         '📅 Daily Performance', 
         '🏆 Model Comparison',
         '🗓️ Results by Date',
+        '📝 Prompts',
         '🔧 Debug'
     ])
     
@@ -544,8 +570,146 @@ def main():
         else:
             st.info(f'No bets found for {selected_date.strftime("%Y-%m-%d")}')
     
-    # Tab 6: Debug
+    # Tab 6: Prompts
     with tab6:
+        st.subheader('📝 Model Prompts')
+        
+        st.markdown('**View and copy the prompts used by each betting model.**')
+        
+        # Get available models for the selected sport
+        available_models = get_available_models(sport)
+        
+        # Model selection
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            selected_model = st.selectbox(
+                'Select Model',
+                available_models,
+                format_func=lambda x: x.upper()
+            )
+        
+        # Load the prompt
+        with st.spinner(f'Loading {selected_model} prompt...'):
+            prompt_text = load_prompt(sport, selected_model)
+        
+        # Extract timestamp from prompt
+        import re
+        
+        # Try multiple patterns to find timestamp
+        timestamp_patterns = [
+            r'`timestamp`:\s*use the time of this prompt\s*--\s*([\d\-\s:.]+)',
+            r'timestamp:\s*([\d\-\s:.]+)',
+            r'Prompt created:\s*([\d\-\s:.]+)',
+            r'Generated:\s*([\d\-\s:.]+)'
+        ]
+        
+        timestamp_display = None
+        for pattern in timestamp_patterns:
+            timestamp_match = re.search(pattern, prompt_text, re.IGNORECASE)
+            if timestamp_match:
+                try:
+                    timestamp_str = timestamp_match.group(1).strip()
+                    # Parse the timestamp
+                    timestamp_dt = pd.to_datetime(timestamp_str)
+                    
+                    # Convert to Pacific Time
+                    import pytz
+                    utc_tz = pytz.UTC
+                    pt_tz = pytz.timezone('America/Los_Angeles')
+                    
+                    # Assume the timestamp is in UTC, convert to PT
+                    if timestamp_dt.tzinfo is None:
+                        timestamp_dt = utc_tz.localize(timestamp_dt)
+                    
+                    timestamp_pt = timestamp_dt.astimezone(pt_tz)
+                    
+                    # Format as MM/DD H:MMAM/PM (cross-platform compatible)
+                    month = timestamp_pt.month
+                    day = timestamp_pt.day
+                    hour = timestamp_pt.hour
+                    minute = timestamp_pt.minute
+                    
+                    # Convert to 12-hour format
+                    if hour == 0:
+                        hour_12 = 12
+                        am_pm = 'AM'
+                    elif hour < 12:
+                        hour_12 = hour
+                        am_pm = 'AM'
+                    elif hour == 12:
+                        hour_12 = 12
+                        am_pm = 'PM'
+                    else:
+                        hour_12 = hour - 12
+                        am_pm = 'PM'
+                    
+                    timestamp_display = f'{month}/{day} {hour_12}:{minute:02d}{am_pm}'
+                    break  # Found a timestamp, stop searching
+                except Exception:
+                    continue  # Try next pattern
+        
+        # Display prompt info
+        if timestamp_display:
+            # Show 4 columns with timestamp
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric('Prompt File', f'{sport.lower()}_prompt_{selected_model}.txt')
+            with col2:
+                st.metric('Created', timestamp_display)
+            with col3:
+                st.metric('Characters', f'{len(prompt_text):,}')
+            with col4:
+                st.metric('Lines', f'{len(prompt_text.splitlines()):,}')
+        else:
+            # Show 3 columns without timestamp
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric('Prompt File', f'{sport.lower()}_prompt_{selected_model}.txt')
+            with col2:
+                st.metric('Characters', f'{len(prompt_text):,}')
+            with col3:
+                st.metric('Lines', f'{len(prompt_text.splitlines()):,}')
+
+        
+        # Copy button and prompt display
+        st.markdown('---')
+        
+        # Create a text area with the prompt
+        st.text_area(
+            'Prompt Content',
+            value=prompt_text,
+            height=400,
+            help='Click inside and use Ctrl+A (Cmd+A on Mac) to select all, then Ctrl+C (Cmd+C) to copy',
+            key=f'prompt_{sport}_{selected_model}'
+        )
+        
+        # Add a copy button using Streamlit's built-in functionality
+        if st.button('📋 Copy to Clipboard', key=f'copy_btn_{sport}_{selected_model}'):
+            # Use st.code with a copy button
+            st.code(prompt_text, language='text')
+            st.success('✅ Prompt displayed above with copy button!')
+        
+        # Additional info
+        st.markdown('---')
+        st.markdown('**Tips:**')
+        st.info("""
+        - **Select all text**: Click in the text area and press `Ctrl+A` (Windows/Linux) or `Cmd+A` (Mac)
+        - **Copy**: Press `Ctrl+C` (Windows/Linux) or `Cmd+C` (Mac)
+        - **Alternative**: Click the "Copy to Clipboard" button to see the prompt in a code block with a built-in copy button
+        """)
+        
+        # Show all available prompts for this sport
+        with st.expander('View all available prompts for this sport'):
+            st.markdown(f'**Available {sport} prompts:**')
+            for model in available_models:
+                st.markdown(f'- `{sport.lower()}_prompt_{model}.txt`')
+
+    
+    # Tab 7: Debug
+    with tab7:
         st.subheader('Debug - Raw Data View')
         
         st.markdown('**Use this tab to inspect the raw data and troubleshoot any issues.**')
