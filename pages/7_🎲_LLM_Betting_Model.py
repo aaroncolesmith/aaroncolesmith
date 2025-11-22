@@ -15,8 +15,10 @@ def load_betting_data(sport):
     """Load betting data from GitHub"""
     if sport == 'NBA':
         url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bet_picks_evaluated.csv'
-    else:  # NCAAB
+    elif sport == 'NCAAB':
         url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/ncaab_bet_picks_evaluated.csv'
+    else:  # Soccer
+        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bet_picks_evaluated.csv'
     
     df = pd.read_csv(url)
     df['date'] = pd.to_datetime(df['date'])
@@ -32,11 +34,19 @@ def load_upcoming_bets(sport):
             'v2_perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bets_v2_perp.txt',
             'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bets_gemini.txt'
         }
-    else:  # NCAAB (cbb)
+    elif sport == 'NCAAB':  # cbb
         model_files = {
             'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_claude.txt',
             'perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_perp.txt',
             'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_gemini.txt'
+        }
+    else:  # Soccer
+        model_files = {
+            'charlie': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_charlie.txt',
+            'cliff': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_cliff.txt',
+            'david': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_david.txt',
+            'gary': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_gary.txt',
+            'grover': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_grover.txt'
         }
     
     all_bets = []
@@ -83,7 +93,12 @@ def load_prompt(sport, model):
     """Load prompt text file for a specific sport and model"""
     
     # Map sport names to prompt file prefixes
-    sport_prefix = 'nba' if sport == 'NBA' else 'ncaab'
+    if sport == 'NBA':
+        sport_prefix = 'nba'
+    elif sport == 'NCAAB':
+        sport_prefix = 'ncaab'
+    else:  # Soccer
+        sport_prefix = 'soccer'
     
     # Construct the URL
     url = f'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/prompts/{sport_prefix}_prompt_{model}.txt'
@@ -100,8 +115,10 @@ def get_available_models(sport):
     """Get list of available models for a sport"""
     if sport == 'NBA':
         return ['gemini', 'v2', 'v2_perp']
-    else:  # NCAAB
+    elif sport == 'NCAAB':
         return ['claude', 'gemini', 'perp']
+    else:  # Soccer
+        return ['charlie', 'cliff', 'david', 'gary', 'grover']
 
 
 
@@ -219,7 +236,7 @@ def main():
     
     c1,c2 = st.columns(2)
     # Sport selection
-    sport = c1.selectbox('Select Sport', ['NBA', 'NCAAB'])
+    sport = c1.selectbox('Select Sport', ['NBA', 'NCAAB', 'Soccer'])
     
     # Load data
     with st.spinner(f'Loading {sport} betting data...'):
@@ -359,7 +376,7 @@ def main():
             
             # Apply sorting
             if sort_by == 'Start Time':
-                df_filtered = df_filtered.sort_values(['start_time_local', 'confidence_pct'], ascending=[True, False])
+                df_filtered = df_filtered.sort_values(['start_time_local', 'game_id', 'confidence_pct'], ascending=[True, True, False])
             elif sort_by == 'Model':
                 df_filtered = df_filtered.sort_values(['model', 'start_time_local'], ascending=[True, True])
             else:  # Confidence
@@ -394,7 +411,32 @@ def main():
                 if row['status'] == 'Completed':
                     result_text = f" - **{row['bet_result'].upper()}** ({row['bet_payout']:+.2f} units)"
                 
-                expander_title = f"{status_emoji[row['status']]} [{row['model']}] {row['match']} - {row['pick']} ({row['odds']}) - {row['confidence_pct']}% confidence{result_text}"
+                # Add time and countdown for upcoming/in-progress games
+                time_text = ''
+                if row['status'] in ['Upcoming', 'In Progress']:
+                    # Short time format (e.g., "3pm")
+                    short_time = row['start_time_local'].strftime('%I%p').lstrip('0').lower()
+                    
+                    # Calculate time until game
+                    time_diff = row['start_time_local'] - now_local
+                    total_seconds = int(time_diff.total_seconds())
+                    
+                    if total_seconds > 0:
+                        # Game hasn't started yet
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        
+                        if hours > 0:
+                            countdown = f"in {hours}h {minutes}m"
+                        else:
+                            countdown = f"in {minutes}m"
+                    else:
+                        # Game is in progress
+                        countdown = "LIVE"
+                    
+                    time_text = f" {short_time} ({countdown}) -"
+                
+                expander_title = f"{status_emoji[row['status']]} [{row['model']}]{time_text} {row['match']} - {row['pick']} ({row['odds']}) - {row['confidence_pct']}% confidence{result_text}"
                 
                 with st.expander(expander_title):
                     col1, col2 = st.columns([2, 1])
