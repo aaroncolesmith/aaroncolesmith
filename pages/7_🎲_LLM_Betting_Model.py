@@ -123,26 +123,61 @@ def get_available_models(sport):
 
 
 
-def plot_model_performance_over_time(df, sport):
-    """Create line chart showing cumulative performance by model"""
+def plot_model_performance_over_time(df, sport, metric='Payout'):
+    """Create line chart showing cumulative performance by model
+    
+    Args:
+        df: DataFrame with betting results
+        sport: Sport name
+        metric: 'Payout', 'Win Rate', or 'ROI'
+    """
     df_sorted = df.sort_values(['model', 'date', 'rank']).copy()
     
-    # Calculate cumulative payout for each model
+    # Add win indicator
+    df_sorted['win'] = (df_sorted['bet_result'] == 'win').astype(int)
+    
+    # Calculate cumulative metrics for each model
     df_sorted['cumulative_payout'] = df_sorted.groupby('model')['bet_payout'].cumsum()
+    df_sorted['cumulative_wins'] = df_sorted.groupby('model')['win'].cumsum()
+    df_sorted['cumulative_bets'] = df_sorted.groupby('model').cumcount() + 1
+    df_sorted['cumulative_units'] = df_sorted.groupby('model')['units'].cumsum()
+    
+    # Calculate win rate and ROI
+    df_sorted['win_rate'] = (df_sorted['cumulative_wins'] / df_sorted['cumulative_bets'] * 100)
+    df_sorted['roi'] = (df_sorted['cumulative_payout'] / df_sorted['cumulative_units'] * 100)
     
     # Get the last entry for each date/model combination for cleaner visualization
     df_daily = df_sorted.groupby(['model', 'date']).agg({
         'cumulative_payout': 'last',
+        'win_rate': 'last',
+        'roi': 'last',
         'bet_payout': 'sum',
         'units': 'sum'
     }).reset_index()
     
+    # Select metric to display
+    if metric == 'Payout':
+        y_col = 'cumulative_payout'
+        y_label = 'Cumulative Payout (Units)'
+        title = f'{sport} Model Performance Over Time (Cumulative Payout)'
+        reference_line = 0
+    elif metric == 'Win Rate':
+        y_col = 'win_rate'
+        y_label = 'Win Rate (%)'
+        title = f'{sport} Model Performance Over Time (Win Rate %)'
+        reference_line = 50
+    else:  # ROI
+        y_col = 'roi'
+        y_label = 'ROI (%)'
+        title = f'{sport} Model Performance Over Time (ROI %)'
+        reference_line = 0
+    
     fig = px.line(df_daily, 
                   x='date', 
-                  y='cumulative_payout',
+                  y=y_col,
                   color='model',
-                  title=f'{sport} Model Performance Over Time (Cumulative Payout)',
-                  labels={'cumulative_payout': 'Cumulative Payout (Units)', 
+                  title=title,
+                  labels={y_col: y_label, 
                          'date': 'Date',
                          'model': 'Model'},
                   template='plotly_white')
@@ -152,13 +187,21 @@ def plot_model_performance_over_time(df, sport):
         height=600,
         hovermode='x unified',
         xaxis_title='Date',
-        yaxis_title='Cumulative Payout (Units)'
+        yaxis_title=y_label
     )
     
-    fig.update_traces(mode='lines+markers', line=dict(width=3))
+    fig.update_traces(
+        mode='lines+markers', 
+        line=dict(width=3),
+        marker=dict(size=12, opacity=1, 
+                    line=dict(width=2, 
+                            color="DarkSlateGrey"
+                            )
+                    )
+        )
     
-    # Add a horizontal line at y=0
-    fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
+    # Add a horizontal reference line
+    fig.add_hline(y=reference_line, line_dash="dash", line_color="gray", opacity=0.5)
     
     return fig
 
@@ -303,6 +346,9 @@ def main():
                 how='left',
                 suffixes=('', '_eval')
             )
+            
+            # Remove duplicates - keep only the first occurrence of each bet_key
+            df_upcoming = df_upcoming.drop_duplicates(subset='bet_key', keep='first')
             
             # Timezone selection
             col_tz1, col_tz2 = st.columns([1, 3])
@@ -473,16 +519,43 @@ def main():
     # Tab 2: Model Performance Over Time
     with tab2:
         st.subheader('Model Performance Over Time')
-        fig_cumulative = plot_model_performance_over_time(df, sport)
+        
+        # Metric selector
+        metric_choice = st.selectbox(
+            'Select Metric',
+            ['Payout', 'Win Rate', 'ROI'],
+            index=0,
+            help='Choose which metric to display over time'
+        )
+        
+        fig_cumulative = plot_model_performance_over_time(df, sport, metric=metric_choice)
         st.plotly_chart(fig_cumulative, use_container_width=True)
         
-        st.markdown("""
-        **How to read this chart:**
-        - Each line represents a different model's cumulative payout over time
-        - The y-axis shows total units won/lost
-        - Lines above 0 indicate profit, below 0 indicate loss
-        - Steeper upward slopes indicate better recent performance
-        """)
+        # Update help text based on metric
+        if metric_choice == 'Payout':
+            st.markdown("""
+            **How to read this chart:**
+            - Each line represents a different model's cumulative payout over time
+            - The y-axis shows total units won/lost
+            - Lines above 0 indicate profit, below 0 indicate loss
+            - Steeper upward slopes indicate better recent performance
+            """)
+        elif metric_choice == 'Win Rate':
+            st.markdown("""
+            **How to read this chart:**
+            - Each line represents a different model's cumulative win rate over time
+            - The y-axis shows the percentage of bets won
+            - The dashed line at 50% represents break-even win rate
+            - Higher lines indicate better prediction accuracy
+            """)
+        else:  # ROI
+            st.markdown("""
+            **How to read this chart:**
+            - Each line represents a different model's cumulative ROI (Return on Investment) over time
+            - The y-axis shows the percentage return on total units wagered
+            - Lines above 0% indicate profit, below 0% indicate loss
+            - ROI accounts for both win rate and odds, making it the most comprehensive metric
+            """)
     
     # Tab 3: Daily Performance
     with tab3:
