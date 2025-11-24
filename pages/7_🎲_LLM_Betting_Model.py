@@ -14,11 +14,11 @@ st.set_page_config(
 def load_betting_data(sport):
     """Load betting data from GitHub"""
     if sport == 'NBA':
-        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bet_picks_evaluated.csv'
+        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/evaluated/nba_bet_picks_evaluated.csv'
     elif sport == 'NCAAB':
-        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/ncaab_bet_picks_evaluated.csv'
-    else:  # Soccer
-        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bet_picks_evaluated.csv'
+        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/evaluated/ncaab_bet_picks_evaluated.csv'
+    elif sport == 'Soccer':  # Changed from 'else' to 'elif sport == 'Soccer''
+        url = 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/evaluated/soccer_bet_picks_evaluated.csv'
     
     df = pd.read_csv(url)
     df['date'] = pd.to_datetime(df['date'])
@@ -30,23 +30,23 @@ def load_upcoming_bets(sport):
     
     if sport == 'NBA':
         model_files = {
-            'v2': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bets_v2.txt',
-            'v2_perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bets_v2_perp.txt',
-            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/nba_bets_gemini.txt'
+            'v2': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_v2.txt',
+            'v2_perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_v2_perp.txt',
+            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_gemini.txt'
         }
-    elif sport == 'NCAAB':  # cbb
-        model_files = {
-            'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_claude.txt',
-            'perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_perp.txt',
-            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/cbb_bets_gemini.txt'
+    elif sport == 'NCAAB':
+        model_files = { # Changed variable name from 'urls' to 'model_files' to match the rest of the function
+            'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_claude.txt', # Changed cbb to ncaab
+            'perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_perp.txt', # Changed cbb to ncaab
+            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_gemini.txt' # Changed cbb to ncaab
         }
     else:  # Soccer
         model_files = {
-            'charlie': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_charlie.txt',
-            'cliff': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_cliff.txt',
-            'david': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_david.txt',
-            'gary': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_gary.txt',
-            'grover': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/soccer_bets_grover.txt'
+            'charlie': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_charlie.txt',
+            'cliff': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_cliff.txt',
+            'david': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_david.txt',
+            'gary': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_gary.txt',
+            'grover': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_grover.txt'
         }
     
     all_bets = []
