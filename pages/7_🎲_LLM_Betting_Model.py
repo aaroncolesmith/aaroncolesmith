@@ -381,6 +381,36 @@ def main():
                 axis=1
             )
             
+            # Date range selector
+            col_date1, col_date2 = st.columns(2)
+            
+            # Get min and max dates from the data
+            min_date = df_upcoming['start_time_local'].min().date()
+            max_date = df_upcoming['start_time_local'].max().date()
+            current_date = now_local.date()
+            
+            with col_date1:
+                start_date = st.date_input(
+                    'Start Date',
+                    value=current_date,
+                    min_value=min_date,
+                    max_value=max_date
+                )
+            
+            with col_date2:
+                end_date = st.date_input(
+                    'End Date',
+                    value=max_date,
+                    min_value=min_date,
+                    max_value=max_date
+                )
+            
+            # Filter by date range
+            df_upcoming = df_upcoming[
+                (df_upcoming['start_time_local'].dt.date >= start_date) &
+                (df_upcoming['start_time_local'].dt.date <= end_date)
+            ]
+            
             # Filter options
             col1, col2, col3, col4 = st.columns(4)
             
