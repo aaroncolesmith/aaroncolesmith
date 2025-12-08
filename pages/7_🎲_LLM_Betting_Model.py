@@ -10,7 +10,7 @@ st.set_page_config(
     layout='wide'
 )
 
-@st.cache_data(ttl=3600)
+# @st.cache_data(ttl=3600)
 def load_betting_data(sport):
     """Load betting data from GitHub"""
     if sport == 'NBA':
@@ -24,35 +24,56 @@ def load_betting_data(sport):
     df['date'] = pd.to_datetime(df['date'])
     return df
 
-@st.cache_data(ttl=600)  # Cache for 10 minutes since these update more frequently
+# @st.cache_data(ttl=600)  # Cache for 10 minutes since these update more frequently
 def load_upcoming_bets(sport):
     """Load upcoming/in-progress bets from txt files"""
     
     if sport == 'NBA':
         model_files = {
-            'v2': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_v2.txt',
-            'v2_perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_v2_perp.txt',
-            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_gemini.txt'
+            'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_claude.txt',
+            'perplexity': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_perplexity.txt',
+            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_gemini.txt',
+            'chatgpt': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/nba_bets_chatgpt.txt'
         }
     elif sport == 'NCAAB':
         model_files = { # Changed variable name from 'urls' to 'model_files' to match the rest of the function
             'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_claude.txt', # Changed cbb to ncaab
-            'perp': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_perp.txt', # Changed cbb to ncaab
+            'perplexity': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_perplexity.txt', # Changed cbb to ncaab
             'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/ncaab_bets_gemini.txt' # Changed cbb to ncaab
         }
     else:  # Soccer
         model_files = {
-            'charlie': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_charlie.txt',
-            'cliff': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_cliff.txt',
-            'david': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_david.txt',
-            'gary': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_gary.txt',
-            'grover': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_grover.txt'
+            'chatgpt': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_chatgpt.txt',
+            'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_claude.txt',
+            'deepseek': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_deepseek.txt',
+            'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_gemini.txt',
+            'grok': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_grok.txt'
         }
     
     all_bets = []
     for model, url in model_files.items():
         try:
             df = pd.read_csv(url)
+            
+            # Remove duplicate header rows that may have been concatenated
+            # Filter out rows where 'start_time' column contains the literal string 'start_time'
+            if 'start_time' in df.columns:
+                df = df[df['start_time'] != 'start_time'].reset_index(drop=True)
+            
+            # Convert numeric columns to proper types after filtering headers
+            numeric_columns = [
+                'game_id', 'rank', 'odds', 'units', 'confidence_pct',
+                'bet_home_spread', 'bet_home_ml', 'bet_away_spread', 'bet_away_ml', 
+                'bet_over', 'bet_under',
+                'home_money_line', 'away_money_line', 'total_score',
+                'over_odds', 'under_odds', 'home_spread', 'home_spread_odds',
+                'away_spread', 'away_spread_odds'
+            ]
+            
+            for col in numeric_columns:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
             df['model'] = model
             all_bets.append(df)
         except Exception as e:
@@ -88,7 +109,7 @@ def load_upcoming_bets(sport):
     else:
         return pd.DataFrame()
 
-@st.cache_data(ttl=3600)
+# @st.cache_data(ttl=3600)
 def load_prompt(sport, model):
     """Load prompt text file for a specific sport and model"""
     
@@ -114,11 +135,11 @@ def load_prompt(sport, model):
 def get_available_models(sport):
     """Get list of available models for a sport"""
     if sport == 'NBA':
-        return ['gemini', 'v2', 'v2_perp']
+        return ['gemini', 'claude', 'perplexity', 'chatgpt']
     elif sport == 'NCAAB':
-        return ['claude', 'gemini', 'perp']
+        return ['claude', 'gemini', 'perplexity']
     else:  # Soccer
-        return ['charlie', 'cliff', 'david', 'gary', 'grover']
+        return ['chatgpt', 'claude', 'deepseek', 'gemini', 'grok']
 
 
 
@@ -333,9 +354,12 @@ def main():
             df_evaluated = df
             
             # Create a unique identifier for matching
-            df_upcoming['bet_key'] = df_upcoming['game_id'].astype(str) + '_' + df_upcoming['pick'].astype(str)
-            df_evaluated['bet_key'] = df_evaluated['game_id'].astype(str) + '_' + df_evaluated['pick'].astype(str)
+            df_upcoming['bet_key'] = df_upcoming['game_id'].astype(str) + '_' + df_upcoming['pick'].astype(str) + '_' + df_upcoming['model'].astype(str)
+            df_evaluated['bet_key'] = df_evaluated['game_id'].astype(str) + '_' + df_evaluated['pick'].astype(str) + '_' + df_evaluated['model'].astype(str)
             
+            
+
+
             # Mark which bets have been evaluated
             df_upcoming['evaluated'] = df_upcoming['bet_key'].isin(df_evaluated['bet_key'])
             
@@ -346,7 +370,7 @@ def main():
                 how='left',
                 suffixes=('', '_eval')
             )
-            
+
             # Remove duplicates - keep only the first occurrence of each bet_key
             df_upcoming = df_upcoming.drop_duplicates(subset='bet_key', keep='first')
             
@@ -389,10 +413,13 @@ def main():
             max_date = df_upcoming['start_time_local'].max().date()
             current_date = now_local.date()
             
+            # Clamp current_date to be within the valid range
+            default_start_date = max(min_date, min(current_date, max_date))
+            
             with col_date1:
                 start_date = st.date_input(
                     'Start Date',
-                    value=current_date,
+                    value=default_start_date,
                     min_value=min_date,
                     max_value=max_date
                 )
@@ -449,6 +476,8 @@ def main():
                 (df_upcoming['model'].isin(model_filter)) &
                 (df_upcoming['confidence_pct'] >= min_confidence)
             ].copy()
+
+            
             
             # Apply sorting
             if sort_by == 'Start Time':
@@ -512,7 +541,7 @@ def main():
                     
                     time_text = f" {short_time} ({countdown}) -"
                 
-                expander_title = f"{status_emoji[row['status']]} [{row['model']}]{time_text} {row['match']} - {row['pick']} ({row['odds']}) - {row['confidence_pct']}% confidence{result_text}"
+                expander_title = f"{status_emoji[row['status']]}{time_text} {row['match']} - {row['pick']} ({row['odds']}) - {row['confidence_pct']}% confidence{result_text} -- [{row['model']}]"
                 
                 with st.expander(expander_title):
                     col1, col2 = st.columns([2, 1])
@@ -669,7 +698,7 @@ def main():
             st.markdown('**Bet Details**')
             
             # Format the display dataframe
-            display_df = df_date[['rank', 'model', 'match', 'pick', 'odds', 'units', 
+            display_df = df_date[['game_id','rank', 'model', 'match', 'pick', 'odds', 'units', 
                                   'home_score', 'away_score', 'bet_result', 'bet_payout']].copy()
             
             # Add color coding for wins/losses
@@ -680,14 +709,14 @@ def main():
                     return 'background-color: #FFB6C6'
             
             # Sort by model and rank
-            display_df = display_df.sort_values(['model', 'rank'])
+            display_df = display_df.sort_values(['game_id','model', 'rank'])
             
             # Format numeric columns
             display_df['odds'] = display_df['odds'].apply(lambda x: f'{x:+.0f}' if x > 0 else f'{x:.0f}')
             display_df['bet_payout'] = display_df['bet_payout'].apply(lambda x: f'{x:+.2f}')
             
             # Rename columns for better display
-            display_df.columns = ['Rank', 'Model', 'Match', 'Pick', 'Odds', 'Units', 
+            display_df.columns = ['Game ID','Rank', 'Model', 'Match', 'Pick', 'Odds', 'Units', 
                                  'Home Score', 'Away Score', 'Result', 'Payout']
             
             st.dataframe(
