@@ -81,7 +81,7 @@ def load_upcoming_bets(sport):
     
     if all_bets:
         combined_df = pd.concat(all_bets, ignore_index=True)
-        combined_df['start_time'] = pd.to_datetime(combined_df['start_time'])
+        combined_df['start_time'] = pd.to_datetime(combined_df['start_time'], format='mixed', errors='coerce')
         
         # Convert numeric columns to proper types
         numeric_columns = ['rank', 'odds', 'units', 'confidence_pct', 'game_id']
