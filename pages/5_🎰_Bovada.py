@@ -355,23 +355,23 @@ def app():
 
     df = load_file(date_select)
 
-    # a=df.groupby('title').agg({'date':['max','size','nunique']}).reset_index()
-    # a.columns = ['title','date','count','unique']
-    # a['date_sort'] = a['date'].astype('datetime64[D]')
-    # a=a.sort_values(['date_sort','unique','count'],ascending=(False,False,False))
-    # del a['date_sort']
+    load_all = st.radio('Would you like to see all the bet options or only ones that have been updated in the last 12 hours?',['All','Most Recent'])
 
-    # a['date']=a['date'].astype('str').str[:16].str[5:]
-    # a=a['title'] + ' | ' + a['date']
-    # a=a.to_list()
-    # a = recent_list + a
+    if load_all == 'Most Recent':
+        current_time = pd.Timestamp.now().tz_localize(None)
+        n_hours_from_now = current_time - pd.Timedelta(hours=36)
+    else:
+        n_hours_from_now = df['date'].min()
 
-    a=df.groupby(['title']).agg(date=('date','max'),
+
+    n_hours_from_now = pd.to_datetime(n_hours_from_now)
+
+    a=df[pd.to_datetime(df['date']) >= n_hours_from_now].groupby(['title']).agg(date=('date','max'),
                             last_day=('day','max'),
                             total_count=('date','size'),
                             unique_count=('date','nunique'),
                             ).reset_index().sort_values(['last_day','total_count','unique_count'],ascending=(False,False,False))
-    
+
     a['title_subject'] = a['title'].str.split(' - ',expand=True)[0]
 
     bet_subjects = a['title_subject'].unique()

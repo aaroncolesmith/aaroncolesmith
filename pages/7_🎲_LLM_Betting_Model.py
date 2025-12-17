@@ -348,7 +348,7 @@ def main():
         # Load upcoming bets
         with st.spinner('Loading upcoming bets...'):
             df_upcoming = load_upcoming_bets(sport)
-        
+
         if len(df_upcoming) > 0:
             # Load evaluated bets to check status
             df_evaluated = df
@@ -520,7 +520,11 @@ def main():
                 time_text = ''
                 if row['status'] in ['Upcoming', 'In Progress']:
                     # Short time format (e.g., "3pm")
-                    short_time = row['start_time_local'].strftime('%I%p').lstrip('0').lower()
+                    short_time = (
+                        row['start_time_local'].strftime('%I%p').lstrip('0').lower()
+                        if row['start_time_local'].minute == 0
+                        else row['start_time_local'].strftime('%I:%M%p').lstrip('0').lower()
+                    )
                     
                     # Calculate time until game
                     time_diff = row['start_time_local'] - now_local
