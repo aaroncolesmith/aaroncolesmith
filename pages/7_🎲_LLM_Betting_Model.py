@@ -47,7 +47,8 @@ def load_upcoming_bets(sport):
             'claude': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_claude.txt',
             'deepseek': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_deepseek.txt',
             'gemini': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_gemini.txt',
-            'grok': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_grok.txt'
+            'grok': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_grok.txt',
+            'perplexity': 'https://raw.githubusercontent.com/aaroncolesmith/llm_betting_model/refs/heads/main/data/bets/soccer_bets_perplexity.txt'
         }
     
     all_bets = []
