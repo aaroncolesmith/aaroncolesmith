@@ -1,16 +1,24 @@
+import numpy as np
+# Patch removed numpy aliases for compatibility with older libraries and NumPy 2.0
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+if not hasattr(np, "int_"):
+    np.int_ = np.int64
+if not hasattr(np, "bool_"):
+    np.bool_ = bool
+
 import pandas as pd
 import streamlit as st
 import requests
 import datetime
-from pyvis.network import Network
-from pyvis import network as net
+# from pyvis.network import Network
+# from pyvis import network as net
 import streamlit.components.v1 as components
-import networkx as nx
+# import networkx as nx
 import plotly_express as px
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.templates.default = "simple_white"
-import numpy as np
 from IPython.core.display import HTML
 import itertools
 from posthog import Posthog
@@ -388,11 +396,12 @@ def app():
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
     draft_year = st.selectbox('Draft Year?', 
-        ('2025', '2024', '2023', '2022', '2022 - Most Recent', '2021'))
+        ('2026','2025', '2024', '2023', '2022', '2022 - Most Recent', '2021'))
 
     # Define a dictionary for draft year to URL mapping
     url_mapping = {
         # '2025': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2025.csv',
+        '2026': 'https://raw.githubusercontent.com/aaroncolesmith/data_nfl_mock_draft/main/data/new_nfl_mock_draft_db_2026.csv',
         '2025': 'https://raw.githubusercontent.com/aaroncolesmith/data_nfl_mock_draft/main/data/new_nfl_mock_draft_db_2025.csv',
         '2024': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2024.csv',
         '2023': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv',
@@ -402,7 +411,11 @@ def app():
 
     # Load the appropriate data based on the selected year
     df = pd.read_csv(url_mapping.get(draft_year, ''))
-    df=add_sheets_data(df)
+    
+    # Fix relative image paths
+    if 'team_img' in df.columns:
+        df['team_img'] = df['team_img'].apply(lambda x: 'https://www.nflmockdraftdatabase.com' + x if str(x).startswith('/') else x)
+    # df=add_sheets_data(df)
     # Apply specific modifications based on the selected year
     if draft_year == '2023':
         # Drop a bad mock draft for 2023
@@ -411,13 +424,19 @@ def app():
     if draft_year == '2022 - Most Recent':
         # Load the 2022 draft and limit rows to the most recent
         df = df.head(1023)
+    df['date'] = pd.to_datetime(df['date'])
+    df['pick'] = pd.to_numeric(df['pick'], errors='coerce')
+    df['team_pick'] = 'Pick ' + df['pick'].fillna(0).astype(int).astype(str) + ' - ' + df['team']
 
+    ## drop duplicates based on pick, team, url_path
+    df = df.drop_duplicates(subset=['pick','team','url_path'])
     df['source_key'] = df['source'].str.lower().replace(' ','_') + '_'+df['date'].astype('str')
 
+
     valid_mocks = df.groupby(['date','source']).size().to_frame('cnt').reset_index().sort_values('date',ascending=False)
+
     valid_mocks = valid_mocks.loc[valid_mocks['cnt']==32]
     df = pd.merge(df, valid_mocks[['date','source']], on=['date','source'], how='inner')
-
 
     unique_player_list = df['player'].unique()
     unique_source_key_list = df['source_key'].unique()
@@ -481,10 +500,20 @@ def app():
         st.markdown('### Avg Pick Over Time by Player')
 
         c1,c2 = st.columns(2)
+        
+        default_min_date = df.date.min()
+        default_max_date = df.date.max()
+        
+        # Ensure we have valid dates for date_input
+        if pd.isna(default_min_date):
+            default_min_date = datetime.date.today()
+        if pd.isna(default_max_date):
+            default_max_date = datetime.date.today()
+
         min_date = c1.date_input("Minimum Date for Avg", 
-                                 value = df.date.min(),
-                                 min_value = df.date.min(),
-                                 max_value = df.date.max())
+                                 value = default_min_date,
+                                 min_value = default_min_date,
+                                 max_value = default_max_date)
         
         top_n = c2.slider("Top n players?", 2, 50, 25)
         top_players=df.groupby(['player']).agg(
@@ -769,10 +798,19 @@ def app():
         df['date'] = pd.to_datetime(df['date'])
         
         c1,c2,c3 = st.columns(3)
+        
+        default_min_date = df.date.min()
+        default_max_date = df.date.max()
+        
+        if pd.isna(default_min_date):
+            default_min_date = datetime.date.today()
+        if pd.isna(default_max_date):
+            default_max_date = datetime.date.today()
+
         min_date = c1.date_input("Minimum Date for Consensus", 
-                                 value = df.date.min(),
-                                 min_value = df.date.min(),
-                                 max_value = df.date.max())
+                                 value = default_min_date,
+                                 min_value = default_min_date,
+                                 max_value = default_max_date)
         
         df_bpa = df.loc[pd.to_datetime(df.date) >= pd.to_datetime(min_date)].groupby(['player']).agg(
             avg_pick=('pick','mean'),

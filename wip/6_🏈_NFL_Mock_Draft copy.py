@@ -228,11 +228,12 @@ def app():
     st.markdown('Taking a look at a number of public NFL mock drafts to identify trends and relationships')
 
     draft_year = st.selectbox('Draft Year?', 
-        ('2025', '2024', '2023', '2022', '2022 - Most Recent', '2021'))
+        ('2026', '2025', '2024', '2023', '2022', '2022 - Most Recent', '2021'))
 
     # Define a dictionary for draft year to URL mapping
     url_mapping = {
         # '2025': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2025.csv',
+        '2026': 'https://raw.githubusercontent.com/aaroncolesmith/data_nfl_mock_draft/main/data/new_nfl_mock_draft_db_2026.csv',
         '2025': 'https://raw.githubusercontent.com/aaroncolesmith/data_nfl_mock_draft/main/data/new_nfl_mock_draft_db_2025.csv',
         '2024': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2024.csv',
         '2023': 'https://raw.githubusercontent.com/aaroncolesmith/nfl_mock_draft_db/main/new_nfl_mock_draft_db_2023.csv',
