@@ -2,7 +2,7 @@
 **AI & Data Product Leader | Analytics Strategy | GenAI Applications**
 
 Portland, OR  
-[aaroncolesmith.com](https://aaroncolesmith.com) • LinkedIn
+[aaroncolesmith.com](https://aaroncolesmith.com) • [LinkedIn](https://linkedin.com/in/aaroncolesmith)
 
 ---
 
